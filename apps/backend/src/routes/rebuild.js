@@ -68,8 +68,10 @@ function validatePayload(scope, payload) {
         }
     }
     if (scope === 'single-asset') {
-        if (!payload?.portfolioItemId || typeof payload.portfolioItemId !== 'number') {
-            return 'payload.portfolioItemId (number) is required for scope=single-asset';
+        const hasSingle = payload?.portfolioItemId && typeof payload.portfolioItemId === 'number';
+        const hasMany   = Array.isArray(payload?.portfolioItemIds) && payload.portfolioItemIds.length > 0;
+        if (!hasSingle && !hasMany) {
+            return 'payload.portfolioItemId (number) or payload.portfolioItemIds (number[]) is required for scope=single-asset';
         }
     }
     return null;
@@ -245,6 +247,7 @@ router.get('/status', apiKeyAuth, async (req, res) => {
                     symbol: true,
                     currency: true,
                     category: { select: { name: true } },
+                    account: { select: { name: true } },
                 },
                 orderBy: { symbol: 'asc' },
             }),

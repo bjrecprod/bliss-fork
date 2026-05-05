@@ -41,6 +41,7 @@ import { startOfYear, subMonths, subYears, format as formatDate } from "date-fns
 import { usePortfolioItems } from "@/hooks/use-portfolio-items";
 import { usePortfolioHistory } from "@/hooks/use-portfolio-history";
 import { useMetadata } from "@/hooks/use-metadata";
+import { useAccountList } from "@/hooks/use-account-list";
 import type { PortfolioItem } from "@/types/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { AggregatedPortfolioHistory } from "@/lib/api";
@@ -52,6 +53,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   parseDecimal,
@@ -60,6 +62,68 @@ import {
   getGroupIcon,
 } from "@/lib/portfolio-utils";
 import { translateCategoryGroup } from "@/lib/category-i18n";
+
+// ── Symbol-level merge (cross-account deduplication) ──────────────────────
+//
+// When the user selects "All accounts", the API returns one PortfolioItem per
+// (symbol, accountId) pair. For display purposes we want a single row per
+// symbol. This helper merges all items that share a symbol by summing their
+// financial summaries and marking the merged item as account-agnostic.
+//
+// Rules:
+//  - quantity          → summed
+//  - costBasis         → summed
+//  - marketValue       → summed
+//  - unrealizedPnL     → summed; unrealizedPnLPercent recalculated
+//  - realizedPnL       → summed
+//  - totalInvested     → summed
+//  - hasLotMismatch    → OR (any account's mismatch surfaces on the merged row)
+//  - accountId         → null  (merged, not tied to one account)
+//  - id                → first item's id (for React keys; doesn't drive any query)
+//  - Everything else   → first item (category, currency, symbol are identical)
+
+function mergeFinancialSummary(
+  items: PortfolioItem[],
+  getBlock: (item: PortfolioItem) => PortfolioItem["native"],
+): PortfolioItem["native"] {
+  const summed = items.reduce(
+    (acc, item) => {
+      const b = getBlock(item);
+      if (!b) return acc;
+      return {
+        costBasis: acc.costBasis + parseDecimal(b.costBasis),
+        marketValue: acc.marketValue + parseDecimal(b.marketValue),
+        unrealizedPnL: acc.unrealizedPnL + parseDecimal(b.unrealizedPnL),
+        unrealizedPnLPercent: 0, // recalculated below
+        realizedPnL: acc.realizedPnL + parseDecimal(b.realizedPnL),
+        totalInvested: acc.totalInvested + parseDecimal(b.totalInvested),
+      };
+    },
+    { costBasis: 0, marketValue: 0, unrealizedPnL: 0, unrealizedPnLPercent: 0, realizedPnL: 0, totalInvested: 0 },
+  );
+  summed.unrealizedPnLPercent =
+    summed.costBasis !== 0 ? (summed.unrealizedPnL / summed.costBasis) * 100 : 0;
+  return summed;
+}
+
+function mergePortfolioItems(items: PortfolioItem[]): PortfolioItem {
+  if (items.length === 1) return items[0];
+  const base = items[0];
+  const quantity = items.reduce((s, i) => s + parseDecimal(i.quantity), 0);
+  const hasLotMismatch = items.some((i) => i.hasLotMismatch);
+  const hasPortfolio = items.some((i) => i.portfolio != null);
+  return {
+    ...base,
+    accountId: null,
+    quantity,
+    hasLotMismatch,
+    native: mergeFinancialSummary(items, (i) => i.native),
+    usd: mergeFinancialSummary(items, (i) => i.usd),
+    ...(hasPortfolio && {
+      portfolio: mergeFinancialSummary(items, (i) => i.portfolio ?? i.usd),
+    }),
+  };
+}
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -218,10 +282,28 @@ export default function PortfolioHoldingsPage() {
   const [closedSectionsVisible, setClosedSectionsVisible] = useState<Record<string, boolean>>({});
   const [timeRange, setTimeRange] = useState("all");
   const [showDebt, setShowDebt] = useState(false);
+  // Account and country filters — "all" means no filter applied
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("all");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("all");
 
   // ── Data Fetching ──
   const { data: metadata, isLoading: metadataLoading, error: metadataError } = useMetadata();
-  const { data: portfolioData, isLoading: itemsLoading, error: itemsError } = usePortfolioItems();
+  const { accounts } = useAccountList();
+
+  // Derive distinct countries from the account list for the country filter
+  const distinctCountries = useMemo(() => {
+    const seen = new Set<string>();
+    return accounts
+      .filter((a) => { if (seen.has(a.countryId)) return false; seen.add(a.countryId); return true; })
+      .map((a) => ({ countryId: a.countryId, label: a.countryId }));
+  }, [accounts]);
+
+  const portfolioFilters = useMemo(() => ({
+    ...(selectedAccountId !== "all" && { accountId: parseInt(selectedAccountId, 10) }),
+    ...(selectedCountryId !== "all" && { countryId: selectedCountryId }),
+  }), [selectedAccountId, selectedCountryId]);
+
+  const { data: portfolioData, isLoading: itemsLoading, error: itemsError } = usePortfolioItems(portfolioFilters);
   const portfolioItems = useMemo(() => portfolioData?.items ?? [], [portfolioData?.items]);
   const portfolioCurrency = portfolioData?.portfolioCurrency ?? "USD";
 
@@ -246,17 +328,37 @@ export default function PortfolioHoldingsPage() {
   // ── Data Processing ──
 
   const { assetList, liabilityList } = useMemo(() => {
-    const assets: PortfolioItem[] = [];
-    const liabilities: PortfolioItem[] = [];
+    const rawAssets: PortfolioItem[] = [];
+    const rawLiabilities: PortfolioItem[] = [];
     portfolioItems.forEach((item) => {
       if (item.category.type === "Debt") {
-        liabilities.push(item);
+        rawLiabilities.push(item);
       } else {
-        assets.push(item);
+        rawAssets.push(item);
       }
     });
-    return { assetList: assets, liabilityList: liabilities };
-  }, [portfolioItems]);
+
+    // When viewing all accounts, merge same-symbol items into one row per symbol.
+    // A specific account filter is already applied server-side, so no merge is needed there.
+    if (selectedAccountId !== "all") {
+      return { assetList: rawAssets, liabilityList: rawLiabilities };
+    }
+
+    const mergeBySymbol = (items: PortfolioItem[]): PortfolioItem[] => {
+      const bySymbol = new Map<string, PortfolioItem[]>();
+      for (const item of items) {
+        const key = item.symbol;
+        if (!bySymbol.has(key)) bySymbol.set(key, []);
+        bySymbol.get(key)!.push(item);
+      }
+      return Array.from(bySymbol.values()).map(mergePortfolioItems);
+    };
+
+    return {
+      assetList: mergeBySymbol(rawAssets),
+      liabilityList: mergeBySymbol(rawLiabilities),
+    };
+  }, [portfolioItems, selectedAccountId]);
 
   const totalAssetsValue = useMemo(
     () => assetList
@@ -598,6 +700,40 @@ export default function PortfolioHoldingsPage() {
                   </button>
                 ))}
               </div>
+
+              {/* Account Filter */}
+              {accounts.length > 1 && (
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="h-7 w-40 text-xs">
+                    <SelectValue placeholder={t("portfolio.allAccounts")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("portfolio.allAccounts")}</SelectItem>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={String(account.id)}>
+                        {account.accountName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {/* Country Filter */}
+              {distinctCountries.length > 1 && (
+                <Select value={selectedCountryId} onValueChange={setSelectedCountryId}>
+                  <SelectTrigger className="h-7 w-36 text-xs">
+                    <SelectValue placeholder={t("portfolio.allCountries")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("portfolio.allCountries")}</SelectItem>
+                    {distinctCountries.map(({ countryId, label }) => (
+                      <SelectItem key={countryId} value={countryId}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               {/* Show Debt Toggle */}
               <div className="flex items-center gap-2">
