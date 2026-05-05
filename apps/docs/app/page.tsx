@@ -632,7 +632,7 @@ export default function HomePage() {
                   Bulletproof Reliability
                 </h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#5A5266' }}>
-                  Orchestrated by 8 independent BullMQ workers and protected by over 1,000 automated CI pipeline tests.
+                  Orchestrated by 8 independent BullMQ workers and protected by over 2,000 automated CI pipeline tests.
                 </p>
               </div>
             </div>
