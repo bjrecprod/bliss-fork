@@ -17,7 +17,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License" />
-  <img src="https://img.shields.io/badge/tests-1543%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-2035%20passing-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/docker-compose%20ready-2496ED?logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Claude%20Code-ready-6D657A?logo=anthropic&logoColor=white" alt="Claude Code Ready" />
 </p>
