@@ -65,6 +65,88 @@ if [ "$LLM_PROVIDER" = "anthropic" ]; then
   echo ""
 fi
 
+# ─── Optional services ────────────────────────────────────────────────────────
+
+# Initialise all optional vars blank
+GOOGLE_CLIENT_ID=""; GOOGLE_CLIENT_SECRET=""
+PLAID_CLIENT_ID=""; PLAID_SECRET=""; PLAID_ENV="sandbox"; PLAID_WEBHOOK_URL=""
+TWELVE_DATA_API_KEY=""
+CURRENCYLAYER_API_KEY=""
+SENTRY_DSN=""; SENTRY_ORG=""; SENTRY_PROJECT=""
+
+# Track which services have been configured
+CONFIGURED=""
+
+configure_service() {
+  local choice="$1"
+  case "$choice" in
+    1)
+      echo "── Google OAuth ─────────────────────────────────────────────────"
+      echo "   Create credentials at: console.cloud.google.com/apis/credentials"
+      echo "   Authorized redirect URI: <NEXTAUTH_URL>/api/auth/callback/google"
+      echo ""
+      read -r -p "  GOOGLE_CLIENT_ID: " GOOGLE_CLIENT_ID
+      read -r -p "  GOOGLE_CLIENT_SECRET: " GOOGLE_CLIENT_SECRET
+      echo ""
+      CONFIGURED="$CONFIGURED 1"
+      ;;
+    2)
+      echo "── Plaid ────────────────────────────────────────────────────────"
+      read -r -p "  PLAID_CLIENT_ID: " PLAID_CLIENT_ID
+      read -r -p "  PLAID_SECRET: " PLAID_SECRET
+      read -r -p "  PLAID_ENV [sandbox]: " _PLAID_ENV
+      PLAID_ENV=${_PLAID_ENV:-sandbox}
+      read -r -p "  PLAID_WEBHOOK_URL (leave blank if none): " PLAID_WEBHOOK_URL
+      echo ""
+      CONFIGURED="$CONFIGURED 2"
+      ;;
+    3)
+      echo "── Twelve Data ──────────────────────────────────────────────────"
+      read -r -p "  TWELVE_DATA_API_KEY: " TWELVE_DATA_API_KEY
+      echo ""
+      CONFIGURED="$CONFIGURED 3"
+      ;;
+    4)
+      echo "── CurrencyLayer ────────────────────────────────────────────────"
+      read -r -p "  CURRENCYLAYER_API_KEY: " CURRENCYLAYER_API_KEY
+      echo ""
+      CONFIGURED="$CONFIGURED 4"
+      ;;
+    5)
+      echo "── Sentry ───────────────────────────────────────────────────────"
+      read -r -p "  SENTRY_DSN: " SENTRY_DSN
+      read -r -p "  SENTRY_ORG: " SENTRY_ORG
+      read -r -p "  SENTRY_PROJECT: " SENTRY_PROJECT
+      echo ""
+      CONFIGURED="$CONFIGURED 5"
+      ;;
+  esac
+}
+
+print_services_menu() {
+  echo "╔══════════════════════════════════════════════════════════════╗"
+  echo "║  Optional Services                                           ║"
+  echo "╚══════════════════════════════════════════════════════════════╝"
+  echo ""
+  [[ "$CONFIGURED" != *" 1"* ]] && echo "  1) Google OAuth    — enables Sign in with Google"
+  [[ "$CONFIGURED" != *" 2"* ]] && echo "  2) Plaid           — bank connection & real-time transaction sync"
+  [[ "$CONFIGURED" != *" 3"* ]] && echo "  3) Twelve Data     — live stock prices & security fundamentals"
+  [[ "$CONFIGURED" != *" 4"* ]] && echo "  4) CurrencyLayer   — historical FX rates for multi-currency portfolios"
+  [[ "$CONFIGURED" != *" 5"* ]] && echo "  5) Sentry          — error monitoring & alerting"
+  echo ""
+}
+
+while true; do
+  print_services_menu
+  read -r -p "Enter a number to configure, or press Enter to continue: " OPT_CHOICE
+  echo ""
+  [ -z "$OPT_CHOICE" ] && break
+  case "$OPT_CHOICE" in
+    1|2|3|4|5) configure_service "$OPT_CHOICE" ;;
+    *) echo "  Invalid choice, please enter a number from the list above." ; echo "" ;;
+  esac
+done
+
 # ─── Generate secrets ────────────────────────────────────────────────────────
 echo "Generating secrets..."
 ENCRYPTION_SECRET=$(openssl rand -base64 48 | tr -d '\n/+=' | head -c 48)
@@ -89,10 +171,8 @@ sed -i.bak \
   "$ENV_FILE"
 
 # ─── Inject LLM provider configuration ───────────────────────────────────────
-# LLM_PROVIDER (default in .env.example is "gemini")
 sed -i.bak -e "s|^LLM_PROVIDER=.*|LLM_PROVIDER=$LLM_PROVIDER|" "$ENV_FILE"
 
-# Primary provider API key
 if [ -n "$LLM_API_KEY" ]; then
   sed -i.bak -e "s|^$KEY_VAR=.*|$KEY_VAR=$LLM_API_KEY|" "$ENV_FILE"
 fi
@@ -104,6 +184,19 @@ if [ -n "$EMBEDDING_PROVIDER" ]; then
     sed -i.bak -e "s|^$EMB_KEY_VAR=.*|$EMB_KEY_VAR=$EMB_API_KEY|" "$ENV_FILE"
   fi
 fi
+
+# ─── Inject optional service credentials ─────────────────────────────────────
+[ -n "$GOOGLE_CLIENT_ID" ]     && sed -i.bak -e "s|^GOOGLE_CLIENT_ID=.*|GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID|" "$ENV_FILE"
+[ -n "$GOOGLE_CLIENT_SECRET" ] && sed -i.bak -e "s|^GOOGLE_CLIENT_SECRET=.*|GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET|" "$ENV_FILE"
+[ -n "$PLAID_CLIENT_ID" ]      && sed -i.bak -e "s|^PLAID_CLIENT_ID=.*|PLAID_CLIENT_ID=$PLAID_CLIENT_ID|" "$ENV_FILE"
+[ -n "$PLAID_SECRET" ]         && sed -i.bak -e "s|^PLAID_SECRET=.*|PLAID_SECRET=$PLAID_SECRET|" "$ENV_FILE"
+sed -i.bak -e "s|^PLAID_ENV=.*|PLAID_ENV=$PLAID_ENV|" "$ENV_FILE"
+[ -n "$PLAID_WEBHOOK_URL" ]    && sed -i.bak -e "s|^PLAID_WEBHOOK_URL=.*|PLAID_WEBHOOK_URL=$PLAID_WEBHOOK_URL|" "$ENV_FILE"
+[ -n "$TWELVE_DATA_API_KEY" ]  && sed -i.bak -e "s|^TWELVE_DATA_API_KEY=.*|TWELVE_DATA_API_KEY=$TWELVE_DATA_API_KEY|" "$ENV_FILE"
+[ -n "$CURRENCYLAYER_API_KEY" ] && sed -i.bak -e "s|^CURRENCYLAYER_API_KEY=.*|CURRENCYLAYER_API_KEY=$CURRENCYLAYER_API_KEY|" "$ENV_FILE"
+[ -n "$SENTRY_DSN" ]           && sed -i.bak -e "s|^SENTRY_DSN=.*|SENTRY_DSN=$SENTRY_DSN|" "$ENV_FILE"
+[ -n "$SENTRY_ORG" ]           && sed -i.bak -e "s|^SENTRY_ORG=.*|SENTRY_ORG=$SENTRY_ORG|" "$ENV_FILE"
+[ -n "$SENTRY_PROJECT" ]       && sed -i.bak -e "s|^SENTRY_PROJECT=.*|SENTRY_PROJECT=$SENTRY_PROJECT|" "$ENV_FILE"
 
 rm -f "$ENV_FILE.bak"
 
@@ -122,6 +215,5 @@ if [ "$LLM_PROVIDER" = "anthropic" ] && [ -z "$EMB_API_KEY" ]; then
 fi
 echo ""
 echo "Next steps:"
-echo "  1. (optional) Add other API keys to .env: Plaid, TwelveData, CurrencyLayer, Sentry"
-echo "  2. docker compose up --build"
-echo "  3. Open http://localhost:8080"
+echo "  1. docker compose up --build"
+echo "  2. Open http://localhost:8080"
