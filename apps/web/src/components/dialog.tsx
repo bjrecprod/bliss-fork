@@ -43,8 +43,8 @@ export function Dialog({ isOpen, onClose, children, maxWidth = 488 }: DialogProp
     <>
       {/* Keyframe animations */}
       <style>{`
-        @keyframes bliss-fade-in  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes bliss-slide-up {
+        @keyframes bijoyai-fade-in  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes bijoyai-slide-up {
           from { opacity: 0; transform: translateY(14px) scale(0.98); }
           to   { opacity: 1; transform: translateY(0)   scale(1); }
         }
@@ -68,7 +68,7 @@ export function Dialog({ isOpen, onClose, children, maxWidth = 488 }: DialogProp
           alignItems: "center",
           justifyContent: "center",
           padding: "24px 16px",
-          animation: "bliss-fade-in 0.18s ease",
+          animation: "bijoyai-fade-in 0.18s ease",
         }}
       >
         {/* ── Modal card — Liquid Glass ── */}
@@ -90,7 +90,7 @@ export function Dialog({ isOpen, onClose, children, maxWidth = 488 }: DialogProp
             ].join(", "),
             borderRadius: "1.25rem",
             overflow: "hidden",
-            animation: "bliss-slide-up 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
+            animation: "bijoyai-slide-up 0.22s cubic-bezier(0.22, 1, 0.36, 1)",
           }}
         >
           {children}

@@ -68,7 +68,7 @@ describe('SetupChecklist Component', () => {
 
     // "connect-bank" and "add-account" map to the same key "connectBank",
     // so there should only be TWO total items rendered (Connect Bank + Explore Expenses)
-    expect(screen.getByText('Get started with Bliss')).toBeInTheDocument();
+    expect(screen.getByText('Get started with Bijoy.ai')).toBeInTheDocument();
     expect(screen.getByText('Connect Bank')).toBeInTheDocument();
     expect(screen.queryByText('Add Account')).not.toBeInTheDocument();
     expect(screen.getByText('Explore Expenses')).toBeInTheDocument();

@@ -1,6 +1,6 @@
 # Bank Sync with Plaid
 
-Bliss integrates with Plaid for automatic bank transaction sync. Transactions are fetched incrementally, deduplicated, and classified by the AI pipeline.
+Bijoy.ai integrates with Plaid for automatic bank transaction sync. Transactions are fetched incrementally, deduplicated, and classified by the AI pipeline.
 
 ## Setup
 
@@ -21,13 +21,13 @@ For testing, use `sandbox` with credentials `user_good` / `pass_good`.
 
 1. Navigate to **Accounts** and click **Connect Bank Account**.
 2. Complete the Plaid Link flow to authorize your bank.
-3. Bliss starts an initial sync immediately.
+3. Bijoy.ai starts an initial sync immediately.
 
 ![Accounts page with Plaid connection](/images/accountspagewithplaid.png)
 
 ## How sync works
 
-Bliss uses a two-worker architecture:
+Bijoy.ai uses a two-worker architecture:
 
 - **plaidSyncWorker** — Fetches new transactions via cursor-based pagination (IO-bound)
 - **plaidProcessorWorker** — Classifies and persists each transaction (CPU-bound)
@@ -44,7 +44,7 @@ The account detail view shows:
 
 ## Plaid + AI classification
 
-Plaid provides its own category hints, which Bliss passes to the AI pipeline as additional context. The 4-tier classification waterfall runs on every Plaid transaction, and results above the `autoPromoteThreshold` are saved directly without manual review.
+Plaid provides its own category hints, which Bijoy.ai passes to the AI pipeline as additional context. The 4-tier classification waterfall runs on every Plaid transaction, and results above the `autoPromoteThreshold` are saved directly without manual review.
 
 ## Next steps
 

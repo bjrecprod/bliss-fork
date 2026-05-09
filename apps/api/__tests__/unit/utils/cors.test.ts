@@ -24,7 +24,7 @@ describe('cors()', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.FRONTEND_URL = 'https://app.blissfinance.co';
+    process.env.FRONTEND_URL = 'https://app.bijoy.ai';
     process.env.NODE_ENV = 'production';
   });
 
@@ -34,7 +34,7 @@ describe('cors()', () => {
   });
 
   it('returns true and sends 200 for OPTIONS preflight', () => {
-    const req = makeReq({ method: 'OPTIONS', headers: { origin: 'https://app.blissfinance.co' } });
+    const req = makeReq({ method: 'OPTIONS', headers: { origin: 'https://app.bijoy.ai' } });
     const res = makeRes();
 
     const result = cors(req, res);
@@ -45,7 +45,7 @@ describe('cors()', () => {
   });
 
   it('returns false for non-OPTIONS requests', () => {
-    const req = makeReq({ method: 'GET', headers: { origin: 'https://app.blissfinance.co' } });
+    const req = makeReq({ method: 'GET', headers: { origin: 'https://app.bijoy.ai' } });
     const res = makeRes();
 
     const result = cors(req, res);
@@ -54,12 +54,12 @@ describe('cors()', () => {
   });
 
   it('sets Allow-Origin for an allowed origin', () => {
-    const req = makeReq({ headers: { origin: 'https://app.blissfinance.co' } });
+    const req = makeReq({ headers: { origin: 'https://app.bijoy.ai' } });
     const res = makeRes();
 
     cors(req, res);
 
-    expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://app.blissfinance.co');
+    expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'https://app.bijoy.ai');
     expect(res.setHeader).toHaveBeenCalledWith('Access-Control-Allow-Credentials', 'true');
   });
 

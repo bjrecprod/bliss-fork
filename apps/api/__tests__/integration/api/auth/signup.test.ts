@@ -2,12 +2,12 @@
  * Integration tests for POST /api/auth/signup
  *
  * Calls the Next.js handler directly with factory-built req/res objects.
- * Uses the real bliss_test Postgres database via Prisma.
+ * Uses the real bijoyai_test Postgres database via Prisma.
  *
  * Rate limiter is mocked to a no-op (prevents IP-based test failures).
  * Redis denylist gracefully degrades when REDIS_URL is not set (allowed through).
  *
- * Requires: bliss_test Postgres database with migrations applied.
+ * Requires: bijoyai_test Postgres database with migrations applied.
  */
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
@@ -76,7 +76,7 @@ function makeRes(): MockRes {
 const createdTenantIds: string[] = [];
 
 function uniqueEmail() {
-  return `signup-test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bliss`;
+  return `signup-test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoyai`;
 }
 
 function validBody(overrides = {}) {

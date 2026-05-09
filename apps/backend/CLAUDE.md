@@ -1,4 +1,4 @@
-# Bliss Backend (Express + BullMQ)
+# Bijoy.ai Backend (Express + BullMQ)
 
 This is the internal service that handles all async processing: AI classification, portfolio valuation, Plaid sync, analytics aggregation, and insights generation. It is not publicly accessible -- all requests come from the API layer via `INTERNAL_API_KEY`.
 
@@ -251,13 +251,13 @@ pnpm test:coverage      # with coverage report
 
 **Unit tests** mock all external dependencies (Prisma, Redis, BullMQ, Gemini, Twelve Data). Declare `jest.mock()` calls **before** `require()` imports. Use `jest.clearAllMocks()` in `beforeEach`.
 
-**Integration tests** use real Express (via supertest) + real Postgres (`bliss_test` DB). BullMQ queues and external APIs are mocked. Tests use `createIsolatedTenant()` with cascade teardown.
+**Integration tests** use real Express (via supertest) + real Postgres (`bijoyai_test` DB). BullMQ queues and external APIs are mocked. Tests use `createIsolatedTenant()` with cascade teardown.
 
 **Test setup:** `env.js` loads `.env.test` first (overrides), then `.env`. `sentry.js` globally mocks `@sentry/node`.
 
 ## Prisma client (`prisma/prisma.js`)
 
-Same pattern as the API app: Prisma 6 `$extends` with encrypt -> validate -> execute -> decrypt pipeline. The encryption config comes from `@bliss/shared/encryption`.
+Same pattern as the API app: Prisma 6 `$extends` with encrypt -> validate -> execute -> decrypt pipeline. The encryption config comes from `@bijoyai/shared/encryption`.
 
 ## Health endpoints
 

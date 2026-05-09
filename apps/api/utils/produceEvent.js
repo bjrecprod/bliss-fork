@@ -12,7 +12,7 @@ const RETRY_DELAYS = [200, 1000, 3000]; // exponential-ish backoff (ms)
 const FETCH_TIMEOUT_MS = 10_000;        // 10 s per attempt
 
 /**
- * Sends a system event to the bliss-backend-service event bus.
+ * Sends a system event to the bijoyai-backend-service event bus.
  *
  * Retries up to MAX_RETRIES times with exponential backoff on network
  * errors or 5xx responses. Uses a 10 s fetch timeout per attempt so a

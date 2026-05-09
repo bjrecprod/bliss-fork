@@ -1,6 +1,6 @@
 # 2. Core Entities (Frontend)
 
-This document describes the frontend implementation of two core data entities in the Bliss application: **Accounts** and **Categories**.
+This document describes the frontend implementation of two core data entities in the Bijoy.ai application: **Accounts** and **Categories**.
 
 ---
 
@@ -100,7 +100,7 @@ Plaid items are fetched via a separate query (`accountListKeys.plaidItems()`) th
 
 ### Design System
 
-All status badges, borders, and interactive states use Bliss design tokens — never raw Tailwind color classes. See `apps/web/CLAUDE.md` and `specs/00-design-system.md` for the full token reference.
+All status badges, borders, and interactive states use Bijoy.ai design tokens — never raw Tailwind color classes. See `apps/web/CLAUDE.md` and `specs/00-design-system.md` for the full token reference.
 
 ---
 

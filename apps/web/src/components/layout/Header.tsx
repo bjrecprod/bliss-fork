@@ -115,7 +115,7 @@ export function Header({ sidebarOpen, onSidebarToggle, isMobile = false }: Heade
             <span style={{
               fontFamily: "'Urbanist', sans-serif", fontSize: "0.9375rem",
               fontWeight: 500, color: "hsl(var(--muted-fg))", whiteSpace: "nowrap",
-            }}>bliss</span>
+            }}>bijoy.ai</span>
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
               <path d="M4.5 3l3 3-3 3" stroke="currentColor" className="text-muted-foreground" strokeWidth="1.5"
                 strokeLinecap="round" strokeLinejoin="round" />

@@ -16,7 +16,7 @@ import { useCategories } from '@/hooks/use-metadata';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Canonical type list — mirrors ALLOWED_CATEGORY_TYPES in bliss-finance-api/lib/constants.js.
+// Canonical type list — mirrors ALLOWED_CATEGORY_TYPES in bijoyai-api/lib/constants.js.
 // Hardcoded here intentionally: these types are immutable system values, not derived from data.
 const ALLOWED_CATEGORY_TYPES = [
   'Income',

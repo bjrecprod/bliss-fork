@@ -214,7 +214,7 @@ npm run test:coverage   # v8 coverage report, enforces 60/60/60 thresholds
 The E2E suite lives inside this repository at `e2e/`. This is its permanent home — E2E tests cover user-facing flows and belong in the frontend repo.
 
 ```
-bliss/
+bijoyai/
 └── e2e/
     ├── package.json               # standalone Node project, @playwright/test
     ├── playwright.config.ts       # Chromium only, baseURL from E2E_BASE_URL

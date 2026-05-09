@@ -1,10 +1,10 @@
-# Contributing to Bliss
+# Contributing to Bijoy.ai
 
-Thank you for your interest in contributing to Bliss! This guide covers how we build, how the project is documented, and how to make your first contribution.
+Thank you for your interest in contributing to Bijoy.ai! This guide covers how we build, how the project is documented, and how to make your first contribution.
 
 ## How We Build: Spec-Driven Development
 
-Bliss follows a **spec-driven development** workflow. Every feature has a technical specification in `docs/specs/` organized by layer:
+Bijoy.ai follows a **spec-driven development** workflow. Every feature has a technical specification in `docs/specs/` organized by layer:
 
 ```
 docs/specs/
@@ -54,13 +54,13 @@ These files prevent the most common mistakes: using the wrong module system, har
 The fastest way to get started is Docker:
 
 ```bash
-git clone https://github.com/danielvsantos/bliss.git
-cd bliss
+git clone https://github.com/danielvsantos/bijoyai.git
+cd bijoyai
 ./scripts/setup.sh
 docker compose up --build
 ```
 
-Open http://localhost:8080 when all containers are healthy. See the [Docker Quick Start](https://blissfinance.co/docs/guides/docker-quickstart) guide for details.
+Open http://localhost:8080 when all containers are healthy. See the [Docker Quick Start](https://bijoy.ai/docs/guides/docker-quickstart) guide for details.
 
 ### Local Development (without Docker)
 
@@ -103,7 +103,7 @@ This is critical -- each app uses a specific module system and they must not be 
 ## Project Structure
 
 ```
-bliss/
+bijoyai/
   apps/
     api/          # Next.js API routes + Prisma ORM (ESM)
     backend/      # Express + BullMQ workers (CJS)
@@ -186,7 +186,7 @@ Every push and pull request triggers a GitHub Actions pipeline with 7 jobs:
 | Lint — Web & API | ESLint across both apps (`--max-warnings 0` for web) |
 | Docker — Build & Health Check | Full `docker compose` build + service health checks |
 
-**All 7 jobs must pass before a PR can be merged.** Run `pnpm test` and `pnpm --filter @bliss/web lint && pnpm --filter @bliss/api lint` locally before pushing to catch issues early.
+**All 7 jobs must pass before a PR can be merged.** Run `pnpm test` and `pnpm --filter @bijoyai/web lint && pnpm --filter @bijoyai/api lint` locally before pushing to catch issues early.
 
 ## Pull Request Process
 
@@ -197,8 +197,8 @@ Every push and pull request triggers a GitHub Actions pipeline with 7 jobs:
 5. Ensure all tests and lint checks pass locally:
    ```bash
    pnpm test
-   pnpm --filter @bliss/web lint
-   pnpm --filter @bliss/api lint
+   pnpm --filter @bijoyai/web lint
+   pnpm --filter @bijoyai/api lint
    ```
 6. Write clear, descriptive commit messages.
 7. Open a pull request against the `main` branch with a description of your changes.

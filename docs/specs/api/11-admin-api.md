@@ -1,6 +1,6 @@
 # 11. Admin API
 
-Internal administration endpoints for managing default categories and the cross-tenant classification system. These endpoints are **not user-facing** — they are used by Bliss operations staff for category provisioning, metadata maintenance, and embedding quality management.
+Internal administration endpoints for managing default categories and the cross-tenant classification system. These endpoints are **not user-facing** — they are used by Bijoy.ai operations staff for category provisioning, metadata maintenance, and embedding quality management.
 
 ---
 
@@ -148,7 +148,7 @@ The cross-tenant embedding table that powers **Tier 2b (VECTOR_MATCH_GLOBAL)** c
 | `embedding` | Gemini vector(768) — cosine similarity searched at classification time |
 | `source` | `USER_CONFIRMED` or `AUTO_CONFIRMED` |
 
-**How rows are created**: Only via the classification feedback pipeline when a user (from any tenant) confirms a transaction against a category that has a `defaultCategoryCode`. Bliss uses this confirmation to add the description to the global pool, so all future tenants benefit from it immediately.
+**How rows are created**: Only via the classification feedback pipeline when a user (from any tenant) confirms a transaction against a category that has a `defaultCategoryCode`. Bijoy.ai uses this confirmation to add the description to the global pool, so all future tenants benefit from it immediately.
 
 **Cross-tenant discount**: During classification, `GlobalEmbedding` matches are multiplied by `0.92` to produce a slightly lower confidence than tenant-scoped `TransactionEmbedding` matches. This reflects that a global match is less certain than a match from the same tenant's own history.
 

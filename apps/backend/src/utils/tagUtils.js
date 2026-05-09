@@ -6,7 +6,7 @@ const logger = require('./logger');
  * For each name string: looks up existing tag, creates if not found.
  * Handles P2002 race condition (concurrent creates) gracefully.
  *
- * Ported from bliss-finance-api/utils/tagUtils.js (ESM → CJS).
+ * Ported from bijoyai-api/utils/tagUtils.js (ESM → CJS).
  *
  * @param {string[]} tagNames - Array of tag name strings
  * @param {string} tenantId - Tenant ID

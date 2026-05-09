@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-const GITHUB_BASE = 'https://github.com/danielvsantos/bliss/blob/main';
+const GITHUB_BASE = 'https://github.com/danielvsantos/bijoyai/blob/main';
 
 const LAYER_META: Record<string, { label: string; color: string }> = {
   api:      { label: 'API',      color: 'hsl(263 9% 43%)' },

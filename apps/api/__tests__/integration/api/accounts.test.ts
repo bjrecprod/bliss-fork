@@ -2,13 +2,13 @@
  * Integration tests for GET /api/accounts and POST /api/accounts
  *
  * Calls the Next.js handler directly with factory-built req/res objects.
- * Uses the real bliss_test Postgres database via Prisma.
+ * Uses the real bijoyai_test Postgres database via Prisma.
  *
  * Rate limiter is mocked to a no-op.
  * JWT auth is tested end-to-end: withAuth decodes the token and hydrates req.user
- * from the real bliss_test User table.
+ * from the real bijoyai_test User table.
  *
- * Requires: bliss_test Postgres database with migrations applied.
+ * Requires: bijoyai_test Postgres database with migrations applied.
  */
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';

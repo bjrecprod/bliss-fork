@@ -69,7 +69,7 @@ export function SetupChecklist({ actions }: SetupChecklistProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-sm">{t("Get started with Bliss")}</h3>
+            <h3 className="font-semibold text-sm">{t("Get started with Bijoy.ai")}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               {completedCount} {t("of")} {uniqueItems.length} {t("complete")}
             </p>

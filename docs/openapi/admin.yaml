@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Admin
+  title: Bijoy.ai API Layer - Admin
   version: 1.0.0
   description: |
     Internal admin endpoints for managing default categories and the GlobalEmbedding
     cross-tenant classification table.
 
-    These endpoints are NOT user-facing — they are called by Anthropic/Bliss operations
+    These endpoints are NOT user-facing — they are called by Anthropic/Bijoy.ai operations
     staff to provision new categories, push metadata changes, and maintain embedding quality.
 
     Auth: `x-admin-key` request header (value must match `ADMIN_API_KEY` env var).

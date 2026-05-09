@@ -1,6 +1,6 @@
 # 4. Transactions (API)
 
-This document outlines the API implementation for managing transactions, which form the core ledger of the Bliss application.
+This document outlines the API implementation for managing transactions, which form the core ledger of the Bijoy.ai application.
 
 ---
 
@@ -53,7 +53,7 @@ Returns recent promoted Plaid transactions matching a merchant name, used by the
 
 ## 4.2. Bulk CSV Import (Smart Import — Native Adapter)
 
-All CSV imports are now handled through the Smart Import pipeline (`/api/imports/*`). The "Bliss Native CSV" system adapter provides a direct replacement for the retired dumb import: it resolves account and category by name or numeric ID from CSV columns, auto-confirms fully-resolved rows, and routes investment rows (ticker, quantity, price) into the enrichment flow.
+All CSV imports are now handled through the Smart Import pipeline (`/api/imports/*`). The "Bijoy.ai Native CSV" system adapter provides a direct replacement for the retired dumb import: it resolves account and category by name or numeric ID from CSV columns, auto-confirms fully-resolved rows, and routes investment rows (ticker, quantity, price) into the enrichment flow.
 
 **To import CSV data**, navigate to `/smart-import?adapter=native`. Download the template from the adapter manager, fill in the `transactiondate`, `description`, `debit`/`credit`, `account`, `category`, and optionally `ticker`, `assetquantity`, `assetprice` columns, then upload through the Smart Import flow.
 
@@ -81,7 +81,7 @@ The Tags API, located at `pages/api/tags.js`, provides full, tenant-scoped CRUD 
 
 **GET** `/api/transactions/export` (`pages/api/transactions/export.js`)
 
-Exports matching transactions as a downloadable Bliss Native CSV file with the `id` column populated, enabling round-trip editing via re-import through Smart Import.
+Exports matching transactions as a downloadable Bijoy.ai Native CSV file with the `id` column populated, enabling round-trip editing via re-import through Smart Import.
 
 - **Auth**: JWT.
 - **Query params**: Same filter set as `GET /api/transactions` — `startDate`, `endDate`, `accountId`, `categoryId`, `group`, `type`, `tags`, `source`, `currencyCode`.

@@ -20,7 +20,7 @@ import type { Category } from '@/types/api';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Canonical type list — mirrors ALLOWED_CATEGORY_TYPES in bliss-finance-api/lib/constants.js.
+// Canonical type list — mirrors ALLOWED_CATEGORY_TYPES in bijoyai-api/lib/constants.js.
 // Order here determines the accordion display order on the page.
 const CATEGORY_TYPES = [
   'Income',
@@ -34,7 +34,7 @@ const CATEGORY_TYPES = [
   'Transfers',
 ] as const;
 
-// Left-border design token per type — all use Bliss semantic tokens (never raw Tailwind colors).
+// Left-border design token per type — all use Bijoy.ai semantic tokens (never raw Tailwind colors).
 const TYPE_BORDER: Record<string, string> = {
   'Income':       'border-l-positive',
   'Essentials':   'border-l-negative',

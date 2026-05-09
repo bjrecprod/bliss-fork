@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
 /**
- * Vitest configuration for bliss-frontend.
+ * Vitest configuration for bijoyai-frontend.
  *
  * Uses jsdom as the test environment to simulate browser APIs.
  * The @vitejs/plugin-react-swc plugin handles JSX and fast refresh.

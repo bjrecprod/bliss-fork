@@ -1,5 +1,5 @@
 {
-  "name": "bliss",
+  "name": "bijoyai",
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@9.15.9",
@@ -11,11 +11,11 @@
     "dev": "pnpm --parallel -r dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "test:api": "pnpm --filter @bliss/api test",
-    "test:backend": "pnpm --filter @bliss/backend test",
-    "test:web": "pnpm --filter @bliss/web test",
-    "dev:docs": "pnpm --filter @bliss/docs dev",
-    "build:docs": "pnpm --filter @bliss/docs build",
+    "test:api": "pnpm --filter @bijoyai/api test",
+    "test:backend": "pnpm --filter @bijoyai/backend test",
+    "test:web": "pnpm --filter @bijoyai/web test",
+    "dev:docs": "pnpm --filter @bijoyai/docs dev",
+    "build:docs": "pnpm --filter @bijoyai/docs build",
     "postinstall": "prisma generate --schema=prisma/schema.prisma"
   },
   "engines": {

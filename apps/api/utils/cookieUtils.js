@@ -6,7 +6,7 @@
  * - Secure     — HTTPS only (always set when SameSite=None, also in production)
  * - SameSite   — "None" when cross-origin (FRONTEND_URL differs from API origin),
  *                "Lax" when same-origin
- * - Domain     — configurable via COOKIE_DOMAIN env var (e.g., ".blissfinance.co"
+ * - Domain     — configurable via COOKIE_DOMAIN env var (e.g., ".bijoy.ai"
  *                for cross-subdomain sharing). Omitted when not set (localhost).
  * - Path=/     — sent with every API request
  * - Max-Age    — matches the JWT expiry (24 hours)
@@ -37,7 +37,7 @@ function isCrossOrigin() {
 
 function buildCookieParts(nameValue, maxAge) {
   const crossOrigin = isCrossOrigin();
-  const cookieDomain = process.env.COOKIE_DOMAIN; // e.g., ".blissfinance.co"
+  const cookieDomain = process.env.COOKIE_DOMAIN; // e.g., ".bijoy.ai"
 
   const parts = [
     nameValue,

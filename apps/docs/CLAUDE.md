@@ -1,6 +1,6 @@
-# Bliss Docs Site
+# Bijoy.ai Docs Site
 
-Public-facing documentation site for Bliss, built with Nextra 4 on Next.js 15.
+Public-facing documentation site for Bijoy.ai, built with Nextra 4 on Next.js 15.
 
 ## Stack
 

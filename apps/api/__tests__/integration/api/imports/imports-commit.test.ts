@@ -7,7 +7,7 @@
  *
  * The commit endpoint dispatches an async SMART_IMPORT_COMMIT event to the
  * backend worker — actual transaction creation, tag linking, and embedding
- * feedback are tested in the backend commitWorker tests (bliss-backend-service).
+ * feedback are tested in the backend commitWorker tests (bijoyai-backend-service).
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

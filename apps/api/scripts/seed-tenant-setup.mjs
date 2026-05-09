@@ -11,7 +11,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { encrypt } from '@bliss/shared/encryption';
+import { encrypt } from '@bijoyai/shared/encryption';
 
 const prisma = new PrismaClient();
 

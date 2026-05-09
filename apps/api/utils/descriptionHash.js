@@ -11,7 +11,7 @@ import crypto from 'crypto';
  * applied in upsertEmbedding() and upsertGlobalEmbedding().
  *
  * Must produce identical output to the backend-service version in
- * bliss-backend-service/src/utils/descriptionHash.js
+ * bijoyai-backend-service/src/utils/descriptionHash.js
  *
  * @param {string} description — Raw description text
  * @returns {string} — 64-char hex SHA-256 hash

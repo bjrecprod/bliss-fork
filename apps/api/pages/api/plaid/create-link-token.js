@@ -86,7 +86,7 @@ async function handlePost(req, res, user) {
             user: {
                 client_user_id: user.id,
             },
-            client_name: 'Bliss Finance',
+            client_name: 'Bijoy.ai Finance',
             country_codes: countryCodes.length > 0 ? countryCodes : ['US'],
             language: 'en',
         };

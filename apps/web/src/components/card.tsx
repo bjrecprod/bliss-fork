@@ -8,7 +8,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 /**
- * Bliss Card — Liquid Glass container
+ * Bijoy.ai Card — Liquid Glass container
  *
  * Auto-Layout:
  *  - Direction: Vertical (flex-col)

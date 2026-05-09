@@ -47,7 +47,7 @@ export function AIAnalysisPanel({ item }: AIAnalysisPanelProps) {
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('review.blissAnalysis')}
+            {t('review.bijoyAnalysis')}
           </span>
         </div>
 

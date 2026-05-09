@@ -69,7 +69,7 @@ vi.mock('uuid', () => ({
   v4: () => 'mock-uuid',
 }));
 
-vi.mock('@bliss/shared/storage', () => ({
+vi.mock('@bijoyai/shared/storage', () => ({
   createStorageAdapter: () => mockStorageAdapter,
 }));
 
