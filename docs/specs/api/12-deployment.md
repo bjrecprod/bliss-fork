@@ -11,7 +11,7 @@ The API is a Next.js 15 application using the Pages Router. It serves as the aut
 The API uses a 4-stage multi-stage Docker build:
 
 1. **deps**: Installs all workspace dependencies via pnpm with frozen lockfile. All workspace `package.json` stubs are copied to ensure correct peer resolution.
-2. **shared-build**: Builds the `@bliss/shared` package (encryption + storage adapters).
+2. **shared-build**: Builds the `@bijoyai/shared` package (encryption + storage adapters).
 3. **builder**: Generates the Prisma client and builds Next.js in standalone output mode (`output: 'standalone'` in `next.config.mjs`).
 4. **runner**: Minimal production image with a non-root `nextjs` user (UID 1001).
 
@@ -23,7 +23,7 @@ The standalone build bundles only the files required to run the server, producin
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://bliss:pass@postgres:5432/bliss`) |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://bijoyai:pass@postgres:5432/bijoyai`) |
 | `JWT_SECRET_CURRENT` | Secret for signing JWT tokens |
 | `NEXTAUTH_SECRET` | Secret for NextAuth session encryption |
 | `ENCRYPTION_SECRET` | AES-256-GCM key for encrypting sensitive fields |

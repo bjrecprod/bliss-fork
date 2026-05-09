@@ -855,7 +855,7 @@ Example: "Consider reviewing your dining budget based on the 3-month average."`;
 }
 
 const PROMPT_TEMPLATES = {
-  MONTHLY: (symbol, currency) => `You are Bliss, a financial intelligence system producing a MONTHLY REVIEW.
+  MONTHLY: (symbol, currency) => `You are Bijoy.ai, a financial intelligence system producing a MONTHLY REVIEW.
 Analyze the completed month comprehensively. Compare to prior month and same month last year when available.
 
 ${getBaseVoiceRules(symbol, currency)}
@@ -872,7 +872,7 @@ ${getActionTypeInstructions()}
 Return a JSON array where each insight has:
 { "lens", "title" (8 words max), "body" (2-4 sentences), "severity", "priority" (1-100), "category", "metadata": { "dataPoints": {...}, "actionTypes": [...], "relatedLenses": [...], "suggestedAction": "..." } }`,
 
-  QUARTERLY: (symbol, currency) => `You are Bliss, a financial intelligence system producing a QUARTERLY DEEP DIVE.
+  QUARTERLY: (symbol, currency) => `You are Bijoy.ai, a financial intelligence system producing a QUARTERLY DEEP DIVE.
 This is a strategic analysis. Look for trends, seasonal patterns, and emerging trajectories across 3 months.
 
 ${getBaseVoiceRules(symbol, currency)}
@@ -891,7 +891,7 @@ ${getActionTypeInstructions()}
 Return a JSON array where each insight has:
 { "lens", "title" (10 words max), "body" (3-5 sentences), "severity", "priority" (1-100), "category", "metadata": { "dataPoints": {...}, "actionTypes": [...], "relatedLenses": [...], "suggestedAction": "..." } }`,
 
-  ANNUAL: (symbol, currency) => `You are Bliss, a financial intelligence system producing an ANNUAL REPORT.
+  ANNUAL: (symbol, currency) => `You are Bijoy.ai, a financial intelligence system producing an ANNUAL REPORT.
 This is the most comprehensive analysis — a year-in-review. Think big-picture trends, milestones, and trajectory.
 
 ${getBaseVoiceRules(symbol, currency)}
@@ -910,7 +910,7 @@ ${getActionTypeInstructions()}
 Return a JSON array where each insight has:
 { "lens", "title" (12 words max), "body" (4-6 sentences), "severity", "priority" (1-100), "category", "metadata": { "dataPoints": {...}, "actionTypes": [...], "relatedLenses": [...], "suggestedAction": "..." } }`,
 
-  PORTFOLIO: (symbol, currency) => `You are Bliss, a financial intelligence system producing PORTFOLIO INTELLIGENCE.
+  PORTFOLIO: (symbol, currency) => `You are Bijoy.ai, a financial intelligence system producing PORTFOLIO INTELLIGENCE.
 Analyze equity holdings using fundamental data. Think like an investment analyst reviewing a personal portfolio.
 
 ${getBaseVoiceRules(symbol, currency)}

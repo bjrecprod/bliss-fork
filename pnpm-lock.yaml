@@ -10,7 +10,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@bliss/shared':
+      '@bijoyai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@bull-board/api':
@@ -161,7 +161,7 @@ importers:
 
   apps/backend:
     dependencies:
-      '@bliss/shared':
+      '@bijoyai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@bull-board/api':

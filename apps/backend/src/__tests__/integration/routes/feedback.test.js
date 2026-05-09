@@ -5,7 +5,7 @@
  * The categorizationService is mocked so these tests focus on the HTTP contract,
  * not the classification logic (which has its own unit tests).
  *
- * Requires: bliss_test Postgres database with migrations applied.
+ * Requires: bijoyai_test Postgres database with migrations applied.
  */
 
 const request = require('supertest');

@@ -1,5 +1,5 @@
 /**
- * MSW server for bliss-frontend tests.
+ * MSW server for bijoyai-frontend tests.
  *
  * setupServer() creates a Node.js HTTP interceptor that works in Vitest's
  * jsdom environment. The server is started/stopped by src/test/setup.ts.

@@ -1,6 +1,6 @@
 # Initial Account Setup
 
-When you first set up Bliss, you need to create the accounts, banks, and currencies that reflect your financial reality. You can do this one by one through the UI, or use the bulk seed script to set everything up at once.
+When you first set up Bijoy.ai, you need to create the accounts, banks, and currencies that reflect your financial reality. You can do this one by one through the UI, or use the bulk seed script to set everything up at once.
 
 ## Global reference data (seeded automatically)
 

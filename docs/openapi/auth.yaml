@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Authentication
+  title: Bijoy.ai API Layer - Authentication
   version: 1.0.0
   description: API endpoints for user authentication, registration, and session management.
 

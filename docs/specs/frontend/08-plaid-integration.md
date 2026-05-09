@@ -198,7 +198,7 @@ When the user clicks "Sync N Accounts":
 
 Currency/country warnings are shown as `Alert` banners at the top of the screen.
 
-> *Clock icon* Bliss will sync up to 2 years of history. Recent transactions appear in seconds; full history arrives within 24 hours.
+> *Clock icon* Bijoy.ai will sync up to 2 years of history. Recent transactions appear in seconds; full history arrives within 24 hours.
 
 ### Phase 2 — Syncing
 
@@ -256,7 +256,7 @@ Summary card showing:
 Below the summary, a `brand-primary` info banner explains ongoing historical sync:
 
 > *Clock icon* **Full history syncing in the background**
-> Currently synced from **Nov 28, 2024**. Bliss will automatically sync up to 2 years of transaction history over the next 24 hours. New transactions will appear in your review queue as they arrive — no action needed.
+> Currently synced from **Nov 28, 2024**. Bijoy.ai will automatically sync up to 2 years of transaction history over the next 24 hours. New transactions will appear in your review queue as they arrive — no action needed.
 
 Design tokens: `border-brand-primary/20 bg-brand-primary/5 text-brand-primary` — uses brand-primary for a calm, informational tone (not warning/amber).
 

@@ -1,6 +1,6 @@
 # Multi-Tenant Deployment
 
-Bliss supports multi-tenancy out of the box -- every user gets their own isolated tenant with separate accounts, transactions, and settings. This guide covers the recommended production architecture for hosting Bliss as a multi-user service.
+Bijoy.ai supports multi-tenancy out of the box -- every user gets their own isolated tenant with separate accounts, transactions, and settings. This guide covers the recommended production architecture for hosting Bijoy.ai as a multi-user service.
 
 ---
 
@@ -57,7 +57,7 @@ Both Vercel and Railway read from environment variables. The critical ones for m
 | `INTERNAL_API_KEY` | API + Backend | Service-to-service auth (must match) |
 | `NEXTAUTH_URL` | API | Your production domain (e.g., `https://app.yoursite.com`) |
 | `FRONTEND_URL` | API | CORS origin for the web app |
-| `BACKEND_URL` | API | Railway backend URL (e.g., `https://bliss-backend.up.railway.app`) |
+| `BACKEND_URL` | API | Railway backend URL (e.g., `https://bijoyai-backend.up.railway.app`) |
 | `COOKIE_DOMAIN` | API | Cookie scope for auth (e.g., `.yoursite.com`) |
 
 ### Google OAuth
@@ -73,7 +73,7 @@ Users can sign up with Google (creates a tenant automatically) or with email/pas
 
 ### Sentry
 
-Bliss has built-in Sentry integration. Every worker failure is reported with structured context:
+Bijoy.ai has built-in Sentry integration. Every worker failure is reported with structured context:
 
 ```
 Worker: portfolioWorker
@@ -92,7 +92,7 @@ Attempt: 2 of 3
 
 ## Multi-Tenancy Model
 
-Bliss uses **query-level tenant isolation** -- every database query includes a `tenantId` filter. There is no Row-Level Security (RLS); isolation is enforced at the application layer.
+Bijoy.ai uses **query-level tenant isolation** -- every database query includes a `tenantId` filter. There is no Row-Level Security (RLS); isolation is enforced at the application layer.
 
 Each tenant gets:
 - Isolated accounts, transactions, categories, and portfolio items
@@ -117,5 +117,5 @@ Tenant data is fully isolated. A user in Tenant A cannot see or modify data belo
 
 ## Next steps
 
-- [Docker Quick Start](/docs/guides/docker-quickstart) -- try Bliss locally before deploying
+- [Docker Quick Start](/docs/guides/docker-quickstart) -- try Bijoy.ai locally before deploying
 - [Choosing Your External Services](/docs/guides/external-services) -- configure Gemini, Twelve Data, Plaid, and CurrencyLayer

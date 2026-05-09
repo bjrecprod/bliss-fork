@@ -13,13 +13,13 @@ const logo = (
       userSelect: 'none',
     }}
   >
-    bliss
+    bijoy.ai
   </span>
 );
 
 const navbarExtra = (
   <a
-    href="https://app.blissfinance.co/auth?origin=docs-site"
+    href="https://app.bijoy.ai/auth?origin=docs-site"
     target="_blank"
     rel="noopener noreferrer"
     className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-90 max-md:hidden"
@@ -43,17 +43,17 @@ export default async function DocsLayout({
       navbar={
         <Navbar
           logo={logo}
-          projectLink="https://github.com/danielvsantos/bliss"
+          projectLink="https://github.com/danielvsantos/bijoyai"
         >
           {navbarExtra}
         </Navbar>
       }
       pageMap={await getPageMap('/docs')}
-      docsRepositoryBase="https://github.com/danielvsantos/bliss/tree/main/apps/docs"
+      docsRepositoryBase="https://github.com/danielvsantos/bijoyai/tree/main/apps/docs"
       footer={
         <Footer>
           <span className="text-sm" style={{ color: 'hsl(260 6% 61%)' }}>
-            {new Date().getFullYear()} Bliss. Open-source under MIT
+            {new Date().getFullYear()} Bijoy.ai. Open-source under MIT
             License.
           </span>
         </Footer>

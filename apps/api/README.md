@@ -1,12 +1,12 @@
-# Bliss API
+# Bijoy.ai API
 
-This is the central API layer for the Bliss platform. It serves as the backend-for-frontend (BFF) for the `bliss-frontend` application, handling user authentication, data querying, and acting as the primary gateway to the `bliss-backend-service`.
+This is the central API layer for the Bijoy.ai platform. It serves as the backend-for-frontend (BFF) for the `bijoyai-frontend` application, handling user authentication, data querying, and acting as the primary gateway to the `bijoyai-backend-service`.
 
 ## Core Purpose
 
 -   **Authentication & Authorization**: Manages user sign-up, sign-in, and session management using JWT. Sessions are transported via an HttpOnly cookie (never exposed in response bodies or URL parameters). A Redis-backed token denylist enables immediate server-side revocation on sign-out. Role-based access control (`admin` / `member`) enforces tenant ownership rules on sensitive endpoints. It provides a secure and robust identity layer for the entire platform.
 -   **Data API**: Provides a rich set of RESTful endpoints for all Create, Read, Update, and Delete (CRUD) operations on core entities like Accounts, Transactions, Categories, and Tags.
--   **Gateway to Backend**: Acts as an intelligent gateway to the backend worker service. It exposes endpoints that, when called, dispatch events and jobs to the `bliss-backend-service` for complex asynchronous processing.
+-   **Gateway to Backend**: Acts as an intelligent gateway to the backend worker service. It exposes endpoints that, when called, dispatch events and jobs to the `bijoyai-backend-service` for complex asynchronous processing.
 -   **Real-time Enrichment**: For certain high-priority endpoints (like the main portfolio view), it enriches data with real-time information (e.g., fetching live stock/fund prices via Twelve Data) before sending it to the client, ensuring the user always sees the most up-to-date information.
 -   **Ticker Resolution**: Provides a ticker search endpoint (`GET /api/ticker/search`) that proxies to the backend's Twelve Data integration for all asset types (stocks, funds, and crypto). When `?type=crypto`, results are filtered and deduplicated for digital currency symbols. Enables autocomplete-style symbol search with ISIN, exchange, and currency resolution for EU-market assets. Ticker values are validated to contain at least one letter (`/[a-zA-Z]/`) across all paths.
 -   **Portfolio Currency**: Supports tenant-configurable portfolio display currency via `GET/PUT /api/tenants/settings`. Portfolio items and history endpoints return values in both USD and the tenant's chosen currency, with on-the-fly conversion using stored currency rates.
@@ -94,14 +94,14 @@ Admins may promote/demote other users via `PUT /api/users?id={id}` by including 
 | Variable | Description |
 |----------|-------------|
 | `JWT_SECRET_CURRENT` (or `JWT_SECRET`) | JWT signing secret. Startup validation rejects fallback/default values. `JWT_SECRET_CURRENT` takes precedence; `JWT_SECRET` is accepted as a legacy alias. |
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bliss`). |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bijoyai`). |
 
 ### Optional
 
 | Variable | Description |
 |----------|-------------|
 | `JWT_SECRET_PREVIOUS` | Previous JWT secret, enabling rolling token rotation. Tokens signed with the previous secret remain valid until they expire naturally. |
-| `INTERNAL_API_KEY` | API key for authenticated communication with `bliss-backend-service` (event dispatch, feedback, similar-search). |
+| `INTERNAL_API_KEY` | API key for authenticated communication with `bijoyai-backend-service` (event dispatch, feedback, similar-search). |
 | `BACKEND_URL` | URL of the backend service (default: `http://localhost:3001`). |
 | `REDIS_URL` | Redis connection string for the JWT token denylist. If unset, server-side revocation is disabled (see [JWT Token Denylist](#jwt-token-denylist-server-side-revocation)). |
 | `SENTRY_DSN` | Sentry DSN for error tracking and observability. |
@@ -139,12 +139,12 @@ The API will now be running at `http://localhost:3000`.
 | Suite | Command | Runner | Tests |
 |-------|---------|--------|-------|
 | Unit | `npm run test:unit` | Vitest | ~20 |
-| Integration | `npm run test:integration` | Vitest | requires `bliss_test` DB |
+| Integration | `npm run test:integration` | Vitest | requires `bijoyai_test` DB |
 | Coverage | `npm run test:coverage` | Vitest v8 | 70% line/fn threshold |
 
-Unit tests are fully mocked — no database or network required. Integration tests invoke Next.js API handlers directly with factory-built `req`/`res` objects and a real `bliss_test` Postgres database.
+Unit tests are fully mocked — no database or network required. Integration tests invoke Next.js API handlers directly with factory-built `req`/`res` objects and a real `bijoyai_test` Postgres database.
 
-**Setup for integration tests**: configure `.env.test` with `DATABASE_URL` pointing to `bliss_test`, then run `npx prisma migrate deploy` once against that database.
+**Setup for integration tests**: configure `.env.test` with `DATABASE_URL` pointing to `bijoyai_test`, then run `npx prisma migrate deploy` once against that database.
 
 Test files live under `__tests__/unit/` (Vitest, all deps mocked) and `__tests__/integration/` (real Prisma, mocked rate limiters and Redis).
 

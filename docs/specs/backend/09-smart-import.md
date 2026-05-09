@@ -4,7 +4,7 @@
 
 The Smart Import pipeline provides an intelligent, adapter-driven import flow for CSV and XLSX/XLS files. It is designed to handle the variety of export formats produced by different banks and financial institutions, deduplicating against existing transactions and classifying each row via the AI pipeline before presenting results for user review.
 
-Smart import uses its own queue (`smart-import`), worker (`smartImportWorker.js`), staging tables (`StagedImport`, `StagedImportRow`), and API (`/api/imports/*`). The "Bliss Native CSV" global system adapter (`matchSignature.isNative: true`) enables direct CSV import without AI classification — it resolves account and category by name or ID from CSV columns and auto-confirms fully-resolved rows.
+Smart import uses its own queue (`smart-import`), worker (`smartImportWorker.js`), staging tables (`StagedImport`, `StagedImportRow`), and API (`/api/imports/*`). The "Bijoy.ai Native CSV" global system adapter (`matchSignature.isNative: true`) enables direct CSV import without AI classification — it resolves account and category by name or ID from CSV columns and auto-confirms fully-resolved rows.
 
 ---
 
@@ -238,9 +238,9 @@ If the worker throws at any point:
 
 ---
 
-## 9.7. Bliss Native CSV Adapter
+## 9.7. Bijoy.ai Native CSV Adapter
 
-The "Bliss Native CSV" system adapter (`matchSignature.isNative: true`, `tenantId: null`) provides a direct, non-AI import path through the Smart Import pipeline. It is seeded via `migrations/20260228120000_seed_bliss_native_adapter`.
+The "Bijoy.ai Native CSV" system adapter (`matchSignature.isNative: true`, `tenantId: null`) provides a direct, non-AI import path through the Smart Import pipeline. It is seeded via `migrations/20260228120000_seed_bijoyai_native_adapter`.
 
 **Key behaviour differences from bank-format adapters:**
 - AI classification is **bypassed** — `account` and `category` columns are resolved by name or numeric ID using tenant-scoped lookup maps.
@@ -282,17 +282,17 @@ If no candidates are found or the API call fails, `isin`/`exchange`/`assetCurren
 | `assetprice` | — | Price per unit at transaction date |
 | `tags` | — | Comma-separated tag names (e.g. `Japan 2026, Business`) |
 
-A downloadable template is available at `/templates/bliss-native-template.csv`.
+A downloadable template is available at `/templates/bijoyai-native-template.csv`.
 
 ---
 
 ## 9.8. CSV Update Pipeline — Overview
 
-The Smart Import pipeline supports **updating existing transactions** via CSV round-trip. Users export transactions as a Bliss Native CSV (with a pre-populated `id` column), edit the file in a spreadsheet, and re-import it. Rows with a valid `id` update the existing transaction; rows without an `id` create new transactions (existing behaviour).
+The Smart Import pipeline supports **updating existing transactions** via CSV round-trip. Users export transactions as a Bijoy.ai Native CSV (with a pre-populated `id` column), edit the file in a spreadsheet, and re-import it. Rows with a valid `id` update the existing transaction; rows without an `id` create new transactions (existing behaviour).
 
-The export endpoint (`apps/api/pages/api/transactions/export.js`) produces a CSV in the exact Bliss Native format, including the transaction `id` and all editable fields. This creates a full round-trip: Export → Edit → Re-import → Review → Commit.
+The export endpoint (`apps/api/pages/api/transactions/export.js`) produces a CSV in the exact Bijoy.ai Native format, including the transaction `id` and all editable fields. This creates a full round-trip: Export → Edit → Re-import → Review → Commit.
 
-The Bliss Native CSV adapter gains one new optional column:
+The Bijoy.ai Native CSV adapter gains one new optional column:
 
 | Column | Required | Description |
 |--------|----------|-------------|

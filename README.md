@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/api/assets/logoblissgh.png" alt="Bliss" width="400" />
+  <img src="apps/api/assets/logobijoyaigh.png" alt="Bijoy.ai" width="400" />
 </p>
 <p align="center">
   <strong>Self-Hosted Personal Finance for Global Citizens.</strong><br>
@@ -9,9 +9,9 @@
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> &bull;
-  <a href="https://blissfinance.co/docs">Documentation</a> &bull;
-  <a href="https://app.blissfinance.co/auth?origin=docs-site">Live Demo</a> &bull;
-  <a href="https://blissfinance.co/docs/architecture">Architecture</a> &bull;
+  <a href="https://bijoy.ai/docs">Documentation</a> &bull;
+  <a href="https://app.bijoy.ai/auth?origin=docs-site">Live Demo</a> &bull;
+  <a href="https://bijoy.ai/docs/architecture">Architecture</a> &bull;
   <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
@@ -23,19 +23,19 @@
 </p>
 
 <p align="center">
-  <img src="https://blissfinance.co/images/dashboard.png" alt="Bliss — Dashboard with net worth, synced accounts, expense breakdown, and quick actions" width="49%" />
-  <img src="https://blissfinance.co/images/portfolio.png" alt="Bliss — Portfolio Holdings with stacked area chart, multi-asset breakdown, and real-time pricing" width="49%" />
+  <img src="https://bijoy.ai/images/dashboard.png" alt="Bijoy.ai — Dashboard with net worth, synced accounts, expense breakdown, and quick actions" width="49%" />
+  <img src="https://bijoy.ai/images/portfolio.png" alt="Bijoy.ai — Portfolio Holdings with stacked area chart, multi-asset breakdown, and real-time pricing" width="49%" />
 </p>
 
 ---
 
-## Why Bliss?
+## Why Bijoy.ai?
 
 Most financial tools force you to trade privacy for convenience. If your financial footprint spans multiple countries, currencies, and asset classes, you're usually handing your most sensitive data to a third-party SaaS — or stitching it together in spreadsheets.
 
-**Bliss is the open-source alternative.** A single, self-hostable dashboard that unifies bank accounts, investment portfolios, expense tracking, and P&L reporting across borders. Everything runs on your infrastructure, classified by AI, normalized to your chosen currency, and encrypted at rest.
+**Bijoy.ai is the open-source alternative.** A single, self-hostable dashboard that unifies bank accounts, investment portfolios, expense tracking, and P&L reporting across borders. Everything runs on your infrastructure, classified by AI, normalized to your chosen currency, and encrypted at rest.
 
-> Built with [Spec-Driven Development](https://blissfinance.co/docs/specifications) — every feature was documented in detailed technical specs before a line of code was written.
+> Built with [Spec-Driven Development](https://bijoy.ai/docs/specifications) — every feature was documented in detailed technical specs before a line of code was written.
 
 ---
 
@@ -60,7 +60,7 @@ Every correction feeds the loop immediately — your override updates the in-mem
 
 Adapter-driven ingestion for any bank's export format:
 
-1. **Adapter auto-detection** — Upload a CSV and Bliss identifies the format by matching column headers
+1. **Adapter auto-detection** — Upload a CSV and Bijoy.ai identifies the format by matching column headers
 2. **Custom adapter builder** — Define column mappings for any bank format via a TypeScript interface
 3. **AI classification** — Every imported row goes through the same 4-tier classification engine
 4. **Investment enrichment** — Automatically detects stock/crypto transactions and fetches current prices
@@ -82,7 +82,7 @@ Each tier is calendar-gated and runs a data-completeness check before generation
 
 #### Multi-Currency, Multi-Country P&L
 
-Your personal income statement, across borders and currencies. Bliss organizes finances like a corporate P&L — Income flows through Essentials, Lifestyle, and Growth spending to produce Gross Profit, Operating Profit, and Net Profit.
+Your personal income statement, across borders and currencies. Bijoy.ai organizes finances like a corporate P&L — Income flows through Essentials, Lifestyle, and Growth spending to produce Gross Profit, Operating Profit, and Net Profit.
 
 - **115+ pre-built categories across 9 types** — A ready-made chart of accounts so classification works from day one
 - **Automatic currency normalization** — Every transaction converted to your display currency using historical FX rates from the transaction date
@@ -156,7 +156,7 @@ Three services. Ten asynchronous workers. Sixty endpoints. One configuration fil
                 └─► Ops: Sentry (Observability)
 ```
 
-See the full [Architecture Documentation](https://blissfinance.co/docs/architecture) for the deep dive.
+See the full [Architecture Documentation](https://bijoy.ai/docs/architecture) for the deep dive.
 
 ---
 
@@ -167,7 +167,7 @@ See the full [Architecture Documentation](https://blissfinance.co/docs/architect
 Three commands to a running instance:
 
 ```bash
-git clone https://github.com/danielvsantos/bliss.git && cd bliss
+git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
 ./scripts/setup.sh        # generates secrets, creates .env
 docker compose up --build  # starts all services
 ```
@@ -179,7 +179,7 @@ Open **http://localhost:8080** and create your account. The database is automati
 Prerequisites: Node.js 20+, pnpm 9+, PostgreSQL 16 with pgvector, Redis 7+
 
 ```bash
-git clone https://github.com/danielvsantos/bliss.git && cd bliss
+git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
 cp .env.example .env       # edit DATABASE_URL and REDIS_URL for your local setup
 ./scripts/setup.sh          # generates secrets (skip if you already have .env)
 pnpm install                # installs all workspace dependencies
@@ -192,14 +192,14 @@ pnpm dev                    # starts all three services in parallel
 - API: http://localhost:3000
 - Backend: http://localhost:3001
 
-See the [Guides](https://blissfinance.co/docs/guides) for detailed setup instructions.
+See the [Guides](https://bijoy.ai/docs/guides) for detailed setup instructions.
 
 ### Develop with Claude Code
 
-Bliss ships with carefully crafted [`CLAUDE.md`](CLAUDE.md) files that give AI assistants full context on the architecture, conventions, and subsystems. Combined with 43 technical specification files and 19 OpenAPI YAML definitions, the repo is designed for AI coding agents to onboard instantly. If you use [Claude Code](https://claude.ai/code), just open the repo and start working -- it already knows the codebase.
+Bijoy.ai ships with carefully crafted [`CLAUDE.md`](CLAUDE.md) files that give AI assistants full context on the architecture, conventions, and subsystems. Combined with 43 technical specification files and 19 OpenAPI YAML definitions, the repo is designed for AI coding agents to onboard instantly. If you use [Claude Code](https://claude.ai/code), just open the repo and start working -- it already knows the codebase.
 
 ```bash
-cd bliss
+cd bijoyai
 claude   # Claude Code automatically loads the project context
 ```
 
@@ -231,7 +231,7 @@ Claude Code loads the root file everywhere, plus the app-specific file when you'
 
 ## Optional Integrations
 
-Bliss works out of the box with just a database. Enable additional features by adding API keys:
+Bijoy.ai works out of the box with just a database. Enable additional features by adding API keys:
 
 | Feature | Provider | Env Var | What it unlocks |
 |---------|----------|---------|----------------|
@@ -241,7 +241,7 @@ Bliss works out of the box with just a database. Enable additional features by a
 | Currency rates | [CurrencyLayer](https://currencylayer.com) | `CURRENCYLAYER_API_KEY` | Live and historical FX rates for multi-currency conversion |
 | Error tracking | [Sentry](https://sentry.io) | `SENTRY_DSN` | Production error monitoring and performance tracing |
 
-Without these keys, Bliss still provides full manual transaction management, CSV import (with rule-based classification), and portfolio management with manual valuations.
+Without these keys, Bijoy.ai still provides full manual transaction management, CSV import (with rule-based classification), and portfolio management with manual valuations.
 
 ---
 
@@ -268,7 +268,7 @@ Without these keys, Bliss still provides full manual transaction management, CSV
 ## Project Structure
 
 ```
-bliss/
+bijoyai/
 ├── apps/
 │   ├── api/          # Next.js API layer (auth, REST, Prisma)
 │   ├── backend/      # Express + BullMQ workers (AI, portfolio, sync)
@@ -299,7 +299,7 @@ pnpm test:web          # 219 tests (Vitest + MSW) — hooks, pages, components, 
 
 ## Configuration
 
-All environment variables are documented in [`.env.example`](.env.example) and explained in detail in the [Configuration Reference](https://blissfinance.co/docs/configuration).
+All environment variables are documented in [`.env.example`](.env.example) and explained in detail in the [Configuration Reference](https://bijoy.ai/docs/configuration).
 
 The single root `.env` file is the source of truth for local development. Docker Compose reads from it automatically. For production, each deployment platform (Vercel, Cloud Run) manages its own environment variables.
 

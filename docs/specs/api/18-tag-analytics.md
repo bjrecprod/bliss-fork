@@ -4,7 +4,7 @@ This document specifies the Tag Analytics API endpoint and related schema change
 
 ## 18.1. Overview
 
-Tags in Bliss are cross-cutting labels that span categories, accounts, and currencies. A single tag (e.g., "Japan 2026") can collect transactions across flights (USD), hotels (JPY), food (JPY), and souvenirs (JPY) — no single category or account captures the full picture.
+Tags in Bijoy.ai are cross-cutting labels that span categories, accounts, and currencies. A single tag (e.g., "Japan 2026") can collect transactions across flights (USD), hotels (JPY), food (JPY), and souvenirs (JPY) — no single category or account captures the full picture.
 
 Tag Analytics provides pre-aggregated, per-category financial data for tagged transactions via the `TagAnalyticsCacheMonthly` table, queried through a dedicated API endpoint.
 

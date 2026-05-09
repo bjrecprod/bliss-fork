@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
-const { createStorageAdapter } = require('@bliss/shared/storage');
+const { createStorageAdapter } = require('@bijoyai/shared/storage');
 const prisma = require('../../prisma/prisma');
 const logger = require('../utils/logger');
 const { getRedisConnection } = require('../utils/redis');
@@ -246,7 +246,7 @@ const processSmartImportJob = async (job) => {
 
     const ext = path.extname(fileStorageKey).toLowerCase().replace('.', '') || 'csv';
     const fileType = (ext === 'xlsx' || ext === 'xls') ? ext : 'csv';
-    const tempFilePath = path.join(os.tmpdir(), `bliss-smart-import-${uuidv4()}.${ext}`);
+    const tempFilePath = path.join(os.tmpdir(), `bijoyai-smart-import-${uuidv4()}.${ext}`);
 
     try {
         // ── Step 1: Download file from storage ─────────────────────────────────────

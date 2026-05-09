@@ -41,7 +41,7 @@ describe('validateEnv', () => {
 
   /** Sets all required env vars to valid values */
   function setAllRequired() {
-    process.env.DATABASE_URL = 'postgresql://localhost:5432/bliss';
+    process.env.DATABASE_URL = 'postgresql://localhost:5432/bijoyai';
     process.env.JWT_SECRET_CURRENT = 'a-real-secret-key-for-testing';
     process.env.ENCRYPTION_SECRET = 'test-secret-that-is-exactly-32-by';
     process.env.INTERNAL_API_KEY = 'a-real-internal-api-key';

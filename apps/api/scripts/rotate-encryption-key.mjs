@@ -188,7 +188,7 @@ async function main() {
   const oldFp = crypto.createHash('sha256').update(OLD_SECRET).digest('hex').slice(0, 16);
 
   console.log('╔══════════════════════════════════════════════════╗');
-  console.log('║     Bliss — Encryption Key Rotation Migration    ║');
+  console.log('║     Bijoy.ai — Encryption Key Rotation Migration    ║');
   console.log('╚══════════════════════════════════════════════════╝');
   if (DRY_RUN) {
     console.log('[DRY RUN] No changes will be written to the database.\n');
@@ -298,7 +298,7 @@ async function main() {
     console.log('  1. Verify that the application reads and writes data correctly');
     console.log('  2. Remove ENCRYPTION_SECRET_PREVIOUS from all environment configs');
     console.log('     (Vercel, Railway, or wherever your services are hosted)');
-    console.log('  3. Restart both bliss-finance-api and bliss-backend-service');
+    console.log('  3. Restart both bijoyai-api and bijoyai-backend-service');
 
   } finally {
     await prisma.$disconnect();

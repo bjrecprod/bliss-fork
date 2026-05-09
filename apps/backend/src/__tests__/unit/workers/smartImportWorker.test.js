@@ -12,7 +12,7 @@ jest.mock('@sentry/node', () => ({
 
 jest.mock('../../../../prisma/prisma', () => ({}));
 
-jest.mock('@bliss/shared/storage', () => ({
+jest.mock('@bijoyai/shared/storage', () => ({
   createStorageAdapter: jest.fn(),
 }));
 

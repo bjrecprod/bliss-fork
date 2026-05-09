@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Currency Rates
+  title: Bijoy.ai API Layer - Currency Rates
   version: 1.0.0
 
 components:

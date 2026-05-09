@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Ticker Search
+  title: Bijoy.ai API Layer - Ticker Search
   version: 1.0.0
   description: >
     Ticker symbol search and profile resolution. All searches route to Twelve Data.

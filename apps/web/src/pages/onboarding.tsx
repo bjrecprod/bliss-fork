@@ -190,7 +190,7 @@ export default function OnboardingPage() {
               >
                 <motion.div className="text-center mb-4" variants={itemVariants}>
                   <h2 className="text-3xl font-bold mb-2">
-                    {t("Welcome to")} <span className="text-brand-primary">bliss</span>
+                    {t("Welcome to")} <span className="text-brand-primary">bijoy.ai</span>
                   </h2>
                   <div className="min-h-8">
                     <TypeAnimation

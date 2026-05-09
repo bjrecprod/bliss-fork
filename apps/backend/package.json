@@ -1,7 +1,7 @@
 {
-  "name": "@bliss/backend",
+  "name": "@bijoyai/backend",
   "version": "1.0.0",
-  "description": "Bliss backend service with Express, Prisma, Redis, and BullMQ",
+  "description": "Bijoy.ai backend service with Express, Prisma, Redis, and BullMQ",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -18,7 +18,7 @@
     "prisma:studio": "prisma studio --schema=../../prisma/schema.prisma"
   },
   "dependencies": {
-    "@bliss/shared": "workspace:*",
+    "@bijoyai/shared": "workspace:*",
     "@bull-board/api": "^5.18.0",
     "@google-cloud/storage": "^7.19.0",
     "@google/generative-ai": "^0.24.1",

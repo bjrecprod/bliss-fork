@@ -14,7 +14,7 @@ export function CapybaraIllustration({
   className = "",
   showCaption = true,
   caption = "All calm, nothing here.",
-  subcaption = "Navigate from the sidebar to explore your bliss dashboard.",
+  subcaption = "Navigate from the sidebar to explore your bijoy.ai dashboard.",
 }: CapybaraIllustrationProps) {
   return (
     <div
@@ -27,7 +27,7 @@ export function CapybaraIllustration({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ overflow: "visible" }}
-        aria-label="Bliss mascot capybara illustration"
+        aria-label="Bijoy.ai mascot capybara illustration"
         role="img"
       >
         {/* ── Ambient decorations ─────────────────────── */}
@@ -223,7 +223,7 @@ export function CapybaraIllustration({
           stroke="#9A95A4" strokeWidth="1.25" strokeLinecap="round" opacity="0.5"
         />
 
-        {/* ── Floating "bliss" decorations ─────────────── */}
+        {/* ── Floating "bijoy.ai" decorations ─────────────── */}
 
         {/* Zzz floats above head */}
         <text

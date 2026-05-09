@@ -1,6 +1,6 @@
 # Importing Transactions
 
-Bliss supports CSV and XLSX imports with automatic format detection, AI classification, and deduplication.
+Bijoy.ai supports CSV and XLSX imports with automatic format detection, AI classification, and deduplication.
 
 ## The Smart Import flow
 
@@ -13,7 +13,7 @@ Bliss supports CSV and XLSX imports with automatic format detection, AI classifi
 
 ## File format detection
 
-Bliss matches your file's column headers against known adapter signatures. If a match is found, it auto-maps columns. If not, you create a custom adapter.
+Bijoy.ai matches your file's column headers against known adapter signatures. If a match is found, it auto-maps columns. If not, you create a custom adapter.
 
 ### Creating a custom adapter
 
@@ -29,9 +29,9 @@ Click **Import Adapters** on the import page to open the adapter manager. Define
 
 Adapters are saved per-tenant and reused automatically on future imports.
 
-## Bliss Native CSV format
+## Bijoy.ai Native CSV format
 
-For maximum control, prepare your data in the Bliss Native format. This bypasses adapter detection and supports all fields including investments and tags.
+For maximum control, prepare your data in the Bijoy.ai Native format. This bypasses adapter detection and supports all fields including investments and tags.
 
 **Required columns:**
 

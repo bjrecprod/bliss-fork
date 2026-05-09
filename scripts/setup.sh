@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bliss — local development setup
+# Bijoy.ai — local development setup
 # Generates secrets and creates .env from .env.example
 set -euo pipefail
 
@@ -31,7 +31,7 @@ sed -i.bak \
   -e "s|INTERNAL_API_KEY=replace-with-output-of-scripts-setup-sh|INTERNAL_API_KEY=$INTERNAL_API_KEY|" \
   -e "s|POSTGRES_PASSWORD=changeme|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|" \
   -e "s|REDIS_PASSWORD=changeme|REDIS_PASSWORD=$REDIS_PASSWORD|" \
-  -e "s|postgresql://bliss:changeme@|postgresql://bliss:$POSTGRES_PASSWORD@|" \
+  -e "s|postgresql://bijoyai:changeme@|postgresql://bijoyai:$POSTGRES_PASSWORD@|" \
   -e "s|redis://:changeme@|redis://:$REDIS_PASSWORD@|" \
   "$ENV_FILE"
 

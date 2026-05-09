@@ -1,12 +1,12 @@
-# Bliss -- Architecture
+# Bijoy.ai -- Architecture
 
 ## High-Level Overview
 
-Bliss is a self-hostable financial dashboard built as a monorepo with
+Bijoy.ai is a self-hostable financial dashboard built as a monorepo with
 three application services, one PostgreSQL database (with pgvector), and a Redis
 instance for job queues and caching.
 
-![Bliss Architecture](/images/blissarchitecture.svg)
+![Bijoy.ai Architecture](/images/bijoyaiarchitecture.svg)
 
 **Key properties:**
 
@@ -25,7 +25,7 @@ instance for job queues and caching.
 
 #### The Backend Runtime — Express.js
 
-> *"Bliss uses Express.js for the worker backend. While newer edge-frameworks offer faster micro-benchmarks, we deliberately chose a battle-tested, highly predictable runtime to orchestrate our financial ledgers and BullMQ queues. In personal finance, reliability is a feature, and saving two milliseconds on an HTTP route is meaningless when orchestrating deterministic P&L math and LLM pipelines. We spent our innovation tokens on pgvector and AI; we chose rock-solid stability for the server."*
+> *"Bijoy.ai uses Express.js for the worker backend. While newer edge-frameworks offer faster micro-benchmarks, we deliberately chose a battle-tested, highly predictable runtime to orchestrate our financial ledgers and BullMQ queues. In personal finance, reliability is a feature, and saving two milliseconds on an HTTP route is meaningless when orchestrating deterministic P&L math and LLM pipelines. We spent our innovation tokens on pgvector and AI; we chose rock-solid stability for the server."*
 
 #### Vector Search — pgvector over a Separate Vector DB
 
@@ -44,7 +44,7 @@ instance for job queues and caching.
 ## Monorepo Structure
 
 ```
-bliss/
+bijoyai/
 |
 +-- apps/
 |   +-- api/            Next.js Pages Router (ESM, "type": "module")
@@ -260,7 +260,7 @@ database. This is handled transparently by Prisma middleware:
 | Account     | accountNumber                   | No         |
 | PlaidItem   | accessToken                     | No         |
 
-- Encryption uses `@bliss/shared/encryption`, which reads `ENCRYPTION_SECRET`
+- Encryption uses `@bijoyai/shared/encryption`, which reads `ENCRYPTION_SECRET`
   from the environment.
 - Dual-key rotation is supported: if `ENCRYPTION_SECRET_PREVIOUS` is set,
   reads attempt decryption with the new key first, then fall back to the
@@ -474,7 +474,7 @@ services:
 
 ### Isolation Model
 
-Bliss uses **query-level tenant isolation** (shared database, shared schema):
+Bijoy.ai uses **query-level tenant isolation** (shared database, shared schema):
 
 ```
   Request arrives

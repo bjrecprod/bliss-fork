@@ -1,6 +1,6 @@
-# Bliss
+# Bijoy.ai
 
-Bliss is a multi-tenant personal finance platform. It ingests bank transactions (Plaid or CSV), classifies them with a 4-tier AI pipeline, tracks investment portfolios with real-time pricing, and generates AI-powered financial insights.
+Bijoy.ai is a multi-tenant personal finance platform. It ingests bank transactions (Plaid or CSV), classifies them with a 4-tier AI pipeline, tracks investment portfolios with real-time pricing, and generates AI-powered financial insights.
 
 ## Architecture overview
 
@@ -62,7 +62,7 @@ Use BullMQ queues for any CPU-intensive or long-running operation. API routes sh
 
 ### Encryption
 
-Sensitive fields (transaction descriptions, account numbers, Plaid access tokens) are encrypted at rest with AES-256-GCM. Prisma middleware handles encrypt/decrypt transparently. The `@bliss/shared` encryption module is the single implementation.
+Sensitive fields (transaction descriptions, account numbers, Plaid access tokens) are encrypted at rest with AES-256-GCM. Prisma middleware handles encrypt/decrypt transparently. The `@bijoyai/shared` encryption module is the single implementation.
 
 ## Quick start
 
@@ -75,7 +75,7 @@ docker compose up --build   # postgres, redis, api, backend, web
 cp .env.example .env
 ./scripts/setup.sh
 pnpm install
-createdb bliss && psql bliss -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+createdb bijoyai && psql bijoyai -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 pnpm exec prisma migrate deploy --schema=prisma/schema.prisma
 pnpm exec prisma db seed
 pnpm dev                    # starts all 3 services
@@ -101,7 +101,7 @@ Coverage thresholds: 70% lines, 70% functions, 60% branches.
 ## Project structure
 
 ```
-bliss/
+bijoyai/
   apps/
     api/                  # Next.js API + auth
       pages/api/          # Route handlers (auth, accounts, transactions, plaid, portfolio, ...)
@@ -174,7 +174,7 @@ Adapter-driven pipeline: detect format -> stage rows -> AI classify -> user revi
 
 - Adapters matched by header intersection against `matchSignature`
 - Deduplication via SHA-256 hash of `(date + description + amount + accountId)`
-- Bliss Native CSV adapter enables direct import without AI classification
+- Bijoy.ai Native CSV adapter enables direct import without AI classification
 - Batch commit (200 rows/batch) with tag resolution via `resolveTagsByName()`
 
 ### Plaid integration

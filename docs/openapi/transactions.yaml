@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Transactions
+  title: Bijoy.ai API Layer - Transactions
   version: 1.0.0
   description: API for managing financial transactions.
 

@@ -4,7 +4,7 @@ import prisma from '../prisma/prisma.js';
 /**
  * Compute a deterministic SHA-256 hash for duplicate detection.
  * Must produce identical results to the backend-service version in
- * bliss-backend-service/src/utils/transactionHash.js
+ * bijoyai-backend-service/src/utils/transactionHash.js
  *
  * @param {Date|string} date     — Transaction date
  * @param {string}      description — Raw transaction description

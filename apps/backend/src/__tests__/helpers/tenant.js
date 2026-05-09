@@ -1,7 +1,7 @@
 /**
  * Integration test helpers — tenant lifecycle management.
  *
- * Creates an isolated Tenant (and optionally a User) in the bliss_test database
+ * Creates an isolated Tenant (and optionally a User) in the bijoyai_test database
  * for use in integration tests. Teardown handles non-cascading relations before
  * deleting the Tenant (which cascades to Category, Account, Transaction, etc.).
  */
@@ -9,7 +9,7 @@
 const prisma = require('../../../prisma/prisma');
 
 /**
- * Creates an isolated Tenant record in bliss_test.
+ * Creates an isolated Tenant record in bijoyai_test.
  *
  * @param {Object} [opts]
  * @param {string} [opts.suffix] - Optional suffix added to the tenant name (e.g. 'feedback', 'events')

@@ -46,7 +46,7 @@ export default function HomePage() {
               textDecoration: 'none',
             }}
           >
-            bliss
+            bijoy.ai
           </Link>
 
           {/* Desktop nav */}
@@ -58,7 +58,7 @@ export default function HomePage() {
               API Reference
             </Link>
             <a
-              href="https://app.blissfinance.co/auth?origin=docs-site"
+              href="https://app.bijoy.ai/auth?origin=docs-site"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-[#2A2631]"
@@ -67,7 +67,7 @@ export default function HomePage() {
               Live Demo
             </a>
             <a
-              href="https://github.com/danielvsantos/bliss"
+              href="https://github.com/danielvsantos/bijoyai"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-[#6D657A]"
@@ -95,8 +95,8 @@ export default function HomePage() {
           <div className="md:hidden px-6 pb-4 flex flex-col gap-3" style={{ borderBottom: '1px solid #E2E8F0' }}>
             <Link href="/docs" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>Documentation</Link>
             <Link href="/docs/api-reference" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>API Reference</Link>
-            <a href="https://app.blissfinance.co/auth?origin=docs-site" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#6D657A' }}>Live Demo</a>
-            <a href="https://github.com/danielvsantos/bliss" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
+            <a href="https://app.bijoy.ai/auth?origin=docs-site" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#6D657A' }}>Live Demo</a>
+            <a href="https://github.com/danielvsantos/bijoyai" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
           </div>
         )}
       </nav>
@@ -131,7 +131,7 @@ export default function HomePage() {
                   Get Started
                 </Link>
                 <a
-                  href="https://github.com/danielvsantos/bliss"
+                  href="https://github.com/danielvsantos/bijoyai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-colors hover:bg-gray-50"
@@ -141,7 +141,7 @@ export default function HomePage() {
                   GitHub
                 </a>
                 <a
-                  href="https://app.blissfinance.co/auth?origin=docs-site"
+                  href="https://app.bijoy.ai/auth?origin=docs-site"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl font-semibold text-sm transition-colors hover:bg-gray-50"
@@ -157,7 +157,7 @@ export default function HomePage() {
             <div className="flex-shrink-0 w-64 md:w-72">
               <Image
                 src="/images/auth-mascot.png"
-                alt="Bliss capybara mascot in a turtleneck, seated in a mid-century chair beside currency coins"
+                alt="Bijoy.ai capybara mascot in a turtleneck, seated in a mid-century chair beside currency coins"
                 width={400}
                 height={400}
                 className="w-full h-auto"
@@ -191,8 +191,8 @@ export default function HomePage() {
           <div className="hidden lg:block glass-card p-3 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
             <div className="mx-auto" style={{ maxWidth: 1200 }}>
               <Image
-                src="/images/blissarchitecture.svg"
-                alt="Bliss architecture: Nginx entrypoint routing to React SPA, Next.js API, and Express backend with 8 BullMQ workers, PostgreSQL with pgvector, Redis, and third-party integrations"
+                src="/images/bijoyaiarchitecture.svg"
+                alt="Bijoy.ai architecture: Nginx entrypoint routing to React SPA, Next.js API, and Express backend with 8 BullMQ workers, PostgreSQL with pgvector, Redis, and third-party integrations"
                 width={1200}
                 height={700}
                 className="w-full h-auto"
@@ -418,7 +418,7 @@ export default function HomePage() {
               >
                 Plaid setup guide <ArrowRight />
               </Link>
-              {/* Icon lockup: Plaid → arrow → Bliss */}
+              {/* Icon lockup: Plaid → arrow → Bijoy.ai */}
               <div className="mt-auto flex items-center justify-center gap-6 py-6" style={{ backgroundColor: 'hsl(var(--muted))', borderRadius: '12px' }}>
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center" style={{ border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -434,9 +434,9 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center" style={{ border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: '0.875rem', fontWeight: 600, color: '#6D657A', letterSpacing: '-0.03em' }}>bliss</span>
+                    <span style={{ fontFamily: "'Urbanist', sans-serif", fontSize: '0.875rem', fontWeight: 600, color: '#6D657A', letterSpacing: '-0.03em' }}>bijoy.ai</span>
                   </div>
-                  <span className="text-[10px] font-medium" style={{ color: '#5A5266' }}>Bliss</span>
+                  <span className="text-[10px] font-medium" style={{ color: '#5A5266' }}>Bijoy.ai</span>
                 </div>
               </div>
             </div>
@@ -586,7 +586,7 @@ export default function HomePage() {
                   Deployment guide <ArrowRight />
                 </Link>
                 <a
-                  href="https://app.blissfinance.co/auth?origin=docs-site"
+                  href="https://app.bijoy.ai/auth?origin=docs-site"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs font-medium transition-colors hover:text-[#3A3542]"
@@ -648,7 +648,7 @@ export default function HomePage() {
             Engineered for AI Coding Agents.
           </h2>
           <p className="text-base leading-relaxed mb-12 max-w-3xl" style={{ color: '#5A5266' }}>
-            Bliss is built with strict Spec-Driven Development. Every repository includes embedded context files,
+            Bijoy.ai is built with strict Spec-Driven Development. Every repository includes embedded context files,
             allowing tools like Claude Code or GitHub Copilot to onboard instantly and start shipping features safely.
           </p>
 
@@ -738,7 +738,7 @@ export default function HomePage() {
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF5F56' }} />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFBD2E' }} />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#27C93F' }} />
-                  <span className="ml-3 text-xs" style={{ color: '#888' }}>~/bliss</span>
+                  <span className="ml-3 text-xs" style={{ color: '#888' }}>~/bijoyai</span>
                 </div>
                 <div className="p-5 overflow-x-auto">
                   <pre className="text-xs leading-relaxed font-mono" style={{ color: '#D4D4D4' }}>
@@ -754,7 +754,7 @@ export default function HomePage() {
 
 `}<span style={{ color: '#27C93F' }}>{'>'}</span>{` Context loaded. `}<span style={{ color: '#6D657A' }}>5 files</span>{`, `}<span style={{ color: '#6D657A' }}>43 specs</span>{`, `}<span style={{ color: '#6D657A' }}>1,178 tests</span>{`
 
-`}<span style={{ color: '#FFBD2E' }}>{'$'}</span>{` How can I help with Bliss?`}
+`}<span style={{ color: '#FFBD2E' }}>{'$'}</span>{` How can I help with Bijoy.ai?`}
                   </pre>
                 </div>
               </div>
@@ -771,7 +771,7 @@ export default function HomePage() {
           </h2>
           <div className="flex flex-col items-center gap-4">
             <a
-              href="https://github.com/danielvsantos/bliss"
+              href="https://github.com/danielvsantos/bijoyai"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-colors hover:bg-[#2A2631]"
@@ -795,11 +795,11 @@ export default function HomePage() {
       <footer className="py-10" style={{ borderTop: '1px solid #E2E8F0' }}>
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-sm" style={{ color: '#5A5266' }}>
-            {new Date().getFullYear()} Bliss. Open-source under AGPL-3.0 License.
+            {new Date().getFullYear()} Bijoy.ai. Open-source under AGPL-3.0 License.
           </span>
           <div className="flex items-center gap-6">
             <Link href="/docs" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>Docs</Link>
-            <a href="https://github.com/danielvsantos/bliss" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
+            <a href="https://github.com/danielvsantos/bijoyai" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
           </div>
         </div>
       </footer>

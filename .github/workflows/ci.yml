@@ -36,10 +36,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Run API unit tests
-        run: pnpm --filter @bliss/api test:unit
+        run: pnpm --filter @bijoyai/api test:unit
 
   # ─────────────────────────────────────────────────────────────────────────────
   # API: Integration Tests (Vitest + real Postgres)
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bliss_test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bijoyai_test
       ENCRYPTION_SECRET: ci-test-secret-exactly-32-bytes!!
       JWT_SECRET_CURRENT: ci-test-jwt-secret-for-integration
       NODE_ENV: test
@@ -66,7 +66,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bliss_test
+          POSTGRES_DB: bijoyai_test
         ports:
           - 5432:5432
         options: >-
@@ -91,16 +91,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Regenerate Prisma client with full engine
-        run: pnpm --filter @bliss/api exec prisma generate --schema=../../prisma/schema.prisma
+        run: pnpm --filter @bijoyai/api exec prisma generate --schema=../../prisma/schema.prisma
 
       - name: Apply database migrations
-        run: pnpm --filter @bliss/api exec prisma migrate deploy --schema=../../prisma/schema.prisma
+        run: pnpm --filter @bijoyai/api exec prisma migrate deploy --schema=../../prisma/schema.prisma
 
       - name: Run API integration tests
-        run: pnpm --filter @bliss/api test:integration
+        run: pnpm --filter @bijoyai/api test:integration
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Backend: Unit Tests (Jest, no infrastructure needed)
@@ -126,10 +126,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Run backend unit tests
-        run: pnpm --filter @bliss/backend test:unit
+        run: pnpm --filter @bijoyai/backend test:unit
         env:
           ENCRYPTION_SECRET: ci-test-secret-exactly-32-bytes!!
 
@@ -145,7 +145,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bliss_test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bijoyai_test
       REDIS_URL: redis://localhost:6379
       INTERNAL_API_KEY: ci-test-api-key-integration
       ENCRYPTION_SECRET: ci-test-secret-exactly-32-bytes!!
@@ -157,7 +157,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: bliss_test
+          POSTGRES_DB: bijoyai_test
         ports:
           - 5432:5432
         options: >-
@@ -192,16 +192,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Generate Prisma client
-        run: pnpm --filter @bliss/backend exec prisma generate --schema=../../prisma/schema.prisma
+        run: pnpm --filter @bijoyai/backend exec prisma generate --schema=../../prisma/schema.prisma
 
       - name: Push schema to test database
-        run: pnpm --filter @bliss/backend exec prisma db push --schema=../../prisma/schema.prisma --accept-data-loss
+        run: pnpm --filter @bijoyai/backend exec prisma db push --schema=../../prisma/schema.prisma --accept-data-loss
 
       - name: Run backend integration tests
-        run: pnpm --filter @bliss/backend test:integration
+        run: pnpm --filter @bijoyai/backend test:integration
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Web: Unit Tests (Vitest + jsdom + MSW, no infrastructure needed)
@@ -230,10 +230,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Run web unit tests
-        run: pnpm --filter @bliss/web test
+        run: pnpm --filter @bijoyai/web test
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Lint: ESLint across web and api (no infrastructure needed)
@@ -259,13 +259,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @bliss/shared build
+        run: pnpm --filter @bijoyai/shared build
 
       - name: Lint web
-        run: pnpm --filter @bliss/web lint
+        run: pnpm --filter @bijoyai/web lint
 
       - name: Lint API
-        run: pnpm --filter @bliss/api lint
+        run: pnpm --filter @bijoyai/api lint
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Docker: Build & Smoke Test

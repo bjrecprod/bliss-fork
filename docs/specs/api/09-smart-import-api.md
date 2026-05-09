@@ -56,7 +56,7 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 - **Purpose**: Accepts the file, stores it in GCS, creates a `StagedImport` record, and enqueues the background processing job.
 - **Body**: `multipart/form-data` with `file`, `accountId`, `adapterId`.
-  - `accountId` is **required** for all adapters except the Bliss Native adapter (`matchSignature.isNative: true`). Native adapters resolve the target account per-row from the CSV `account` column, so `accountId` is optional and may be omitted.
+  - `accountId` is **required** for all adapters except the Bijoy.ai Native adapter (`matchSignature.isNative: true`). Native adapters resolve the target account per-row from the CSV `account` column, so `accountId` is optional and may be omitted.
 - **Accepted file types**: `text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (XLSX), `application/vnd.ms-excel` (XLS). Any other MIME type returns `400` with `{ error: "Unsupported file type..." }`.
 - **Size limit**: 10 MB maximum. Exceeding this returns `400` with `{ error: "File exceeds maximum allowed size of 10 MB" }`.
 - **Workflow**:
@@ -191,14 +191,14 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 **GET** `/api/transactions/export`
 
-- **Purpose**: Exports the user's transactions as a downloadable Bliss Native CSV with the `id` column populated, enabling round-trip editing through re-import.
+- **Purpose**: Exports the user's transactions as a downloadable Bijoy.ai Native CSV with the `id` column populated, enabling round-trip editing through re-import.
 - **File**: `pages/api/transactions/export.js`
 - **Auth**: JWT.
 - **Query params**: Same filter set as `GET /api/transactions` — `startDate`, `endDate`, `accountId`, `categoryId`, `categoryGroup`, `type`, `tags`, `source`, `currencyCode`, `group`.
 - **No pagination**: All matching transactions are streamed as a single CSV response.
 - **Response headers**:
   - `Content-Type: text/csv; charset=utf-8`
-  - `Content-Disposition: attachment; filename="bliss-export-YYYY-MM-DD.csv"`
+  - `Content-Disposition: attachment; filename="bijoyai-export-YYYY-MM-DD.csv"`
 - **Response body**: UTF-8 CSV with BOM (`\uFEFF`) for Excel compatibility. Columns: `id`, `transactiondate`, `description`, `debit`, `credit`, `account`, `category`, `currency`, `details`, `ticker`, `assetquantity`, `assetprice`, `tags` (pipe-separated).
 - **Empty export**: Returns only the header row if no transactions match (no 404).
 - **Rate limit**: `transactions` limiter (same as `GET /api/transactions`).
@@ -209,7 +209,7 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 ## Update Support (CSV Round-Trip)
 
-When a Bliss Native CSV with an `id` column is re-imported, the Smart Import pipeline detects existing transactions and treats matching rows as updates rather than inserts. The following changes support this flow.
+When a Bijoy.ai Native CSV with an `id` column is re-imported, the Smart Import pipeline detects existing transactions and treats matching rows as updates rather than inserts. The following changes support this flow.
 
 ### Import Status — Additional Fields
 

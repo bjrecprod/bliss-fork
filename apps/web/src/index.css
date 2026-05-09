@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* ── Bliss Design Tokens ───────────────────────────── */
+    /* ── Bijoy.ai Design Tokens ───────────────────────────── */
     --font-size: 16px;
     --font-family-base: 'Urbanist', sans-serif;
 
@@ -239,7 +239,7 @@
 }
 
 /* ── Focus Ring Utility ─────────────────────────────── */
-.bliss-focus-ring:focus-visible {
+.bijoyai-focus-ring:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px hsl(var(--ring-offset)),

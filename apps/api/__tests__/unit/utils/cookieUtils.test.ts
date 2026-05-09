@@ -60,16 +60,16 @@ describe('cookieUtils', () => {
 
     it('includes Secure and Domain in production with COOKIE_DOMAIN', () => {
       process.env.NODE_ENV = 'production';
-      process.env.NEXTAUTH_URL = 'https://api.blissfinance.co';
-      process.env.FRONTEND_URL = 'https://app.blissfinance.co';
-      process.env.COOKIE_DOMAIN = '.blissfinance.co';
+      process.env.NEXTAUTH_URL = 'https://api.bijoy.ai';
+      process.env.FRONTEND_URL = 'https://app.bijoy.ai';
+      process.env.COOKIE_DOMAIN = '.bijoy.ai';
       const res = makeRes();
 
       setAuthCookie(res, 'prod-token');
 
       const cookie: string = res.setHeader.mock.calls[0][1];
       expect(cookie).toContain('Secure');
-      expect(cookie).toContain('Domain=.blissfinance.co');
+      expect(cookie).toContain('Domain=.bijoy.ai');
       expect(cookie).toContain('SameSite=None');
     });
 
@@ -88,7 +88,7 @@ describe('cookieUtils', () => {
 
     it('includes Secure in production same-origin HTTPS', () => {
       process.env.NODE_ENV = 'production';
-      process.env.NEXTAUTH_URL = 'https://api.blissfinance.co';
+      process.env.NEXTAUTH_URL = 'https://api.bijoy.ai';
       delete process.env.FRONTEND_URL;
       delete process.env.COOKIE_DOMAIN;
       const res = makeRes();
@@ -120,16 +120,16 @@ describe('cookieUtils', () => {
 
     it('matches cross-origin attributes when FRONTEND_URL differs from API', () => {
       process.env.NODE_ENV = 'production';
-      process.env.FRONTEND_URL = 'https://app.blissfinance.co';
-      process.env.NEXTAUTH_URL = 'https://api.blissfinance.co';
-      process.env.COOKIE_DOMAIN = '.blissfinance.co';
+      process.env.FRONTEND_URL = 'https://app.bijoy.ai';
+      process.env.NEXTAUTH_URL = 'https://api.bijoy.ai';
+      process.env.COOKIE_DOMAIN = '.bijoy.ai';
       const res = makeRes();
 
       clearAuthCookie(res);
 
       const cookie: string = res.setHeader.mock.calls[0][1];
       expect(cookie).toContain('Secure');
-      expect(cookie).toContain('Domain=.blissfinance.co');
+      expect(cookie).toContain('Domain=.bijoy.ai');
       expect(cookie).toContain('SameSite=None');
     });
   });
