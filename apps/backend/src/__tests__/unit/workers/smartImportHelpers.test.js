@@ -31,7 +31,7 @@ jest.mock('../../../utils/categoryCache', () => ({
 
 jest.mock('../../../../prisma/prisma', () => ({}));
 
-jest.mock('@bliss/shared/storage', () => ({
+jest.mock('@bijoyai/shared/storage', () => ({
   createStorageAdapter: jest.fn().mockReturnValue({
     uploadFile: jest.fn(),
     downloadFile: jest.fn(),

@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import formidable from 'formidable';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { createStorageAdapter } from '@bliss/shared/storage';
+import { createStorageAdapter } from '@bijoyai/shared/storage';
 import prisma from '../../../prisma/prisma.js';
 import { rateLimiters } from '../../../utils/rateLimit.js';
 import { cors } from '../../../utils/cors.js';

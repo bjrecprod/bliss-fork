@@ -23,10 +23,10 @@ ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x
 # Allow postinstall scripts so Prisma downloads its engine binary
 RUN pnpm install --frozen-lockfile
 
-# ─── Stage 2: Build @bliss/shared ────────────────────────────────────────────
+# ─── Stage 2: Build @bijoyai/shared ────────────────────────────────────────────
 FROM deps AS shared-build
 COPY packages/shared/src ./packages/shared/src
-RUN pnpm --filter @bliss/shared build
+RUN pnpm --filter @bijoyai/shared build
 
 # ─── Stage 3: Build backend + create prod deploy ────────────────────────────
 FROM shared-build AS builder
@@ -39,7 +39,7 @@ RUN pnpm exec prisma generate --schema=../../prisma/schema.prisma
 # This resolves workspace:* references, includes only prod deps, and creates
 # a self-contained directory with node_modules + app source.
 WORKDIR /app
-RUN pnpm deploy --prod --filter=@bliss/backend /prod/backend
+RUN pnpm deploy --prod --filter=@bijoyai/backend /prod/backend
 
 # Copy the properly-generated Prisma client from the workspace into the deploy output.
 # pnpm deploy's postinstall runs `prisma generate` but due to pnpm's symlink layout,
@@ -63,10 +63,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy pnpm deploy output (flat prod-only node_modules + app source)
 COPY --from=builder --chown=backendjs:nodejs /prod/backend ./
 
-# pnpm deploy copies @bliss/shared source but doesn't run its build —
+# pnpm deploy copies @bijoyai/shared source but doesn't run its build —
 # overlay the pre-built dist files from the builder stage.
-COPY --from=builder /app/packages/shared/dist ./node_modules/@bliss/shared/dist
-COPY --from=builder /app/packages/shared/package.json ./node_modules/@bliss/shared/package.json
+COPY --from=builder /app/packages/shared/dist ./node_modules/@bijoyai/shared/dist
+COPY --from=builder /app/packages/shared/package.json ./node_modules/@bijoyai/shared/package.json
 
 # Prisma schema (needed for any runtime schema references)
 COPY --from=builder /app/prisma ./prisma

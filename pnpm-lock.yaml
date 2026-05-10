@@ -10,7 +10,7 @@ importers:
 
   apps/api:
     dependencies:
-      '@bliss/shared':
+      '@bijoyai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@bull-board/api':
@@ -164,7 +164,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.90.0
         version: 0.90.0(zod@3.25.76)
-      '@bliss/shared':
+      '@bijoyai/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@bull-board/api':

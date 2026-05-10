@@ -119,4 +119,4 @@ The notification center and the dashboard action registry (`specs/16-dashboard-a
 - **Sound/vibration on critical alerts** — Audio or haptic feedback when a critical signal appears.
 - **Group similar notifications** — Collapse multiple signals of the same type into a single expandable row.
 - **Notification history drawer** — Full-page or drawer view showing historical notification state.
-- **Badge count in browser tab title** — Show `(3) Bliss` in the browser tab when there are unseen notifications.
+- **Badge count in browser tab title** — Show `(3) Bijoy.ai` in the browser tab when there are unseen notifications.

@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Smart Import
+  title: Bijoy.ai API Layer - Smart Import
   version: 1.0.0
   description: |
     API endpoints for the intelligent CSV import pipeline (Sprint 4+).
@@ -21,7 +21,7 @@ components:
   schemas:
     Adapter:
       type: object
-      description: A CSV adapter configuration that maps bank-specific column formats to Bliss fields.
+      description: A CSV adapter configuration that maps bank-specific column formats to Bijoy.ai fields.
       properties:
         id:
           type: string
@@ -34,7 +34,7 @@ components:
           example: 'Chase'
         columnMappings:
           type: object
-          description: Maps Bliss field names to source CSV column names.
+          description: Maps Bijoy.ai field names to source CSV column names.
           additionalProperties:
             type: string
           example:

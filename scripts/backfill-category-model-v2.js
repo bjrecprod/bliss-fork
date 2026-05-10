@@ -38,7 +38,7 @@
  *
  * Prerequisites (run from repo root):
  *   pnpm install
- *   pnpm --filter @bliss/shared build
+ *   pnpm --filter @bijoyai/shared build
  *
  * Then either run inside the backend container, or from the host with:
  *   NODE_PATH=$(pwd)/apps/backend/node_modules \
@@ -220,7 +220,7 @@ async function main() {
     process.exit(1);
   }
 
-  console.log('Bliss — backfill category model v2');
+  console.log('Bijoy.ai — backfill category model v2');
   console.log(`  tenant scope    = ${opts.tenant || '(all)'}`);
   console.log(`  dry run         = ${opts.dryRun}`);
   console.log(`  trigger rebuild = ${willRebuild}${opts.skipRebuild ? ' (skipped via flag)' : ''}`);

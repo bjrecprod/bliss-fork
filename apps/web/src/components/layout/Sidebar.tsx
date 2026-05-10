@@ -313,7 +313,7 @@ export function Sidebar({
                   userSelect: "none",
                 }}
               >
-                bliss
+                bijoy.ai
               </span>
             </div>
           )}

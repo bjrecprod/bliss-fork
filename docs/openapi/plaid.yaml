@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Plaid Integration
+  title: Bijoy.ai API Layer - Plaid Integration
   version: 2.0.0
   description: |
     Full lifecycle management of Plaid bank connections: link token creation,

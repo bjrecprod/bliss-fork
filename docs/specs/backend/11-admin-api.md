@@ -1,6 +1,6 @@
 # 11. Admin API
 
-Internal administration endpoints for managing default categories and the cross-tenant classification system. These endpoints are **not user-facing** — they are used by Bliss operations staff for category provisioning, metadata maintenance, and embedding quality management.
+Internal administration endpoints for managing default categories and the cross-tenant classification system. These endpoints are **not user-facing** — they are used by Bijoy.ai operations staff for category provisioning, metadata maintenance, and embedding quality management.
 
 The admin endpoints live in the Next.js API (`apps/api`) and are documented here for cross-repo context since the backend service owns the classification pipeline that produces and consumes `GlobalEmbedding` data.
 

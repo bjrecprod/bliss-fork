@@ -49,7 +49,7 @@ The main user interface for interacting with transactions is a comprehensive, fe
 
 ## 4.2. CSV Import
 
-The "Import CSV" button in the transactions toolbar navigates to `/agents/import?adapter=native`, pre-selecting the "Bliss Native CSV" adapter in the Smart Import page. All CSV imports are now handled through the Smart Import pipeline — see the Smart Import spec for full details.
+The "Import CSV" button in the transactions toolbar navigates to `/agents/import?adapter=native`, pre-selecting the "Bijoy Native CSV" adapter in the Smart Import page. All CSV imports are now handled through the Smart Import pipeline — see the Smart Import spec for full details.
 
 ---
 
@@ -110,7 +110,7 @@ When filters are active, clicking Export opens a dialog asking the user to choos
 
 ### Download Mechanism
 
-The export uses `fetch` with auth headers, receives the response as a blob, and triggers a browser download via a programmatic `<a>` element click. The downloaded file is named `bliss-export-YYYY-MM-DD.csv` (date = today).
+The export uses `fetch` with auth headers, receives the response as a blob, and triggers a browser download via a programmatic `<a>` element click. The downloaded file is named `bijoy-export-YYYY-MM-DD.csv` (date = today).
 
 - **Loading state**: The Export button shows "Exporting..." text and is disabled while the download is in progress.
 - **Empty state**: If no transactions match the filters, the CSV contains only the header row. No error is shown.

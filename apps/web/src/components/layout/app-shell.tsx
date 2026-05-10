@@ -47,7 +47,7 @@ export function AppShell({ children }: AppShellProps) {
       (sum: number, imp: { pendingRowCount?: number }) => sum + (imp.pendingRowCount ?? 0), 0,
     );
   useEffect(() => {
-    document.title = reviewCount > 0 ? `(${reviewCount}) Bliss` : 'Bliss';
+    document.title = reviewCount > 0 ? `(${reviewCount}) Bijoy.ai` : 'Bijoy.ai';
   }, [reviewCount]);
 
   const toggleSidebar = () => {

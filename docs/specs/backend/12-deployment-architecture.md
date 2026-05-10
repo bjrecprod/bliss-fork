@@ -1,6 +1,6 @@
 # 12. Deployment Architecture
 
-This document specifies the deployment infrastructure for the Bliss platform.
+This document specifies the deployment infrastructure for the Bijoy.ai platform.
 
 ## 12.1. Docker Compose (Primary)
 
@@ -27,7 +27,7 @@ The primary deployment method uses Docker Compose to orchestrate a 5-service sta
 
 ### Health Checks
 
-- **postgres**: `pg_isready -U bliss` (10s interval, 5 retries)
+- **postgres**: `pg_isready -U bijoyai` (10s interval, 5 retries)
 - **redis**: `redis-cli -a <password> ping` (10s interval, 5 retries)
 
 ### Dependency Chain
@@ -72,7 +72,7 @@ On first startup, the API container automatically:
 | Stage | Base | Purpose |
 |-------|------|---------|
 | `deps` | `node:20-alpine` | pnpm install with frozen lockfile; copies all workspace package.json stubs for peer resolution |
-| `shared-build` | deps | Builds `@bliss/shared` package |
+| `shared-build` | deps | Builds `@bijoyai/shared` package |
 | `builder` | shared-build | Generates Prisma client, builds Next.js standalone output |
 | `runner` | `node:20-alpine` | Production image with non-root `nextjs` user (UID 1001). Copies standalone output, Prisma schema/migrations, seed script, and `wait-for-db.sh` |
 
@@ -83,7 +83,7 @@ The standalone build includes only the files needed to run the server, significa
 | Stage | Base | Purpose |
 |-------|------|---------|
 | `deps` | `node:20-alpine` | pnpm install; sets `PRISMA_CLI_BINARY_TARGETS=linux-musl-openssl-3.0.x` for Alpine compatibility |
-| `shared-build` | deps | Builds `@bliss/shared` package |
+| `shared-build` | deps | Builds `@bijoyai/shared` package |
 | `builder` | shared-build | Generates Prisma client for the backend app |
 | `runner` | `node:20-alpine` | Production image with non-root `backendjs` user (UID 1001). Copies app code, shared package dist, full node_modules, and Prisma schema |
 

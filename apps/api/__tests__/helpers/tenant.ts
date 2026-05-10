@@ -1,7 +1,7 @@
 /**
  * Integration test helpers — tenant lifecycle management.
  *
- * Creates an isolated Tenant + User in the bliss_test database for use in
+ * Creates an isolated Tenant + User in the bijoyai_test database for use in
  * integration tests. Returns a pre-signed JWT token so callers can immediately
  * make authenticated requests without going through the signup flow.
  *
@@ -38,7 +38,7 @@ export async function createIsolatedTenant(suffix = ''): Promise<IsolatedTenant>
   // Email is encrypted by the Prisma middleware automatically
   const user = await prisma.user.create({
     data: {
-      email: `admin${label}-${timestamp}@test.bliss`,
+      email: `admin${label}-${timestamp}@test.bijoy.ai`,
       tenantId: tenant.id,
       role: 'admin',
     },

@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Bliss API Layer - Notifications
+  title: Bijoy.ai API Layer - Notifications
   description: |
     Notification summary endpoints. Aggregates actionable signals from existing
     tables (no dedicated notification table) and provides read-tracking via

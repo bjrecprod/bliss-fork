@@ -13,7 +13,7 @@ Only the latest release on the `main` branch receives security fixes. We do not 
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, use [GitHub Private Security Advisories](https://github.com/danielvsantos/bliss/security/advisories/new) to report vulnerabilities. This creates a private channel where we can discuss the issue, develop a fix, and coordinate disclosure.
+Instead, use [GitHub Private Security Advisories](https://github.com/bjrecprod/bliss-fork/security/advisories/new) to report vulnerabilities. This creates a private channel where we can discuss the issue, develop a fix, and coordinate disclosure.
 
 ### What to include
 
@@ -40,18 +40,18 @@ The following are considered security issues:
 - Exposure of sensitive data (transaction descriptions, account numbers, Plaid tokens)
 - Multi-tenant data leakage (cross-tenant access)
 - Server-side request forgery (SSRF)
-- Vulnerabilities in dependencies that are exploitable in Bliss's context
+- Vulnerabilities in dependencies that are exploitable in Bijoy.ai's context
 
 The following are **not** in scope:
 
 - Vulnerabilities that require physical access to the host machine
-- Denial of service (Bliss is self-hosted; the operator controls access)
+- Denial of service (Bijoy.ai is self-hosted; the operator controls access)
 - Issues in third-party services (Plaid, Gemini, Twelve Data) — report those to the respective providers
 - Security best practices that are already documented as user responsibility (e.g., setting strong secrets in `.env`)
 
 ## Security Architecture
 
-Bliss is designed with security in mind:
+Bijoy.ai is designed with security in mind:
 
 - **Encryption at rest**: Transaction descriptions, account numbers, and Plaid access tokens are encrypted with AES-256-GCM via Prisma middleware
 - **Multi-tenant isolation**: Every database query includes `tenantId` for strict query-level isolation

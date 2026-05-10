@@ -123,23 +123,23 @@ npm run test:coverage   # with v8 coverage report
 Integration tests verify the **HTTP contract** of each Express route end-to-end: routing, middleware execution order, request parsing, auth enforcement, and response serialisation. They use:
 
 - **supertest** — sends real HTTP requests against the in-process Express app
-- **Real Prisma** — connected to the `bliss_test` local database
+- **Real Prisma** — connected to the `bijoyai_test` local database
 - **Mocked queues / external APIs** — BullMQ queues and Gemini API are mocked to keep tests fast and hermetic
 
 ### Test Database
 
 ```
-DATABASE_URL=postgresql://<user>@localhost:5432/bliss_test
+DATABASE_URL=postgresql://<user>@localhost:5432/bijoyai_test
 ```
 
 Create the database and apply all migrations once before running integration tests:
 
 ```bash
-createdb bliss_test
+createdb bijoyai_test
 npx prisma migrate deploy --schema prisma/schema.prisma
 ```
 
-CI uses a `pgvector/pgvector:pg16` service container with the same `bliss_test` database name (see §13.6).
+CI uses a `pgvector/pgvector:pg16` service container with the same `bijoyai_test` database name (see §13.6).
 
 ### Tenant Isolation
 
@@ -297,12 +297,12 @@ Key environment variables required for the integration test job:
 
 | Variable | Value in CI |
 |----------|-------------|
-| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/bliss_test` |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/bijoyai_test` |
 | `REDIS_URL` | `redis://localhost:6379` |
 | `INTERNAL_API_KEY` | Any fixed test value |
 | `ENCRYPTION_SECRET` | Any 32-byte base64 test value |
 
-The CI job runs `npx prisma migrate deploy` before executing tests to ensure the `bliss_test` schema is current.
+The CI job runs `npx prisma migrate deploy` before executing tests to ensure the `bijoyai_test` schema is current.
 
 ---
 

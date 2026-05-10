@@ -222,7 +222,7 @@ function resolveAmount(
 
 /**
  * Given a raw CSV row and adapter configuration, return a human-readable
- * preview of how the row will be parsed into a Bliss transaction.
+ * preview of how the row will be parsed into a Bijoy.ai transaction.
  */
 export function previewRow(
   row: Record<string, unknown>,

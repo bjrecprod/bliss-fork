@@ -1,6 +1,6 @@
 # AI Classification
 
-Every transaction in Bliss is classified by a 4-tier pipeline that learns from your corrections over time.
+Every transaction in Bijoy.ai is classified by a 4-tier pipeline that learns from your corrections over time.
 
 ## The 4-tier waterfall
 
@@ -10,7 +10,7 @@ Each transaction flows through these tiers until one succeeds:
 An O(1) in-memory cache lookup by description. If you've categorized "NETFLIX" before, the next occurrence is matched instantly with confidence `1.0`.
 
 ### Tier 2: Vector Similarity (Tenant)
-If no exact match, Bliss computes a 768-dimensional vector embedding using the configured embedding provider and queries pgvector for cosine similarity against your previous classifications. Threshold: `reviewThreshold` (default 0.70).
+If no exact match, Bijoy.ai computes a 768-dimensional vector embedding using the configured embedding provider and queries pgvector for cosine similarity against your previous classifications. Threshold: `reviewThreshold` (default 0.70).
 
 ### Tier 3: Vector Similarity (Global)
 Same as Tier 2 but searches across all tenants' embeddings. Results are discounted by 0.92x since cross-tenant matches are less reliable.
@@ -20,7 +20,7 @@ If no vector match, the configured LLM provider (Gemini, OpenAI, or Anthropic) c
 
 ## Enabling AI classification
 
-Tier 1 works out of the box. Tiers 2-4 require an LLM provider. Bliss supports three:
+Tier 1 works out of the box. Tiers 2-4 require an LLM provider. Bijoy.ai supports three:
 
 - **Google Gemini** — native embedding support, recommended default.
 - **OpenAI** — native embedding support.

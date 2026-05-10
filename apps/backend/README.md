@@ -1,26 +1,26 @@
-# Bliss Backend Service
+# Bijoy.ai Backend Service
 
-This service is the asynchronous processing engine for the Bliss platform. It handles all the heavy lifting, complex calculations, and third-party API interactions that would be too slow or unreliable to run in a synchronous web request. It operates independently from the other services and communicates via a shared Redis instance and PostgreSQL database.
+This service is the asynchronous processing engine for the Bijoy.ai platform. It handles all the heavy lifting, complex calculations, and third-party API interactions that would be too slow or unreliable to run in a synchronous web request. It operates independently from the other services and communicates via a shared Redis instance and PostgreSQL database.
 
 ## Core Purpose
 
 The backend service is designed as a robust, event-driven system with a clear separation of concerns from the user-facing API.
 
 -   **Asynchronous Job Processing**: It uses a powerful queueing system to manage and process background jobs, ensuring that long-running tasks do not block the main application thread or degrade the user experience.
--   **Smart Import**: Processes adapter-driven CSV/XLSX imports with AI classification, deduplication, and staging for user review. The "Bliss Native CSV" system adapter supports direct import without AI — resolving account/category by name or ID from CSV columns.
+-   **Smart Import**: Processes adapter-driven CSV/XLSX imports with AI classification, deduplication, and staging for user review. The "Bijoy Native CSV" system adapter supports direct import without AI — resolving account/category by name or ID from CSV columns.
 -   **Portfolio Valuation**: Runs the entire multi-step pipeline to calculate the daily historical value of all user assets. This includes fetching prices from third-party financial data providers, calculating cost basis, and tracking realized/unrealized gains.
 -   **Analytics Processing**: Aggregates raw transaction data into a denormalized, pre-calculated format stored in the `AnalyticsCacheMonthly` table, allowing the frontend analytics dashboards to load quickly without on-the-fly calculations.
 -   **AI Classification**: Classifies imported transactions into categories using a four-tier waterfall: (1) O(1) exact-match description cache — returns instantly when the description was seen before; (2) pgvector cosine similarity against `TransactionEmbedding` (tenant-scoped); (3) pgvector cosine similarity against `GlobalEmbedding` (cross-tenant, `× 0.92` discount) — catches semantically similar transactions from other tenants; (4) LLM fallback for novel descriptions, routed through `services/llm/` to the configured provider (Gemini, OpenAI, or Anthropic Claude). User overrides feed back into both the in-memory cache and the vector index immediately via the feedback loop (`POST /api/feedback`). All classification tuning constants are centralised in `src/config/classificationConfig.js`. High-confidence classifications (above the tenant's `autoPromoteThreshold`) are promoted or confirmed automatically, bypassing the review queue.
 -   **Plaid Sync**: Two-worker pipeline for Plaid bank data — `plaidSyncWorker` (ingestion: cursor-based `transactionsSync`, sync logs, Plaid error code detection, status updates) and `plaidProcessorWorker` (classification + promotion: Plaid category hint to LLM, investment detection and flagging, auto-promote). High-confidence non-investment transactions (above the tenant's `autoPromoteThreshold`) are promoted to the `Transaction` table automatically, bypassing the review queue.
 -   **AI Insights**: Generates tiered financial insights per tenant across four cadences — MONTHLY (2nd of month, MoM + YoY), QUARTERLY (3 days after Q close, seasonal trends), ANNUAL (Jan 3rd, year-in-review), and PORTFOLIO (Mon 5 AM, equity intelligence via `SecurityMaster`). Analyzes 15 lenses across 6 categories (Spending, Income, Savings, Portfolio, Debt, Net Worth) using the configured LLM provider's insight model (defaults: `gemini-3.1-pro-preview`, `gpt-4.1`, or `claude-sonnet-4-6`; override via `INSIGHT_MODEL`). A `dataCompletenessService` gates every tier so partial periods are never compared to full ones. Persistence is additive: old batches are preserved for historical context and deduped by `(tenantId, tier, periodKey, dataHash)`; dismissed state is preserved across regenerations; a tiered TTL cleanup (`insightRetentionService`) keeps MONTHLY for 2 years, QUARTERLY for 5 years, ANNUAL forever, and PORTFOLIO for 1 year. Users can manually trigger any tier for any period via the API with an optional `force: true` flag that bypasses the completeness gate.
 -   **SecurityMaster & Nightly Refresh**: Maintains a global `SecurityMaster` table with stock fundamental data (sector, industry, P/E, dividend yield, EPS, 52-week range) derived from Twelve Data Profile, Earnings, and Dividends APIs. A nightly BullMQ cron job (3 AM UTC) refreshes fundamentals for all active stock holdings with conservative rate limiting (41 credits/symbol). Profile data for new tickers is populated on-demand via a cache-first pattern in the ticker profile route.
--   **Event-Driven Architecture**: The service exposes a minimal Express API at `/api/events` that the `bliss-finance-api` calls to dispatch work. The `eventSchedulerWorker` routes each event type to the appropriate BullMQ queue and job.
+-   **Event-Driven Architecture**: The service exposes a minimal Express API at `/api/events` that the `@bijoyai/api` calls to dispatch work. The `eventSchedulerWorker` routes each event type to the appropriate BullMQ queue and job.
 
 ## Technology Stack
 
 ### Core Technologies
 -   **Runtime**: [Node.js](https://nodejs.org/) (CommonJS / `require()`)
--   **Framework**: [Express.js](https://expressjs.com/). Exposes a minimal internal API for receiving events from the `bliss-finance-api`.
+-   **Framework**: [Express.js](https://expressjs.com/). Exposes a minimal internal API for receiving events from the `@bijoyai/api`.
 -   **Database**: [PostgreSQL](https://www.postgresql.org/) with the [Prisma](https://www.prisma.io/) client for type-safe database access.
 
 ### Job Queue & Caching
@@ -122,7 +122,7 @@ The project is organized with a clear separation of concerns:
     -   `classificationConfig.js` — Single source of truth for all AI classification tuning constants (thresholds, embedding dimensions, concurrency limits). Values are read by workers per-job so changes take effect without a restart. Tenant-level overrides (`autoPromoteThreshold`, `reviewThreshold`) stored in the `Tenant` model default to the values in this file.
 -   **/src/services**: Shared services for third-party API access (`stockService.js`, `twelveDataService.js`, `cryptoService.js`, `categorizationService.js`, `priceService.js`, `insightService.js`) and other business logic.
 -   **/src/routes**: Express route definitions for the internal API.
-    -   `events.js` — Receives business events from `bliss-finance-api` and enqueues them.
+    -   `events.js` — Receives business events from `@bijoyai/api` and enqueues them.
     -   `feedback.js` — Internal `POST /api/feedback` endpoint. Receives category corrections from the finance-api, updates the in-memory description cache immediately, and fire-and-forgets an embedding upsert to the `TransactionEmbedding` vector index.
     -   `similar.js` — Internal `GET /api/similar` endpoint. Accepts a description, generates an embedding via the configured embedding provider (Gemini or OpenAI), and returns the top-N most similar previously-classified transactions from `TransactionEmbedding`.
     -   `ticker.js` — Internal `GET /api/ticker/search` and `GET /api/ticker/profile` endpoints. All searches route to Twelve Data; `?type=crypto` filters and deduplicates for digital currency symbols. Provides symbol search and ISIN/exchange resolution.
@@ -136,12 +136,12 @@ The project is organized with a clear separation of concerns:
 | Suite | Command | Runner | Tests |
 |-------|---------|--------|-------|
 | Unit | `npm test` or `npm run test:unit` | Jest | 193 |
-| Integration | `npm run test:integration` | Jest + supertest | requires `bliss_test` DB + Redis |
+| Integration | `npm run test:integration` | Jest + supertest | requires `bijoyai_test` DB + Redis |
 | Coverage | `npm run test:coverage` | Jest v8 | 70% line/fn threshold |
 
-Unit tests are fully mocked — no database or network required. Integration tests use supertest against the real Express app and a local `bliss_test` Postgres database.
+Unit tests are fully mocked — no database or network required. Integration tests use supertest against the real Express app and a local `bijoyai_test` Postgres database.
 
-**Setup for integration tests**: ensure `.env.test` has `DATABASE_URL` pointing to `bliss_test` and `INTERNAL_API_KEY` set, then run `npx prisma migrate deploy --schema prisma/schema.prisma` once against that database.
+**Setup for integration tests**: ensure `.env.test` sets `DATABASE_URL` to use PostgreSQL role `bjrectest` and database `bijoyai_test`, and set `INTERNAL_API_KEY`, then run `npx prisma migrate deploy --schema prisma/schema.prisma` once against that database.
 
 Test files live under `src/__tests__/unit/` (Jest mocks all deps) and `src/__tests__/integration/` (real Express + Prisma, mocked queues and external APIs).
 

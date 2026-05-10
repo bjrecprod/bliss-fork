@@ -10,7 +10,7 @@ describe('CapybaraIllustration', () => {
 
   it('renders the aria-label on the SVG', () => {
     render(<CapybaraIllustration />);
-    expect(screen.getByLabelText('Bliss mascot capybara illustration')).toBeInTheDocument();
+    expect(screen.getByLabelText('Bijoy.ai mascot capybara illustration')).toBeInTheDocument();
   });
 
   it('shows default caption text', () => {
@@ -20,7 +20,7 @@ describe('CapybaraIllustration', () => {
 
   it('shows default subcaption text', () => {
     render(<CapybaraIllustration showCaption />);
-    expect(screen.getByText('Navigate from the sidebar to explore your bliss dashboard.')).toBeInTheDocument();
+    expect(screen.getByText('Navigate from the sidebar to explore your bijoy.ai dashboard.')).toBeInTheDocument();
   });
 
   it('hides caption when showCaption=false', () => {

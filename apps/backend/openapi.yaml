@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: Bliss Backend Service
+  title: Bijoy.ai Backend Service
   description: |
-    API documentation for the Bliss Backend Service, which handles asynchronous processing
+    API documentation for the Bijoy.ai Backend Service, which handles asynchronous processing
     via an event-driven architecture.
   version: 1.0.0
 servers:
@@ -455,7 +455,7 @@ paths:
         - Feedback
       summary: Record a category correction and build the vector index
       description: |
-        Called by `bliss-finance-api` when a user confirms or overrides a transaction
+        Called by `@bijoyai/api` when a user confirms or overrides a transaction
         category, and by workers after auto-promote/commit.
 
         Two effects:
@@ -730,7 +730,7 @@ paths:
         - Insights
       summary: Trigger insight generation for a tenant
       description: |
-        Internal endpoint called by `bliss-finance-api` to trigger on-demand
+        Internal endpoint called by `@bijoyai/api` to trigger on-demand
         insight generation. Enqueues a `generate-tenant-insights` job on the
         BullMQ insights queue. The job is processed asynchronously by the
         `insightGeneratorWorker`.

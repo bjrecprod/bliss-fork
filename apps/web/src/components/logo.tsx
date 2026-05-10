@@ -31,7 +31,7 @@ export function Logo({ size = "md", className = "" }: LogoProps) {
           userSelect: "none",
         }}
       >
-        bliss
+        bijoy.ai
       </span>
     </div>
   );

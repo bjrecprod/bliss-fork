@@ -1,6 +1,6 @@
 # Investment Portfolios
 
-Bliss tracks investment holdings with FIFO lot calculation, multi-currency PnL, and real-time pricing.
+Bijoy.ai tracks investment holdings with FIFO lot calculation, multi-currency PnL, and real-time pricing.
 
 ## How it works
 
@@ -21,11 +21,11 @@ Investment accounts work like any other account but hold transactions with ticke
 
 - Create them via the UI (**Accounts** > **Add Manual Account**)
 - Include them in your [tenant seed script](/docs/guides/tenant-seed-setup)
-- Import transactions with ticker data via [Bliss Native CSV](/docs/guides/importing-transactions#bliss-native-csv-format)
+- Import transactions with ticker data via [Bijoy Native CSV](/docs/guides/importing-transactions#bijoy-native-csv-format)
 
 ## Importing investment transactions
 
-The key columns for investment transactions in the Bliss Native CSV format:
+The key columns for investment transactions in the Bijoy Native CSV format:
 
 ```csv
 transactiondate,description,debit,credit,account,category,ticker,assetquantity,assetprice,currency
@@ -34,7 +34,7 @@ transactiondate,description,debit,credit,account,category,ticker,assetquantity,a
 2024-06-01,Buy VWCE,2000,,Revolut Investment (EUR),ETFs,VWCE.DEX,15,133.33,EUR
 ```
 
-When a `ticker` is present, Bliss automatically looks up the security metadata from Twelve Data (name, exchange, type).
+When a `ticker` is present, Bijoy.ai automatically looks up the security metadata from Twelve Data (name, exchange, type).
 
 ## Portfolio dashboard
 

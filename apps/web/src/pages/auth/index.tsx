@@ -215,8 +215,8 @@ function SignInForm({ demoMode = false }: { demoMode?: boolean }) {
 
   useEffect(() => {
     if (demoMode) {
-      form.setValue("email", "demo@blissfinance.co");
-      form.setValue("password", "bliss1234");
+      form.setValue("email", "bjrec@bijoy.ai");
+      form.setValue("password", "bijoy1234");
     }
   }, [demoMode, form]);
 
@@ -421,7 +421,7 @@ function SignUpForm() {
         >
           {t("By creating an account you agree to our")}{" "}
           <a
-            href="https://github.com/danielvsantos/bliss/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -460,7 +460,7 @@ function SignUpForm() {
 function useDemoMode(): boolean {
   const [isDemo, setIsDemo] = useState(false);
   useEffect(() => {
-    setIsDemo(window.location.hostname === "app.blissfinance.co");
+    setIsDemo(window.location.hostname === "app.bijoy.ai");
   }, []);
   return isDemo;
 }
@@ -490,7 +490,7 @@ function AuthCard() {
             lineHeight: 1.6,
           }}
         >
-          {t("Welcome to the Bliss demo. Use the credentials below to sign in and explore.")}
+          {t("Welcome to the Bijoy.ai demo. Use the credentials below to sign in and explore.")}
           <div
             style={{
               marginTop: 8,
@@ -500,7 +500,7 @@ function AuthCard() {
               fontFamily: "monospace",
             }}
           >
-            demo@blissfinance.co &nbsp;/&nbsp; bliss1234
+            bjrec@bijoy.ai &nbsp;/&nbsp; bijoy1234
           </div>
         </div>
       )}
@@ -672,7 +672,7 @@ function LeftPanel() {
           <img
             src="/images/auth-mascot.png"
             alt={t(
-              "Bliss capybara in a turtleneck, seated in a mid-century chair beside a stack of currency coins"
+              "Bijoy.ai capybara in a turtleneck, seated in a mid-century chair beside a stack of currency coins"
             )}
             style={{
               width: "100%",
@@ -745,7 +745,7 @@ function RightPanel() {
         >
           {t("Protected by enterprise-grade encryption.")}{" "}
           <a
-            href="https://github.com/danielvsantos/bliss/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -840,7 +840,7 @@ export default function AuthPage() {
       >
         <img
           src="/images/auth-mascot.png"
-          alt={t("Bliss capybara mascot seated in a mid-century chair")}
+          alt={t("Bijoy.ai capybara mascot seated in a mid-century chair")}
           style={{
             width: "100%",
             height: "auto",

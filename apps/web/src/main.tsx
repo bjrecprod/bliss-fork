@@ -5,7 +5,7 @@ import "./i18n";
 import { Providers } from "./lib/providers.tsx";
 
 console.log(
-  '%c💜 Welcome to bliss%c\nThe quiet intelligence behind your global wealth.\n\nLike what you see? We\'re open source!\nGive us a ⭐ and help us grow → %cgithub.com/danielvsantos/bliss',
+  '%c💜 Welcome to Bijoy.ai%c\nThe quiet intelligence behind your global wealth.\n\nLike what you see? We\'re open source!\nGive us a ⭐ and help us grow → %cgithub.com/bjrecprod/bliss-fork',
   'color-scheme:light dark;color:light-dark(#3A3542,#ffffff);font-size:20px;font-weight:700;',
   'color-scheme:light dark;color:light-dark(#3A3542,#ffffff);font-size:13px;line-height:1.7;',
   'color-scheme:light dark;color:light-dark(#6D657A,#B8AEC8);font-size:13px;text-decoration:underline;'

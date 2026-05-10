@@ -1,6 +1,6 @@
 # Environment Variable Reference
 
-Bliss uses a **single root `.env` file** as the source of truth for all services. Both the Next.js API layer and the Express backend service read from this shared file, ensuring configuration stays consistent across the stack.
+Bijoy.ai uses a **single root `.env` file** as the source of truth for all services. Both the Next.js API layer and the Express backend service read from this shared file, ensuring configuration stays consistent across the stack.
 
 ## How it works
 
@@ -33,7 +33,7 @@ See [Choosing Your External Services](/docs/guides/external-services) for pickin
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `DATABASE_URL` | Yes | `postgresql://bliss:changeme@localhost:5432/bliss` | PostgreSQL connection string used by Prisma in both services. Inside Docker the host is `postgres` instead of `localhost`. |
+| `DATABASE_URL` | Yes | `postgresql://bijoyai:changeme@localhost:5432/bliss` | PostgreSQL connection string used by Prisma in both services. Inside Docker the host is `postgres` instead of `localhost`. |
 | `POSTGRES_PASSWORD` | Yes | `changeme` | Superuser password passed to the `postgres` Docker image to bootstrap the database. |
 
 ## Redis
@@ -104,7 +104,7 @@ Plaid integration is optional. CSV import works without it. To enable bank-accou
 
 ## AI / LLM Provider
 
-Bliss supports three LLM providers for transaction classification and financial insights: **Google Gemini**, **OpenAI**, and **Anthropic Claude**. An LLM provider is required for AI classification and insights. Pick one in `.env`.
+Bijoy.ai supports three LLM providers for transaction classification and financial insights: **Google Gemini**, **OpenAI**, and **Anthropic Claude**. An LLM provider is required for AI classification and insights. Pick one in `.env`.
 
 See the [Choosing Your External Services](/docs/guides/external-services) guide for per-provider setup, model overrides, and switching workflows.
 

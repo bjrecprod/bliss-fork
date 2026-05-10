@@ -406,7 +406,7 @@ export default function SettingsPage() {
                   Workspace Details
                 </h3>
                 <p className="text-[0.8125rem] text-muted-foreground mt-1 leading-relaxed">
-                  These settings apply to your entire bliss workspace.
+                  These settings apply to your entire bijoy.ai workspace.
                 </p>
               </div>
 

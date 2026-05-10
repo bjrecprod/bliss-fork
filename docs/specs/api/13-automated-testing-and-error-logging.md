@@ -143,13 +143,13 @@ What is mocked:
 ### Test Database
 
 ```
-DATABASE_URL=postgresql://<user>@localhost:5432/bliss_test
+DATABASE_URL=postgresql://<user>@localhost:5432/bijoyai_test
 ```
 
 Create the database and apply all migrations once:
 
 ```bash
-createdb bliss_test
+createdb bijoyai_test
 npx prisma migrate deploy
 ```
 
@@ -186,7 +186,7 @@ No cookie setup is required.
 
 #### Real-DB Integration Tests (supertest-like, `createIsolatedTenant`)
 
-These tests use real Prisma connected to `bliss_test` and the `createIsolatedTenant()` helper:
+These tests use real Prisma connected to `bijoyai_test` and the `createIsolatedTenant()` helper:
 
 | File | Route | Approach |
 |------|-------|----------|
@@ -290,11 +290,11 @@ Key environment variables required for the `finance-api-integration` CI job:
 
 | Variable | Value in CI |
 |----------|-------------|
-| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/bliss_test` |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/bijoyai_test` |
 | `ENCRYPTION_SECRET` | Any 32-character test value |
 | `JWT_SECRET_CURRENT` | Any test value |
 
-The CI job runs `npx prisma migrate deploy` before executing tests to ensure the `bliss_test` schema is current. The `pgvector/pgvector:pg16` image is required because the schema includes the `vector` extension and the `TransactionEmbedding` model.
+The CI job runs `npx prisma migrate deploy` before executing tests to ensure the `bijoyai_test` schema is current. The `pgvector/pgvector:pg16` image is required because the schema includes the `vector` extension and the `TransactionEmbedding` model.
 
 ---
 

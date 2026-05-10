@@ -2,13 +2,13 @@
  * Integration tests for POST /api/users (user creation with password)
  *
  * Calls the Next.js handler directly with factory-built req/res objects.
- * Uses the real bliss_test Postgres database via Prisma.
+ * Uses the real bijoyai_test Postgres database via Prisma.
  *
  * Rate limiter is mocked to a no-op.
  * JWT auth is tested end-to-end: withAuth decodes the token and hydrates req.user
- * from the real bliss_test User table.
+ * from the real bijoyai_test User table.
  *
- * Requires: bliss_test Postgres database with migrations applied.
+ * Requires: bijoyai_test Postgres database with migrations applied.
  */
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
@@ -77,7 +77,7 @@ function makeRes(): MockRes {
 // ---------------------------------------------------------------------------
 
 function uniqueEmail(label = '') {
-  return `user-test${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bliss`;
+  return `user-test${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoy.ai`;
 }
 
 // ---------------------------------------------------------------------------

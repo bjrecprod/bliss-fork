@@ -1,6 +1,6 @@
 # Choosing Your External Services
 
-Bliss works out of the box with just a database, but several external integrations unlock key features. **An LLM provider is required** for AI classification and financial insights — the rest are optional.
+Bijoy.ai works out of the box with just a database, but several external integrations unlock key features. **An LLM provider is required** for AI classification and financial insights — the rest are optional.
 
 ---
 
@@ -8,7 +8,7 @@ Bliss works out of the box with just a database, but several external integratio
 
 **What it powers:** Transaction classification (Tier 4 of the AI waterfall) and financial insights.
 
-Bliss uses a large language model in two ways: to categorize new, unseen transactions that don't match your existing history, and to write the monthly, quarterly, annual, and portfolio insight reports on your dashboard. Bring your own provider — pick one of three.
+Bijoy.ai uses a large language model in two ways: to categorize new, unseen transactions that don't match your existing history, and to write the monthly, quarterly, annual, and portfolio insight reports on your dashboard. Bring your own provider — pick one of three.
 
 | Provider | Native embeddings | Notes |
 |---|---|---|
@@ -25,7 +25,7 @@ Bliss uses a large language model in two ways: to categorize new, unseen transac
 
 **Switching providers later:** Safe and reversible. Edit `.env` and restart. If you change the embedding provider specifically, you also run `scripts/regenerate-embeddings.js` once to rebuild the vector index. See [Backend Spec 20 — LLM Provider Abstraction](/docs/specifications) for the full workflow.
 
-**Without an LLM:** Transactions you've already categorized still auto-match on sight (Tier 1 cache). But new merchants stay unclassified until you review them, and the insights page is empty. The rest of Bliss — transactions, portfolio, analytics, Plaid sync — keeps working normally.
+**Without an LLM:** Transactions you've already categorized still auto-match on sight (Tier 1 cache). But new merchants stay unclassified until you review them, and the insights page is empty. The rest of Bijoy.ai — transactions, portfolio, analytics, Plaid sync — keeps working normally.
 
 **Env vars:** `LLM_PROVIDER`, API key for the selected provider (`GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`), plus `EMBEDDING_PROVIDER` + its key when using Anthropic.
 
@@ -35,7 +35,7 @@ Bliss uses a large language model in two ways: to categorize new, unseen transac
 
 **What it powers:** Real-time and historical pricing for stocks, ETFs, mutual funds, and cryptocurrencies.
 
-Bliss uses Twelve Data to:
+Bijoy.ai uses Twelve Data to:
 - Fetch current prices for portfolio valuation
 - Look up historical prices for cost basis and P&L calculations
 - Search for ticker symbols when adding investment transactions
@@ -43,7 +43,7 @@ Bliss uses Twelve Data to:
 
 Twelve Data covers 10,000+ symbols across 27+ global markets (NYSE, NASDAQ, XETRA, Euronext, LSE, Borsa Italiana, and more).
 
-**Cost optimization:** Bliss caches all fetched prices in the database. Once a price is retrieved for a given date/symbol, it's never fetched again. The nightly SecurityMaster refresh also stores fundamentals locally. This means your API usage stays low after the initial historical backfill.
+**Cost optimization:** Bijoy.ai caches all fetched prices in the database. Once a price is retrieved for a given date/symbol, it's never fetched again. The nightly SecurityMaster refresh also stores fundamentals locally. This means your API usage stays low after the initial historical backfill.
 
 **Plan recommendations:**
 - **Basic** -- Sufficient if you only track US-listed stocks and don't need real-time quotes. Covers NYSE and NASDAQ.
@@ -59,7 +59,7 @@ Twelve Data covers 10,000+ symbols across 27+ global markets (NYSE, NASDAQ, XETR
 
 **What it powers:** Automatic bank account linking and transaction synchronization.
 
-Plaid connects to thousands of financial institutions worldwide. Once linked, Bliss:
+Plaid connects to thousands of financial institutions worldwide. Once linked, Bijoy.ai:
 - Pulls your full transaction history (configurable depth, up to 2 years)
 - Syncs new transactions automatically via incremental cursor-based updates
 - Detects investment transactions and enriches them with ticker/price data
@@ -77,7 +77,7 @@ See the [Bank Sync with Plaid](/docs/guides/plaid-bank-sync) guide for setup det
 
 **What it powers:** Automatic historical exchange rate fetching for multi-currency P&L and portfolio valuation.
 
-When your accounts span multiple currencies, Bliss needs exchange rates to normalize everything to your display currency. CurrencyLayer provides historical rates used by:
+When your accounts span multiple currencies, Bijoy.ai needs exchange rates to normalize everything to your display currency. CurrencyLayer provides historical rates used by:
 - Portfolio processing (converting foreign-currency investments to your portfolio currency)
 - Analytics (aggregating spending across currencies into a single P&L)
 - Transaction display (showing amounts in your preferred currency)

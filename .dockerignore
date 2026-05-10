@@ -33,7 +33,7 @@
 
 # Python virtual environments (backend ML experiments)
 **/venv
-**/bliss-python-env
+**/bijoy-python-env
 
 # Tests — not needed in production images
 **/__tests__
@@ -43,8 +43,3 @@
 
 # Stale lockfiles from pre-monorepo era
 apps/*/package-lock.json
-
-# Original repos — not needed in Docker build context
-bliss-finance-api/
-bliss-backend-service/
-bliss-frontend/

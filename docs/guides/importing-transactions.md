@@ -1,6 +1,6 @@
 # Importing Transactions
 
-Bliss supports CSV and XLSX imports with automatic format detection, AI classification, and deduplication.
+Bijoy.ai supports CSV and XLSX imports with automatic format detection, AI classification, and deduplication.
 
 ## The Smart Import flow
 
@@ -15,11 +15,11 @@ Bliss supports CSV and XLSX imports with automatic format detection, AI classifi
 
 ## File format detection
 
-Bliss matches your file's column headers against known adapter signatures. If a match is found, it auto-maps columns. If not, you create a custom adapter.
+Bijoy.ai matches your file's column headers against known adapter signatures. If a match is found, it auto-maps columns. If not, you create a custom adapter.
 
 ### Preconfigured bank adapters
 
-Bliss ships with 30+ preconfigured adapters that automatically recognize CSV exports from major banks worldwide. Just upload your file and Bliss will detect the format:
+Bijoy.ai ships with 30+ preconfigured adapters that automatically recognize CSV exports from major banks worldwide. Just upload your file and Bijoy.ai will detect the format:
 
 | Region | Supported banks |
 |--------|----------------|
@@ -39,13 +39,13 @@ Two generic fallback adapters (`Date/Description/Amount` and `Date/Description/D
 
 ### Creating a custom adapter
 
-When Bliss can't recognise your file's format, it shows an **"Unknown Format"** alert along with a preview table of up to 3 rows from your file — so you can see exactly what Bliss is reading before you configure anything.
+When Bijoy.ai can't recognise your file's format, it shows an **"Unknown Format"** alert along with a preview table of up to 3 rows from your file — so you can see exactly what Bijoy.ai is reading before you configure anything.
 
-Click **"Create Adapter for this Format"** (or **Import Adapters → New Adapter**) to open the adapter form. Bliss pre-fills the form using the headers it detected, so you mostly just pick values from dropdowns rather than typing column names by hand.
+Click **"Create Adapter for this Format"** (or **Import Adapters → New Adapter**) to open the adapter form. Bijoy.ai pre-fills the form using the headers it detected, so you mostly just pick values from dropdowns rather than typing column names by hand.
 
 #### Match Headers
 
-Detected column names appear as removable **chips**. You can click `×` on any chip to remove it, or type a new name and press `+` to add one. These are the headers Bliss will look for in future uploads to identify this file format automatically.
+Detected column names appear as removable **chips**. You can click `×` on any chip to remove it, or type a new name and press `+` to add one. These are the headers Bijoy.ai will look for in future uploads to identify this file format automatically.
 
 #### Column mapping
 
@@ -64,7 +64,7 @@ Choose how amounts are encoded in your file:
 
 #### Date format
 
-Pick from common presets (e.g. `DD/MM/YYYY`, `YYYY-MM-DD`, `MM/DD/YYYY`) or choose **Auto-detect** to let Bliss figure it out. You can also enter a custom format string.
+Pick from common presets (e.g. `DD/MM/YYYY`, `YYYY-MM-DD`, `MM/DD/YYYY`) or choose **Auto-detect** to let Bijoy.ai figure it out. You can also enter a custom format string.
 
 #### Row preview
 
@@ -78,9 +78,9 @@ Select the currency to apply when your file doesn't include a currency column. L
 
 Adapters are saved per-tenant and reused automatically on future imports.
 
-## Bliss Native CSV format
+## Bijoy Native CSV format
 
-For maximum control, prepare your data in the Bliss Native format. This bypasses adapter detection and supports all fields including investments and tags.
+For maximum control, prepare your data in the Bijoy Native format. This bypasses adapter detection and supports all fields including investments and tags.
 
 **Required columns:**
 

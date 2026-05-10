@@ -1,5 +1,5 @@
 /**
- * Default MSW request handlers for bliss-frontend tests.
+ * Default MSW request handlers for @bijoyai/web tests.
  *
  * These handlers stub the most common API endpoints so that component
  * and hook tests can run without a live backend. Add new handlers here

@@ -1,6 +1,6 @@
 # Initial Account Setup
 
-When you first set up Bliss, you need to create the accounts, banks, and currencies that reflect your financial reality. You can do this one by one through the UI, or use the bulk seed script to set everything up at once.
+When you first set up Bijoy.ai, you need to create the accounts, banks, and currencies that reflect your financial reality. You can do this one by one through the UI, or use the bulk seed script to set everything up at once.
 
 ## Global reference data (seeded automatically)
 
@@ -9,7 +9,7 @@ The global seed (`prisma/seed.js`) runs automatically during Docker setup or `pr
 - **16 countries** — US, UK, Germany, France, Spain, Portugal, Brazil, Canada, Australia, Japan, Switzerland, Mexico, Italy, Netherlands, Singapore, India
 - **11 currencies** — USD, EUR, GBP, BRL, CAD, AUD, JPY, CHF, MXN, SGD, INR
 - **30 banks** — Major banks across US (Chase, Bank of America, Citi, Capital One, Amex, Discover, US Bank, Schwab, Fidelity), UK (HSBC, Barclays, Lloyds, Monzo, Santander UK), Spain (BBVA, CaixaBank, Santander), France (Boursorama, Credit Agricole), EU (N26, Revolut, Wise, Deutsche Bank), Brazil (Nubank, Itau), Canada (RBC, TD Canada), Australia (ANZ, Commonwealth Bank), and brokerages (Interactive Brokers)
-- **32 import adapters** — Preconfigured CSV column mappings for the banks above (plus generic fallbacks and a Bliss Native format). These enable automatic format detection when importing transactions via CSV. See [Importing transactions](/docs/guides/importing-transactions) for the full list.
+- **32 import adapters** — Preconfigured CSV column mappings for the banks above (plus generic fallbacks and a Bijoy.ai Native format). These enable automatic format detection when importing transactions via CSV. See [Importing transactions](/docs/guides/importing-transactions) for the full list.
 
 **If your country, currency, or bank isn't listed**, add it to `prisma/seed.js` and re-run `pnpm exec prisma db seed`. The seed is idempotent — existing records are updated in place, and new entries are created without affecting existing data.
 

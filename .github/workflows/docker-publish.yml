@@ -11,11 +11,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - image: danielvsantos/bliss-api
+          - image: bjrecprod/bijoyai-api
             dockerfile: docker/Dockerfile.api
-          - image: danielvsantos/bliss-backend
+          - image: bjrecprod/bijoyai-backend
             dockerfile: docker/Dockerfile.backend
-          - image: danielvsantos/bliss-web
+          - image: bjrecprod/bijoyai-web
             dockerfile: docker/Dockerfile.web
     steps:
       - uses: actions/checkout@v4

@@ -33,7 +33,7 @@
  * (LIMIT 1 query) — not a cumulative or average score.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NOTE: The Prisma Tenant model (bliss-finance-api/prisma/schema.prisma, lines 42–43)
+ * NOTE: The Prisma Tenant model (@bijoyai/api/prisma/schema.prisma, lines 42–43)
  * has matching @default values for autoPromoteThreshold and reviewThreshold.
  * Keep those in sync manually if you change the defaults here.
  * ─────────────────────────────────────────────────────────────────────────────

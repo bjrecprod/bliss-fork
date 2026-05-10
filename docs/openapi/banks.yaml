@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Bliss API Layer - Banks
+  title: Bijoy.ai API Layer - Banks
   version: 1.1.0
   description: >
     Tenant-scoped bank management. All endpoints require JWT authentication.

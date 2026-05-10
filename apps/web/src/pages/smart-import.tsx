@@ -1135,8 +1135,8 @@ export default function SmartImportPage() {
                           {isGlobal && <Badge variant="outline" className="text-xs shrink-0">{t('smartImport.system')}</Badge>}
                           {(adapter as ImportAdapter & { matchSignature?: { isNative?: boolean } }).matchSignature?.isNative && (
                             <a
-                              href="/templates/bliss-native-template.csv"
-                              download="bliss-native-template.csv"
+                              href="/templates/bijoy-native-template.csv"
+                              download="bijoy-native-template.csv"
                               className="text-xs text-brand-primary underline flex items-center gap-1 shrink-0"
                               onClick={(e) => e.stopPropagation()}
                             >

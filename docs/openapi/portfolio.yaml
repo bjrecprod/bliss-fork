@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Portfolio
+  title: Bijoy.ai API Layer - Portfolio
   version: 1.0.0
 
 components:

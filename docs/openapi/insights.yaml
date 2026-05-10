@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Bliss API Layer - Insights
+  title: Bijoy.ai API Layer - Insights
   description: |
     AI-generated financial insights endpoints. Insights are produced by the
     backend service across four cadence tiers (MONTHLY, QUARTERLY, ANNUAL,

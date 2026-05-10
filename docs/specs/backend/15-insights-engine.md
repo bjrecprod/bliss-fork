@@ -1,6 +1,6 @@
 # 15. Insights Engine (Backend)
 
-This document specifies the backend architecture of the Bliss Insights engine — a tiered AI pipeline that generates structured financial insights across four cadences (monthly / quarterly / annual / portfolio), gated by data completeness, persisted additively, and retained on a per-tier TTL.
+This document specifies the backend architecture of the Bijoy.ai Insights engine — a tiered AI pipeline that generates structured financial insights across four cadences (monthly / quarterly / annual / portfolio), gated by data completeness, persisted additively, and retained on a per-tier TTL.
 
 ## 15.1. Overview
 

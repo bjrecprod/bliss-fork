@@ -1,4 +1,4 @@
-# Bliss API (Next.js)
+# Bijoy.ai API (Next.js)
 
 This is the public-facing API layer. It handles authentication, REST endpoints, Prisma ORM access, and event dispatch to the backend service. Built with Next.js 15 Pages Router.
 
@@ -105,7 +105,7 @@ Uses Prisma 6 `$extends` with a single `$allModels.$allOperations` extension tha
 3. **Execute** -- Runs the actual query
 4. **Decrypt** -- Auto-decrypts returned data
 
-The encrypted fields config comes from `@bliss/shared/encryption`. You never need to manually encrypt/decrypt.
+The encrypted fields config comes from `@bijoyai/shared/encryption`. You never need to manually encrypt/decrypt.
 
 ## Path aliases
 
@@ -154,7 +154,7 @@ This POSTs to `BACKEND_URL/api/events` with the `INTERNAL_API_KEY` header. The b
 ```bash
 pnpm test:api           # all tests
 pnpm test:unit          # unit only
-pnpm test:integration   # integration only (requires bliss_test DB)
+pnpm test:integration   # integration only (requires bijoyai_test DB)
 ```
 
 **Coverage:** 70% lines/functions, 60% branches. Excludes `pages/api/auth/[...nextauth].js`.
@@ -163,7 +163,7 @@ pnpm test:integration   # integration only (requires bliss_test DB)
 
 **Test setup** (`__tests__/setup/env.ts`): Loads `.env.test` first, then root `.env`. Forces test values for encryption and JWT secrets. This runs before any module imports.
 
-**Mocking:** Rate limiter is mocked in integration tests. Prisma hits a real `bliss_test` database. External APIs (Plaid, Gemini) are mocked.
+**Mocking:** Rate limiter is mocked in integration tests. Prisma hits a real `bijoyai_test` database. External APIs (Plaid, Gemini) are mocked.
 
 ## Services
 

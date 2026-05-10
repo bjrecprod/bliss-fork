@@ -6,7 +6,7 @@ This document traces the complete user and tenant lifecycle from the frontend pe
 
 ## 1.1. `src/pages/auth/index.tsx` - The Authentication Hub
 
-This component serves as the primary user interface for both logging in and registering a new account. It features a modern two-panel layout inspired by the Bliss UIKit design system.
+This component serves as the primary user interface for both logging in and registering a new account. It features a modern two-panel layout inspired by the Bijoy.ai UIKit design system.
 
 ### Layout:
 
@@ -14,7 +14,7 @@ This component serves as the primary user interface for both logging in and regi
 
 | Left Panel | Right Panel |
 |-----------|-------------|
-| **Bliss logo** (top-left, `Logo` component `size="md"`) | **"Welcome back"** greeting text (centered, muted) |
+| **Bijoy.ai logo** (top-left, `Logo` component `size="md"`) | **"Welcome back"** greeting text (centered, muted) |
 | **Headline**: "The quiet intelligence behind your global wealth." | **Auth Card** (glassmorphic `Card` component): |
 | **Subheading**: "Financial clarity, without borders." | — Custom pill tabs (Sign In / Sign Up) with dark active state |
 | **Mascot illustration** (`/images/auth-mascot.png`, `mix-blend-mode: multiply`, bleeds to bottom) | — Google OAuth button (multicolor SVG icon) |
@@ -52,7 +52,7 @@ Note: The register form does **not** include a confirm-password field. Instead, 
 - **Full name** input (`autoComplete="name"`)
 - **Email address** input (`autoComplete="email"`)
 - **Password** input with hint text (`autoComplete="new-password"`)
-- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/danielvsantos/bliss/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
+- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
 - **"Create Account"** primary button (full width, loading spinner when pending)
 - Error messages displayed inline
 
@@ -79,7 +79,7 @@ The auth page supports a **demo mode** for visitors arriving from the documentat
 - **UI changes in demo mode**:
   - The tab switcher is hidden — only the **Sign In** form is shown (no Sign Up tab).
   - A **demo banner** is displayed above the form explaining this is a live demo environment.
-  - The sign-in form fields are **pre-filled** with demo credentials: `email: "daniel@blissfinance.co"`, `password: "bliss1234"`.
+  - The sign-in form fields are **pre-filled** with demo credentials: `email: "daniel@bijoy.ai"`, `password: "bijoy1234"`.
   - The user can click "Sign In" immediately without typing anything.
 - **`SignInForm` component**: Accepts an optional `demoMode` prop. When `true`, `useForm()` is initialized with the pre-filled demo credentials as `defaultValues`.
 
@@ -174,7 +174,7 @@ The settings page uses a constrained layout (`max-w-[880px]`, centered) with a p
 
 ### Card Architecture
 
-All settings cards follow a structured 3-zone pattern inspired by the Bliss UIKit:
+All settings cards follow a structured 3-zone pattern inspired by the Bijoy.ai UIKit:
 
 | Zone | Layout | Description |
 |------|--------|-------------|

@@ -1,6 +1,6 @@
 # Financial Insights
 
-Bliss generates AI-powered financial reports that analyze your patterns across four cadences — monthly, quarterly, annual, and portfolio-specific.
+Bijoy.ai generates AI-powered financial reports that analyze your patterns across four cadences — monthly, quarterly, annual, and portfolio-specific.
 
 ## How it works
 

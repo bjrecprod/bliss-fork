@@ -49,7 +49,7 @@ Beneath the form fields, a **Row Preview** card shows how the first `sampleData`
 
 **Unknown Format alert:**
 When `POST /api/imports/detect-adapter` returns `matched: false`, the "Unknown Format" alert includes:
-1. A **sample rows table** — shows up to 3 rows from `sampleData` with the detected column headers as table headings. Lets non-technical users see exactly what Bliss is reading from their file before configuring the adapter.
+1. A **sample rows table** — shows up to 3 rows from `sampleData` with the detected column headers as table headings. Lets non-technical users see exactly what Bijoy.ai is reading from their file before configuring the adapter.
 2. A **"Create Adapter for this Format"** button. Clicking it opens the adapter form with the detected headers **pre-loaded as chips** in the Match Headers field and all column-mapping fields populated from those headers as `<Select>` dropdowns. The live preview card also uses the captured sample data immediately.
 
 After the adapter is saved, adapter detection automatically re-runs on the already-selected file. If it matches, the new adapter is auto-selected and a *"Format matched: AdapterName"* toast is shown.

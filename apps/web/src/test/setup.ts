@@ -1,5 +1,5 @@
 /**
- * Vitest global test setup for bliss-frontend.
+ * Vitest global test setup for @bijoyai/web.
  *
  * - Imports @testing-library/jest-dom matchers (toBeInTheDocument, toHaveValue, etc.)
  * - Starts the MSW service worker server before all tests

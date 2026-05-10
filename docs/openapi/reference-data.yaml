@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Reference Data
+  title: Bijoy.ai API Layer - Reference Data
   version: 1.1.0
   description: >
     API for fetching reference data. Countries and currencies are global

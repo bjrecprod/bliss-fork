@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Equity Analysis
+  title: Bijoy.ai API Layer - Equity Analysis
   version: 1.0.0
 
 components:

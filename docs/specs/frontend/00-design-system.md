@@ -1,4 +1,4 @@
-# 0. Bliss Design System
+# 0. Bijoy.ai Design System
 
 > **"Calm. Precise. Deliberate."**
 >
@@ -21,7 +21,7 @@
 ## 1. Color System
 
 ### Design Philosophy
-The Bliss palette is built around a **muted purple-gray core** with **semantic accents** for financial signals. It avoids bright primaries in favour of calm, sophisticated tones that convey trust and precision.
+The Bijoy.ai palette is built around a **muted purple-gray core** with **semantic accents** for financial signals. It avoids bright primaries in favour of calm, sophisticated tones that convey trust and precision.
 
 **Financial signal colors (`positive`, `negative`, `warning`) are intentionally stable** — green always means gain, rose always means loss, amber always means caution.
 
@@ -315,7 +315,7 @@ All interactive elements use the ring system. Applied automatically by shadcn co
 
 ```css
 /* Manual focus ring utility */
-.bliss-focus-ring:focus-visible {
+.bijoy-focus-ring:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--ring);
 }
@@ -358,7 +358,7 @@ Add a row to the **Color Tokens** table in this file.
 
 ## 11. What Is NOT in the Design System
 
-The Bliss design system intentionally excludes some common UI patterns:
+The Bijoy.ai design system intentionally excludes some common UI patterns:
 
 - **No amber/yellow from Tailwind** — use `warning` token (#E09F12) instead
 - **No blue** — Plaid "Connected" badges use `brand-primary` (purple), not blue
@@ -373,7 +373,7 @@ The Bliss design system intentionally excludes some common UI patterns:
 
 ### Overview
 
-Bliss uses **react-i18next** for frontend-only internationalization. All user-facing strings must go through the translation system — no hardcoded English text in JSX.
+Bijoy.ai uses **react-i18next** for frontend-only internationalization. All user-facing strings must go through the translation system — no hardcoded English text in JSX.
 
 ### Supported Languages
 

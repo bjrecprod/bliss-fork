@@ -1,16 +1,14 @@
 {
-  "name": "@bliss/api",
+  "name": "@bijoyai/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "pnpm --filter @bliss/shared build && prisma generate --no-engine --schema=../../prisma/schema.prisma && next build",
+    "build": "pnpm --filter @bijoyai/shared build && prisma generate --no-engine --schema=../../prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
     "knip": "knip",
-    "chat-with-bliss": "node scripts/chat.mjs",
-    "update-bliss": "node scripts/updateBliss.mjs",
     "test": "vitest run",
     "test:unit": "vitest run __tests__/unit",
     "test:integration": "vitest run __tests__/integration",
@@ -18,7 +16,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@bliss/shared": "workspace:*",
+    "@bijoyai/shared": "workspace:*",
     "@bull-board/api": "^5.18.0",
     "@google-cloud/storage": "^7.19.0",
     "@opentelemetry/api": "^1.9.0",

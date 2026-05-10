@@ -2,9 +2,9 @@
 
 ## Overview
 
-Bliss supports multiple LLM providers (Google Gemini, OpenAI, Anthropic) through a factory-backed adapter layer. This spec documents the abstraction boundary, provider selection rules, behavioral contract every adapter must uphold, and operator workflows for switching providers.
+Bijoy.ai supports multiple LLM providers (Google Gemini, OpenAI, Anthropic) through a factory-backed adapter layer. This spec documents the abstraction boundary, provider selection rules, behavioral contract every adapter must uphold, and operator workflows for switching providers.
 
-LLM provider selection is a **deployment-level** decision, not a per-tenant setting. The operator configures `LLM_PROVIDER` once in `.env` and the entire Bliss instance uses that provider. There are no database migrations and no per-tenant overrides. Switching providers is a config change plus (for embedding-provider changes) a one-time operator script.
+LLM provider selection is a **deployment-level** decision, not a per-tenant setting. The operator configures `LLM_PROVIDER` once in `.env` and the entire Bijoy.ai instance uses that provider. There are no database migrations and no per-tenant overrides. Switching providers is a config change plus (for embedding-provider changes) a one-time operator script.
 
 ---
 

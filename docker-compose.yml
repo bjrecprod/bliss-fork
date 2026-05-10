@@ -5,15 +5,15 @@ services:
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: bliss
+      POSTGRES_USER: bijoyai
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: bliss
+      POSTGRES_DB: bijoyai
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bliss"]
+      test: ["CMD-SHELL", "pg_isready -U bijoyai"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,7 +34,7 @@ services:
   # API layer (Next.js)
   # ────────────────────────────────────────────────────────────────────────────
   api:
-    image: danielvsantos/bliss-api:latest
+    image: bjrecprod/bijoyai-api:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.api
@@ -42,7 +42,7 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://bliss:${POSTGRES_PASSWORD:-changeme}@postgres:5432/bliss
+      DATABASE_URL: postgresql://bijoyai:${POSTGRES_PASSWORD:-changeme}@postgres:5432/bijoyai
       JWT_SECRET_CURRENT: ${JWT_SECRET_CURRENT}
       JWT_SECRET_PREVIOUS: ${JWT_SECRET_PREVIOUS:-}
       ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
@@ -88,7 +88,7 @@ services:
   # Backend service (Express + BullMQ workers)
   # ────────────────────────────────────────────────────────────────────────────
   backend:
-    image: danielvsantos/bliss-backend:latest
+    image: bjrecprod/bijoyai-backend:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.backend
@@ -96,7 +96,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://bliss:${POSTGRES_PASSWORD:-changeme}@postgres:5432/bliss
+      DATABASE_URL: postgresql://bijoyai:${POSTGRES_PASSWORD:-changeme}@postgres:5432/bijoyai
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
       REDIS_SKIP_TLS_CHECK: "true"
       ENCRYPTION_SECRET: ${ENCRYPTION_SECRET}
@@ -141,7 +141,7 @@ services:
   # Web (Vite React SPA served by nginx)
   # ────────────────────────────────────────────────────────────────────────────
   web:
-    image: danielvsantos/bliss-web:latest
+    image: bjrecprod/bijoyai-web:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.web

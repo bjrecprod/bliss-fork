@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Admin
+  title: Bijoy.ai API Layer - Admin
   version: 1.1.0
   description: |
     Endpoints under `/api/admin/*`. Two distinct audiences and auth models
@@ -9,7 +9,7 @@ info:
     **1. Default Categories & Cross-Tenant Classification** (ops-staff)
 
     `/api/admin/default-categories/*`
-    Called by Bliss operations staff to provision new default categories,
+    Called by Bijoy.ai operations staff to provision new default categories,
     push metadata changes across all tenants, and maintain the
     `GlobalEmbedding` cross-tenant classification table.
     Auth: `x-admin-key` request header (`ADMIN_API_KEY` env var). No user

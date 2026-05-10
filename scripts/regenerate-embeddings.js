@@ -41,7 +41,7 @@
  *   node scripts/regenerate-embeddings.js --batch=50       # batch size (default 100)
  *
  * Environment:
- *   All the usual Bliss env vars are read from .env at the repo root. The
+ *   All the usual Bijoy.ai env vars are read from .env at the repo root. The
  *   script uses whichever adapter is currently configured (LLM_PROVIDER /
  *   EMBEDDING_PROVIDER). Shell env vars DO NOT override the .env file — the
  *   script uses dotenv with { override: true } so the .env is always the
@@ -59,10 +59,10 @@
  *   pnpm install
  *
  *   # 2. Build the shared package (tsup outputs consumed by apps/backend)
- *   pnpm --filter @bliss/shared build
+ *   pnpm --filter @bijoyai/shared build
  *
  * Then run the script with NODE_PATH pointing at the backend's node_modules
- * so dotenv, @prisma/client, the LLM SDKs, and @bliss/shared all resolve:
+ * so dotenv, @prisma/client, the LLM SDKs, and @bijoyai/shared all resolve:
  *
  *   NODE_PATH=$(pwd)/apps/backend/node_modules \
  *     node scripts/regenerate-embeddings.js --dry-run
@@ -138,7 +138,7 @@ Options:
 async function main() {
   const opts = parseArgs(process.argv);
 
-  console.log('Bliss — regenerate embeddings');
+  console.log('Bijoy.ai — regenerate embeddings');
   console.log(`  LLM_PROVIDER       = ${process.env.LLM_PROVIDER || 'gemini'}`);
   console.log(`  EMBEDDING_PROVIDER = ${process.env.EMBEDDING_PROVIDER || process.env.LLM_PROVIDER || 'gemini'}`);
   console.log(`  EMBEDDING_DIMENSIONS = ${EMBEDDING_DIMENSIONS}`);

@@ -16,8 +16,8 @@ const urbanist = Urbanist({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Bliss — Open-Source Wealth Intelligence Platform',
-    template: '%s — Bliss',
+    default: 'Bijoy.ai — Open-Source Wealth Intelligence Platform',
+    template: '%s — Bijoy.ai',
   },
   description:
     'Self hosted multi-currency personal wealth intelligence platform with AI-powered transaction classification, portfolio tracking, and financial insights.',

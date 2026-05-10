@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Bliss API Layer - Onboarding
+  title: Bijoy.ai API Layer - Onboarding
   description: |
     Onboarding progress tracking endpoints. Manages the multi-step onboarding
     flow (setup wizard) and post-setup checklist completion state.

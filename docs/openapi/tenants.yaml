@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: Bliss API Layer - Tenants
+  title: Bijoy.ai API Layer - Tenants
   version: 1.0.0
 
 components:

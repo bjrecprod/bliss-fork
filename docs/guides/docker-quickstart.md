@@ -1,6 +1,6 @@
 # Docker Quick Start
 
-Get Bliss running locally in under 5 minutes.
+Get Bijoy.ai running locally in under 5 minutes.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ Get Bliss running locally in under 5 minutes.
 ## Start everything
 
 ```bash
-git clone https://github.com/danielvsantos/bliss.git && cd bliss
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
 ./scripts/setup.sh          # prompts for LLM provider, generates secrets, creates .env
 docker compose up           # pulls images and starts all 5 services
 ```
@@ -45,7 +45,7 @@ Your data lives in Docker named volumes (`postgres_data`, `redis_data`, `uploads
 
 ## Database GUI
 
-Adminer is included at [http://localhost:8888](http://localhost:8888). Log in with system **PostgreSQL**, server **postgres**, username **bliss**, and the `POSTGRES_PASSWORD` from your `.env`.
+Adminer is included at [http://localhost:8888](http://localhost:8888). Log in with system **PostgreSQL**, server **postgres**, username **bijoyai**, and the `POSTGRES_PASSWORD` from your `.env`.
 
 ---
 
@@ -82,7 +82,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### Setup
 
 ```bash
-git clone https://github.com/danielvsantos/bliss.git && cd bliss
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
 cp .env.example .env
 ./scripts/setup.sh          # generates secrets
 pnpm install
@@ -91,8 +91,8 @@ pnpm install
 Edit `.env` and set `DATABASE_URL` and `REDIS_URL` for your local setup.
 
 ```bash
-createdb bliss
-psql bliss -c 'CREATE EXTENSION IF NOT EXISTS vector;'
+createdb bijoyai
+psql bijoyai -c 'CREATE EXTENSION IF NOT EXISTS vector;'
 pnpm exec prisma migrate deploy --schema=prisma/schema.prisma
 pnpm exec prisma db seed
 pnpm dev                    # starts all services

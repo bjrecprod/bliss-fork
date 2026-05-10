@@ -317,6 +317,6 @@ describe('GET /api/transactions/export', () => {
     await handler(req as NextApiRequest, res as unknown as NextApiResponse);
 
     const today = new Date().toISOString().slice(0, 10);
-    expect(res._headers['Content-Disposition']).toBe(`attachment; filename="bliss-export-${today}.csv"`);
+    expect(res._headers['Content-Disposition']).toBe(`attachment; filename="bijoy-export-${today}.csv"`);
   });
 });

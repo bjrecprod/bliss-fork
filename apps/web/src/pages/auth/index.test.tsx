@@ -82,7 +82,7 @@ describe('AuthPage', () => {
     mockSignIn.mockResolvedValueOnce({});
     renderAuthPage();
 
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'test@bliss.com' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
     
     // Find the submit button specifically since there are 2 "Sign In" buttons (tab vs submit)
@@ -90,7 +90,7 @@ describe('AuthPage', () => {
     fireEvent.click(submitBtn!);
 
     await waitFor(() => {
-      expect(mockSignIn).toHaveBeenCalledWith({ email: 'test@bliss.com', password: 'password123' });
+      expect(mockSignIn).toHaveBeenCalledWith({ email: 'test@example.com', password: 'password123' });
     });
   });
 
@@ -103,7 +103,7 @@ describe('AuthPage', () => {
     fireEvent.click(screen.getByRole('button', { name: "Sign Up" })); // switch tab
 
     fireEvent.change(screen.getByPlaceholderText('Alex Morgan'), { target: { value: 'Alex Morgan' } });
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'alex@bliss.com' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'alex@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('8+ characters'), { target: { value: 'securePass1' } });
     
     const submitBtn = screen.getByRole('button', { name: 'Create Account' });
@@ -111,7 +111,7 @@ describe('AuthPage', () => {
 
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith(expect.objectContaining({
-        email: 'alex@bliss.com',
+        email: 'alex@example.com',
         password: 'securePass1',
         name: 'Alex Morgan'
       }));
@@ -127,7 +127,7 @@ describe('AuthPage', () => {
     mockSignIn.mockRejectedValueOnce(new Error('Invalid credentials'));
     renderAuthPage();
 
-    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'wrong@bliss.com' } });
+    fireEvent.change(screen.getByPlaceholderText('you@example.com'), { target: { value: 'wrong@example.com' } });
     fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'badpass' } });
     
     const submitBtn = screen.getAllByRole('button', { name: 'Sign In' }).find(b => b.getAttribute('type') === 'submit');

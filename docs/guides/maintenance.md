@@ -1,6 +1,6 @@
 # Maintenance
 
-When Bliss data looks wrong or a background process seems stuck, this guide
+When Bijoy.ai data looks wrong or a background process seems stuck, this guide
 tells you what to check first, where the tools live, and how to recover.
 Most issues resolve via the **Settings → Maintenance** tab (tenant admins
 only) without touching the database directly.

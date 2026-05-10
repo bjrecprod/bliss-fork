@@ -95,7 +95,7 @@ const BANKS = [
 // Fields:
 //   name            — Display name (must be unique among global adapters)
 //   matchSignature  — { headers: [...], isNative?: true }
-//   columnMapping   — Maps CSV columns to Bliss fields (date, description, amount/debit/credit, etc.)
+//   columnMapping   — Maps CSV columns to Bijoy.ai fields (date, description, amount/debit/credit, etc.)
 //   dateFormat      — Date parsing hint (MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, etc.)
 //   amountStrategy  — SINGLE_SIGNED | SINGLE_SIGNED_INVERTED | DEBIT_CREDIT_COLUMNS | AMOUNT_WITH_TYPE
 //   currencyDefault — Fallback ISO currency code (null = multi-currency, read from CSV)
@@ -103,7 +103,7 @@ const BANKS = [
 const ADAPTERS = [
   // ── System adapters ─────────────────────────────────────────────────────
   {
-    name: 'Bliss Native CSV',
+    name: 'Bijoy Native CSV',
     matchSignature: { headers: ['transactiondate', 'description', 'debit', 'credit'], isNative: true },
     columnMapping: { date: 'transactiondate', description: 'description', debit: 'debit', credit: 'credit', account: 'account', category: 'category', currency: 'currency', details: 'details', ticker: 'ticker', assetQuantity: 'assetquantity', assetPrice: 'assetprice', tags: 'tags' },
     dateFormat: null,
