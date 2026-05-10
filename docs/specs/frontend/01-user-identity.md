@@ -52,7 +52,7 @@ Note: The register form does **not** include a confirm-password field. Instead, 
 - **Full name** input (`autoComplete="name"`)
 - **Email address** input (`autoComplete="email"`)
 - **Password** input with hint text (`autoComplete="new-password"`)
-- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
+- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/bjrecprod/bjfinance/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
 - **"Create Account"** primary button (full width, loading spinner when pending)
 - Error messages displayed inline
 

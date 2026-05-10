@@ -10,7 +10,7 @@ Get Bijoy.ai running locally in under 5 minutes.
 ## Start everything
 
 ```bash
-git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+git clone https://github.com/bjrecprod/bjfinance.git && cd bjfinance
 ./scripts/setup.sh          # prompts for LLM provider, generates secrets, creates .env
 docker compose up           # pulls images and starts all 5 services
 ```
@@ -82,7 +82,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### Setup
 
 ```bash
-git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+git clone https://github.com/bjrecprod/bjfinance.git && cd bjfinance
 cp .env.example .env
 ./scripts/setup.sh          # generates secrets
 pnpm install

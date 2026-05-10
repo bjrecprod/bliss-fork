@@ -2,7 +2,7 @@
 
 ## Current version
 
-**0.2.0** (last updated: 2026-05-10)
+**0.2.1** (last updated: 2026-05-10)
 
 ## What is working
 

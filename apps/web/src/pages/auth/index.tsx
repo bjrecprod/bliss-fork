@@ -421,7 +421,7 @@ function SignUpForm() {
         >
           {t("By creating an account you agree to our")}{" "}
           <a
-            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bjfinance/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -745,7 +745,7 @@ function RightPanel() {
         >
           {t("Protected by enterprise-grade encryption.")}{" "}
           <a
-            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bjfinance/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"

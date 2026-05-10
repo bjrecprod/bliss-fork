@@ -13,7 +13,7 @@ Only the latest release on the `main` branch receives security fixes. We do not 
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, use [GitHub Private Security Advisories](https://github.com/bjrecprod/bliss-fork/security/advisories/new) to report vulnerabilities. This creates a private channel where we can discuss the issue, develop a fix, and coordinate disclosure.
+Instead, use [GitHub Private Security Advisories](https://github.com/bjrecprod/bjfinance/security/advisories/new) to report vulnerabilities. This creates a private channel where we can discuss the issue, develop a fix, and coordinate disclosure.
 
 ### What to include
 

@@ -67,5 +67,5 @@ pnpm --filter @bijoyai/backend lint
 
 - **Domain:** https://bijoy.ai  
 - **App host (demo):** https://app.bijoy.ai  
-- **Upstream fork:** https://github.com/bjrecprod/bliss-fork  
+- **GitHub repo:** https://github.com/bjrecprod/bjfinance
 - **Demo login (hosted demo UI):** `bjrec@bijoy.ai` (see auth panel on `app.bijoy.ai`)

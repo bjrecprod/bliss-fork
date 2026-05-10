@@ -169,7 +169,7 @@ See the full [Architecture Documentation](https://bijoy.ai/docs/architecture) fo
 Three commands to a running instance:
 
 ```bash
-git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+git clone https://github.com/bjrecprod/bjfinance.git && cd bjfinance
 ./scripts/setup.sh        # prompts for LLM provider, generates secrets, creates .env
 docker compose up --build # builds and starts API, backend, web, infra
 ```
@@ -183,7 +183,7 @@ Open **http://localhost:8080** and create your account. The database is automati
 Prerequisites: Node.js 20+, pnpm 9+, PostgreSQL 16 with pgvector, Redis 7+
 
 ```bash
-git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+git clone https://github.com/bjrecprod/bjfinance.git && cd bjfinance
 cp .env.example .env       # edit DATABASE_URL and REDIS_URL for your local setup
 ./scripts/setup.sh          # generates secrets (skip if you already have .env)
 pnpm install                # installs all workspace dependencies
@@ -203,7 +203,7 @@ See the [Guides](https://bijoy.ai/docs/guides) for detailed setup instructions.
 Bijoy.ai ships with carefully crafted [`CLAUDE.md`](CLAUDE.md) files that give AI assistants full context on the architecture, conventions, and subsystems. Combined with 43 technical specification files and 19 OpenAPI YAML definitions, the repo is designed for AI coding agents to onboard instantly. If you use [Claude Code](https://claude.ai/code), just open the repo and start working -- it already knows the codebase.
 
 ```bash
-cd bliss-fork
+cd bjfinance
 claude   # Claude Code automatically loads the project context
 ```
 

@@ -67,7 +67,7 @@ export default function HomePage() {
               Live Demo
             </a>
             <a
-              href="https://github.com/bjrecprod/bliss-fork"
+              href="https://github.com/bjrecprod/bjfinance"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-[#6D657A]"
@@ -96,7 +96,7 @@ export default function HomePage() {
             <Link href="/docs" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>Documentation</Link>
             <Link href="/docs/api-reference" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>API Reference</Link>
             <a href="https://app.bijoy.ai/auth?origin=docs-site" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#6D657A' }}>Live Demo</a>
-            <a href="https://github.com/bjrecprod/bliss-fork" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
+            <a href="https://github.com/bjrecprod/bjfinance" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
           </div>
         )}
       </nav>
@@ -131,7 +131,7 @@ export default function HomePage() {
                   Get Started
                 </Link>
                 <a
-                  href="https://github.com/bjrecprod/bliss-fork"
+                  href="https://github.com/bjrecprod/bjfinance"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-colors hover:bg-gray-50"
@@ -773,7 +773,7 @@ export default function HomePage() {
           </h2>
           <div className="flex flex-col items-center gap-4">
             <a
-              href="https://github.com/bjrecprod/bliss-fork"
+              href="https://github.com/bjrecprod/bjfinance"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-colors hover:bg-[#2A2631]"
@@ -801,7 +801,7 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-6">
             <Link href="/docs" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>Docs</Link>
-            <a href="https://github.com/bjrecprod/bliss-fork" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
+            <a href="https://github.com/bjrecprod/bjfinance" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
           </div>
         </div>
       </footer>

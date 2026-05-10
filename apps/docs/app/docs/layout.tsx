@@ -43,13 +43,13 @@ export default async function DocsLayout({
       navbar={
         <Navbar
           logo={logo}
-          projectLink="https://github.com/bjrecprod/bliss-fork"
+          projectLink="https://github.com/bjrecprod/bjfinance"
         >
           {navbarExtra}
         </Navbar>
       }
       pageMap={await getPageMap('/docs')}
-      docsRepositoryBase="https://github.com/bjrecprod/bliss-fork/tree/main/apps/docs"
+      docsRepositoryBase="https://github.com/bjrecprod/bjfinance/tree/main/apps/docs"
       footer={
         <Footer>
           <span className="text-sm" style={{ color: 'hsl(260 6% 61%)' }}>
