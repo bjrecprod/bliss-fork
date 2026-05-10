@@ -44,7 +44,7 @@ instance for job queues and caching.
 ## Monorepo Structure
 
 ```
-bliss/
+bijoyai/
 |
 +-- apps/
 |   +-- api/            Next.js Pages Router (ESM, "type": "module")

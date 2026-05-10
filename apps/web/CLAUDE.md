@@ -1,4 +1,4 @@
-# Bliss Frontend (React + Vite)
+# Bijoy.ai Frontend (React + Vite)
 
 This is the single-page application that users interact with. Built with React 18, Vite, shadcn/ui, Tailwind CSS, and TanStack Query.
 
@@ -119,7 +119,7 @@ Debt groups always use negative-family colors (#E5989B, #D4686C, #C44E52, #F0B4B
 
 ### Token source of truth layers
 
-1. UIKit CSS variables (hex) -> external `Uikitforbliss/src/styles/theme.css`
+1. UIKit CSS variables (hex) -> external `UikitforBijoyai/src/styles/theme.css`
 2. Production CSS (HSL) -> `src/index.css`
 3. Tailwind mapping -> `tailwind.config.ts`
 

@@ -33,9 +33,8 @@
  * (LIMIT 1 query) — not a cumulative or average score.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NOTE: The Prisma Tenant model (@bijoyai/api/prisma/schema.prisma, lines 42–43)
- * has matching @default values for autoPromoteThreshold and reviewThreshold.
- * Keep those in sync manually if you change the defaults here.
+ * NOTE: `prisma/schema.prisma` Tenant model defaults for `autoPromoteThreshold`,
+ *       `reviewThreshold`, and related fields must mirror the defaults here — keep sync manually.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 

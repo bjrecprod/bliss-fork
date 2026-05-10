@@ -57,7 +57,7 @@ Both Vercel and Railway read from environment variables. The critical ones for m
 | `INTERNAL_API_KEY` | API + Backend | Service-to-service auth (must match) |
 | `NEXTAUTH_URL` | API | Your production domain (e.g., `https://app.yoursite.com`) |
 | `FRONTEND_URL` | API | CORS origin for the web app |
-| `BACKEND_URL` | API | Railway backend URL (e.g., `https://bliss-backend.up.railway.app`) |
+| `BACKEND_URL` | API | Railway backend URL (e.g., `https://bijoyai-backend.up.railway.app`) |
 | `COOKIE_DOMAIN` | API | Cookie scope for auth (e.g., `.yoursite.com`) |
 
 ### Google OAuth

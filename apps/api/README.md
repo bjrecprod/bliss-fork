@@ -94,7 +94,7 @@ Admins may promote/demote other users via `PUT /api/users?id={id}` by including 
 | Variable | Description |
 |----------|-------------|
 | `JWT_SECRET_CURRENT` (or `JWT_SECRET`) | JWT signing secret. Startup validation rejects fallback/default values. `JWT_SECRET_CURRENT` takes precedence; `JWT_SECRET` is accepted as a legacy alias. |
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bliss`). |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bijoyai`). |
 
 ### Optional
 

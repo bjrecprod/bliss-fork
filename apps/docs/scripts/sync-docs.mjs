@@ -28,7 +28,7 @@ const PUBLIC_OPENAPI = resolve(PUBLIC_DIR, 'openapi');
 // The sync script validates that files exist and writes a manifest for the UI.
 
 const FEATURE_MAP = {
-  'design-system':            { title: 'Design System',              order: 0,  description: 'Color tokens, typography, component patterns, and the Bliss UIKit' },
+  'design-system':            { title: 'Design System',              order: 0,  description: 'Color tokens, typography, component patterns, and the Bijoy.ai UIKit' },
   'user-identity':            { title: 'User Identity & Auth',       order: 1,  description: 'Registration, sign-in, JWT sessions, Google OAuth, RBAC roles' },
   'accounts-and-categories':  { title: 'Accounts & Categories',      order: 2,  description: 'Multi-bank account management, category hierarchy, account owners' },
   'reference-data':           { title: 'Reference Data',             order: 3,  description: 'Countries, currencies, banks, tenant configuration, and admin maintenance / rebuild operations' },

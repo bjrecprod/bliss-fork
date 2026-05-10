@@ -55,7 +55,7 @@ The fastest way to get started is Docker:
 
 ```bash
 git clone https://github.com/bjrecprod/bliss-fork.git
-cd bliss
+cd bliss-fork
 ./scripts/setup.sh
 docker compose up --build
 ```
@@ -103,7 +103,7 @@ This is critical -- each app uses a specific module system and they must not be 
 ## Project Structure
 
 ```
-bliss/
+bijoyai/
   apps/
     api/          # Next.js API routes + Prisma ORM (ESM)
     backend/      # Express + BullMQ workers (CJS)

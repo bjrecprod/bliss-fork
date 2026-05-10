@@ -10,8 +10,8 @@
 
 | Layer | File | Role |
 |-------|------|------|
-| **UIKit definition** | `Uikitforbliss/src/styles/theme.css` | Canonical token values (hex format) |
-| **UIKit page** | `Uikitforbliss/src/app/pages/DesignSystem.tsx` | Visual reference — rendered swatches, type scale, components |
+| **UIKit definition** | `UikitforBijoyai/src/styles/theme.css` | Canonical token values (hex format) |
+| **UIKit page** | `UikitforBijoyai/src/app/pages/DesignSystem.tsx` | Visual reference — rendered swatches, type scale, components |
 | **Production CSS** | `apps/web/src/index.css` | Token values in HSL format (Tailwind-compatible) |
 | **Tailwind mapping** | `apps/web/tailwind.config.ts` | Maps CSS vars → Tailwind utility classes |
 | **Usage rules** | `apps/web/CLAUDE.md` | Enforcement rules for Claude Code sessions |
@@ -328,7 +328,7 @@ All interactive elements use the ring system. Applied automatically by shadcn co
 When a new semantic color or value is needed, update **all three layers** in order:
 
 ### Step 1 — UIKit (source of truth)
-Edit `Uikitforbliss/src/styles/theme.css`:
+Edit `UikitforBijoyai/src/styles/theme.css`:
 ```css
 /* Accents */
 --positive: #2E8B57;

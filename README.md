@@ -62,7 +62,7 @@ Every correction feeds the loop immediately — your override updates the in-mem
 Adapter-driven ingestion with 30+ preconfigured bank formats (Chase, Bank of America, Citi, Capital One, Amex, HSBC, Barclays, Revolut, N26, BBVA, CaixaBank, Nubank, and more):
 
 1. **Adapter auto-detection** — Upload a CSV and Bijoy.ai identifies the format by matching column headers against 30+ known bank formats
-2. **Custom adapter builder** — Define column mappings for any bank format not yet supported
+2. **Custom adapter builder** — Define column mappings for unsupported banks via TypeScript adapters
 3. **AI classification** — Every imported row goes through the same 4-tier classification engine
 4. **Investment enrichment** — Automatically detects stock/crypto transactions and fetches current prices
 5. **SHA-256 deduplication** — Hash-based dedup scoped to the batch's date range prevents double-counting
@@ -171,7 +171,7 @@ Three commands to a running instance:
 ```bash
 git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
 ./scripts/setup.sh        # prompts for LLM provider, generates secrets, creates .env
-docker compose up          # pulls images and starts all services
+docker compose up --build # builds and starts API, backend, web, infra
 ```
 
 During `setup.sh` you're asked to pick an LLM provider (Gemini / OpenAI / Anthropic) and paste its API key. An LLM is required for AI classification and financial insights. See [Choosing an LLM Provider](https://bijoy.ai/docs/guides/external-services) for the full comparison.
@@ -203,7 +203,7 @@ See the [Guides](https://bijoy.ai/docs/guides) for detailed setup instructions.
 Bijoy.ai ships with carefully crafted [`CLAUDE.md`](CLAUDE.md) files that give AI assistants full context on the architecture, conventions, and subsystems. Combined with 43 technical specification files and 19 OpenAPI YAML definitions, the repo is designed for AI coding agents to onboard instantly. If you use [Claude Code](https://claude.ai/code), just open the repo and start working -- it already knows the codebase.
 
 ```bash
-cd bliss
+cd bliss-fork
 claude   # Claude Code automatically loads the project context
 ```
 
@@ -235,9 +235,7 @@ AI classification and financial insights are powered by an LLM. Pick one — Gem
 
 Without an LLM configured, Tier 1 (exact match) still works for already-categorized merchants, but new merchants stay unclassified and the insights page is empty. See the [LLM provider guide](https://bijoy.ai/docs/guides/external-services) for details.
 
-### Optional integrations
-
-Enable additional features by adding API keys. All degrade gracefully if missing.
+Bijoy.ai works out of the box with a database and migrations. Enable additional integrations by adding API keys below — everything degrades gracefully if missing.
 
 | Feature | Provider | Env Var | What it unlocks |
 |---------|----------|---------|----------------|
@@ -246,14 +244,34 @@ Enable additional features by adding API keys. All degrade gracefully if missing
 | Currency rates | [CurrencyLayer](https://currencylayer.com) | `CURRENCYLAYER_API_KEY` | Live and historical FX rates for multi-currency conversion |
 | Error tracking | [Sentry](https://sentry.io) | `SENTRY_DSN` | Production error monitoring and performance tracing |
 
-Without the optional keys, Bijoy.ai still provides full manual transaction management, CSV import, and portfolio management with manual valuations.
+Without these keys, Bijoy.ai still provides full manual transaction management, CSV import (including rule-based classification tiers that do not require an LLM for already-learned merchants), and portfolio management with manual valuations.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, TypeScript, Vite, TanStack Query, Recharts, shadcn/ui, Tailwind CSS, Framer Motion |
+| API | Next.js, NextAuth.js, Prisma ORM |
+| Backend | Express, BullMQ, Google Generative AI SDK |
+| Database | PostgreSQL 16 with pgvector extension |
+| Queue | Redis 7 via BullMQ |
+| Storage | Local filesystem (default) or Google Cloud Storage |
+| AI/ML | Gemini Flash (classification), Gemini Embedding-001 (768-dim vectors) |
+| Market Data | Twelve Data |
+| Currency Rates | CurrencyLayer |
+| Banking | Plaid |
+| Observability | Sentry, OpenTelemetry |
+| Testing | Jest (backend), Vitest (API + frontend), MSW, Playwright (E2E stubs) |
+| CI/CD | GitHub Actions, Docker Compose |
 
 ---
 
 ## Project Structure
 
 ```
-bliss/
+bijoyai/
 ├── apps/
 │   ├── api/          # Next.js API layer (auth, REST, Prisma)
 │   ├── backend/      # Express + BullMQ workers (AI, portfolio, sync)

@@ -101,7 +101,7 @@ Coverage thresholds: 70% lines, 70% functions, 60% branches.
 ## Project structure
 
 ```
-bliss/
+bijoyai/
   apps/
     api/                  # Next.js API + auth
       pages/api/          # Route handlers (auth, accounts, transactions, plaid, portfolio, ...)

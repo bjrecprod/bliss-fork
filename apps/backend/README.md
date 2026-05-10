@@ -52,7 +52,7 @@ You can control which parts of the application boot using the `START_MODE` envir
 | Variable | Description |
 |----------|-------------|
 | `INTERNAL_API_KEY` | API key for inter-service authentication. Startup validation rejects the default/placeholder value. |
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bliss`). |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://user:pass@localhost:5432/bijoyai`). |
 | `REDIS_URL` | Redis connection string for BullMQ queues (e.g. `redis://localhost:6379`). |
 | `LLM_PROVIDER` | `gemini` (default) \| `openai` \| `anthropic`. Selects which provider powers classification + insights. |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | API key for the selected provider. Only the matching key is required. |

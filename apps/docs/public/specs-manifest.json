@@ -2,7 +2,7 @@
   {
     "slug": "design-system",
     "title": "Design System",
-    "description": "Color tokens, typography, component patterns, and the Bliss UIKit",
+    "description": "Color tokens, typography, component patterns, and the Bijoy.ai UIKit",
     "order": 0,
     "layers": {
       "frontend": "docs/specs/frontend/00-design-system.md"

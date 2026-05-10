@@ -23,7 +23,7 @@ const workers = [];
 const startServer = async () => {
     try {
         const startMode = process.env.START_MODE || 'all';
-        logger.info(`Starting Bliss Backend Service in mode: ${startMode}`);
+        logger.info(`Starting Bijoy.ai Backend Service in mode: ${startMode}`);
 
         // Guard: require TLS-encrypted Redis in production.
         // Set REDIS_SKIP_TLS_CHECK=true when using a provider whose private/internal network
@@ -66,7 +66,7 @@ const startServer = async () => {
             await waitForSchemaAndRefresh();
 
             app.listen(PORT, () => {
-                logger.info(`Bliss Backend Service listening on port ${PORT}`);
+                logger.info(`Bijoy.ai Backend Service listening on port ${PORT}`);
             });
         } else {
             logger.info('Skipping Express server initialization (START_MODE is not "web" or "all").');
@@ -81,7 +81,7 @@ const startServer = async () => {
 startServer();
 
 const gracefulShutdown = async () => {
-    logger.info('Shutting down Bliss Backend Service...');
+    logger.info('Shutting down Bijoy.ai Backend Service...');
     // 1. Close all workers first (they need Redis to clean up)
     try {
         logger.info(`Closing ${workers.length} workers...`);
