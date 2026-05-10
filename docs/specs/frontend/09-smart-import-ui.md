@@ -31,8 +31,28 @@ A collapsible "Import Adapters" section below the file picker lists all availabl
 - **Edit**: pre-fills the form with existing adapter values.
 - **Delete**: soft-deletes the adapter (sets `isActive: false`); tenant-owned only.
 
+**Adapter form — field details:**
+
+| Field | UI control | Notes |
+|-------|-----------|-------|
+| Match Headers | Chip multi-select | Detected headers appear as removable chips. A text input with `+` button lets the user add custom header names. Each chip has an `×` to remove it. |
+| Date / Description / Amount / Debit / Credit columns | Dropdown (detected headers) or plain text input | When detected headers are available, each mapping field shows a `<Select>` populated with those headers. Falls back to `<Input>` when no headers are available (edit mode with no prior detection). |
+| Amount Strategy | Dropdown with inline descriptions | Options: **One column (positive/negative)** (`SINGLE_SIGNED`), **One column inverted (Amex-style)** (`SINGLE_SIGNED_INVERTED`), **Separate debit/credit columns** (`DEBIT_CREDIT_COLUMNS`), **Amount + type column** (`AMOUNT_WITH_TYPE`). Selecting `DEBIT_CREDIT_COLUMNS` reveals Debit Column and Credit Column fields; `AMOUNT_WITH_TYPE` reveals Debit Column and a Type Column field. |
+| Type Column | Dropdown / input | Only shown when strategy is `AMOUNT_WITH_TYPE`. |
+| Category Column | Dropdown / input (optional) | Maps an optional bank-supplied category column. The extracted value is forwarded as `bankCategoryHint` to the AI classifier (Tier 3 LLM only; Tiers 1 and 2 are unaffected). |
+| Date Format | Dropdown with preset formats | **Date-only group**: `Auto-detect`, `MM/DD/YYYY`, `DD/MM/YYYY`, `YYYY-MM-DD`, `DD.MM.YYYY`, `DD-MM-YYYY`. **Date + Time group**: `DD/MM/YYYY HH:mm:ss`, `MM/DD/YYYY HH:mm:ss`, `YYYY-MM-DD HH:mm:ss`, `YYYY-MM-DDTHH:mm:ss`. Custom (free text). When the user picks a date column and sample data is available, the form auto-suggests a format via `inferDateFormat()`. An ambiguity warning appears when all sample day/month values are ≤ 12 and the format remains on Auto-detect. |
+| Default Currency | Dropdown with ISO codes | Shows a placeholder option ("No default — use account currency") as a sentinel; selecting it stores an empty string. |
+| Skip Rows | Number input | Rows to skip at the top of the file (e.g., metadata lines above the header). |
+
+**Live row preview card:**
+Beneath the form fields, a **Row Preview** card shows how the first `sampleData` row (from the original file detection) will be parsed with the current column/strategy/date-format settings. Updates in real time as the user adjusts form fields. Displays five fields: Date, Description, Amount (formatted as currency), Currency, Bank Category (only when a category column is mapped and the sample row has a value). Shows a placeholder when no sample data is available (edit mode with no prior detection).
+
 **Unknown Format alert:**
-When `POST /api/imports/detect-adapter` returns no match, the "Unknown Format" alert includes a **"Create Adapter for this Format"** button. Clicking it opens the Adapter Manager with the create form pre-filled with the detected headers in the `Match Headers` field, allowing the user to define a new adapter without typing headers manually. After the adapter is saved, adapter detection automatically re-runs on the already-selected file. If it matches, the new adapter is auto-selected and a "Format matched: AdapterName" toast is shown.
+When `POST /api/imports/detect-adapter` returns `matched: false`, the "Unknown Format" alert includes:
+1. A **sample rows table** — shows up to 3 rows from `sampleData` with the detected column headers as table headings. Lets non-technical users see exactly what Bijoy.ai is reading from their file before configuring the adapter.
+2. A **"Create Adapter for this Format"** button. Clicking it opens the adapter form with the detected headers **pre-loaded as chips** in the Match Headers field and all column-mapping fields populated from those headers as `<Select>` dropdowns. The live preview card also uses the captured sample data immediately.
+
+After the adapter is saved, adapter detection automatically re-runs on the already-selected file. If it matches, the new adapter is auto-selected and a *"Format matched: AdapterName"* toast is shown.
 
 **Hooks used:** `useAdapters`, `useCreateAdapter`, `useUpdateAdapter`, `useDeleteAdapter`, `useDetectAdapter`, `useUploadSmartImport`
 
@@ -106,15 +126,23 @@ When `autoConfirmedCount > 0`, an info banner appears at the top of the review t
 **Per-row controls (flat view):**
 - **Category dropdown**: Pre-selected to `suggestedCategoryId`. Changing it calls `PUT /api/imports/:id/rows/:rowId` with the new category and sets `classificationSource: 'USER_OVERRIDE'`.
 - **Confidence badge**: Colour-coded (green/yellow/red) with source label (`EXACT_MATCH`, `VECTOR_MATCH`, `VECTOR_MATCH_GLOBAL`, `LLM`, `USER_OVERRIDE`).
-- **Status badge**: Current row status (`PENDING`, `CONFIRMED`, `DUPLICATE`, etc.).
-- **Confirm button**: Sets `status: 'CONFIRMED'`.
+- **Status badge**: Current row status. Rendered via `components/review/status-badge.tsx` — maps `POTENTIAL_DUPLICATE` to a yellow **"Possible dup"** badge (`bg-warning/10 text-warning`) and `DUPLICATE` to a red badge (`bg-destructive/10 text-destructive`).
+- **Confirm button**: Sets `status: 'CONFIRMED'`. For `POTENTIAL_DUPLICATE` rows this is the **explicit override** path — one click per row acknowledges "I've looked at this, it's a real transaction, commit it".
 - **Skip button**: Sets `status: 'SKIPPED'`.
 - **Notes popover**: Opens a text area; content saved on blur via `PUT /api/imports/:id/rows/:rowId`.
+
+> **Row-action visibility.** Once a row is `CONFIRMED` or `SKIPPED`, the inline Confirm / Skip buttons hide (`showActions = !isPromoted && !isSkipped` in `tx-data-row.tsx`). To reverse a `CONFIRMED` row — for example, an auto-promoted row the user wants to re-examine before commit — open the Deep Dive drawer and use **Reset to Pending** in its footer. See Review spec §E.1 for the rationale and backend support.
+
+**Duplicate handling — data-integrity guard:**
+
+- Rows flagged as `DUPLICATE` (exact hash match including wall-clock timestamp) are **never returned by the default `GET /api/imports/:id` query** — they're hidden from the Review UI entirely. The backend `commitWorker` also refuses to promote them. To audit these rows the caller must pass `?status=DUPLICATE` explicitly.
+- Rows flagged as `POTENTIAL_DUPLICATE` (date-only hash match) **are** shown in Review with the yellow "Possible dup" badge and a tinted row background, but are **excluded from every bulk / "Approve All" flow** (per-group approve, promote-by-description toasts, drawer "apply to all matching" prompts). A user must open or approve each flagged row individually to confirm it. This prevents accidental re-imports: a second upload of the same CSV produces a page of "Possible dup" rows that cannot be mass-committed with one click.
+- At commit time the backend enforces the same guard: only rows with `status === 'CONFIRMED'` are promoted to the `Transaction` table (see `docs/specs/backend/09-smart-import.md` §9.6, step 2). The `Transaction.externalId @unique` constraint is the final backstop.
 
 **Auto-suggest toast:**
 After confirming a row, if other unconfirmed rows share the same `suggestedCategoryId`, a toast appears:
 > "3 other transactions in 'Groceries' — Confirm All?"
-Clicking "Confirm All" bulk-confirms those rows.
+Clicking "Confirm All" bulk-confirms those rows. **`POTENTIAL_DUPLICATE` and `DUPLICATE` rows are excluded from this bulk action** even when they match the same description.
 
 **Grouped view (Accordion):**
 - One `AccordionItem` per category.
@@ -188,6 +216,8 @@ Update rows are visually distinct from create rows:
 ### Review Step — Import Summary Bar
 
 The summary bar gains an "Updates" count badge using `brand-primary` tokens: `bg-brand-primary/10 text-brand-primary border-brand-primary/20`. The count is sourced from `import.updateCount`.
+
+The **"N duplicates"** pill at the top of the review step uses `warning` tokens (`bg-warning/10 text-warning border-warning/20`) to match the per-row "Possible dup" status badge. Its count is `statusSummary['DUPLICATE'] + statusSummary['POTENTIAL_DUPLICATE']`. Keeping the summary pill and the row-level badge in the same colour family avoids the dissonance where a row looks duplicate-flagged while the summary pill suggests something neutral.
 
 ### Review Step — Status Filter
 

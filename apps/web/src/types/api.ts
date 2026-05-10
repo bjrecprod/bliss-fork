@@ -71,6 +71,7 @@ export type Category = {
   type: string;
   tenantId: string;
   icon?: string;
+  description?: string | null;
   processingHint?: string;
   /** Stable SNAKE_UPPER_CASE code from defaultCategories.js. null for tenant-created custom categories. */
   defaultCategoryCode?: string | null;
@@ -83,6 +84,7 @@ export type CategoryRequest = {
   group: string;
   type: string;
   icon?: string;
+  description?: string | null;
 };
 
 export type CategoryResponse = {
@@ -148,6 +150,13 @@ type FinancialSummary = {
 export type PortfolioItem = {
   id: number;
   symbol: string;
+  /** Brokerage account this position belongs to. Null for manually-entered assets
+   *  (real estate, private equity, etc.) that are not tied to a specific account. */
+  accountId: number | null;
+  /** True when FIFO lot calculation produced a negative quantity — indicates a
+   *  missing buy transaction or an unrecorded cross-account share transfer.
+   *  Surface this as a data quality warning in the UI. */
+  hasLotMismatch: boolean;
   currency: string;
   quantity: number;
   category: {
@@ -242,6 +251,66 @@ export type Error = {
   details?: unknown;
 };
 
+// ─── Admin Maintenance (rebuild) ──────────────────────────────────────────
+
+export type RebuildScope = 'full-portfolio' | 'full-analytics' | 'scoped-analytics' | 'single-asset';
+
+export type RebuildJobState = 'active' | 'waiting' | 'delayed' | 'completed' | 'failed' | 'unknown';
+
+export type RebuildJob = {
+  id: string | number;
+  name: string;
+  state: RebuildJobState;
+  progress: number;
+  rebuildType: RebuildScope | null;
+  requestedBy: string | null;
+  requestedAt: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  failedReason: string | null;
+  attemptsMade: number;
+};
+
+export type RebuildLockInfo = {
+  scope: RebuildScope;
+  held: boolean;
+  ttlSeconds: number | null;
+};
+
+// Lightweight portfolio-item shape used by the Maintenance tab's
+// single-asset picker. Shipped alongside status to avoid calling
+// `/api/portfolio/items`, which triggers a live price fetch per asset.
+export type RebuildAsset = {
+  id: number;
+  symbol: string;
+  currency: string;
+  category: { name: string } | null;
+  account: { name: string } | null;
+};
+
+export type RebuildStatusResponse = {
+  locks: RebuildLockInfo[];
+  current: RebuildJob[];
+  recent: RebuildJob[];
+  assets: RebuildAsset[];
+};
+
+export type RebuildTriggerRequest = {
+  scope: RebuildScope;
+  payload?: {
+    earliestDate?: string;       // required for scope=scoped-analytics (ISO date)
+    portfolioItemId?: number;    // legacy single-asset (kept for backward compat)
+    portfolioItemIds?: number[]; // preferred: all item IDs for the selected symbol
+  };
+};
+
+export type RebuildTriggerResponse = {
+  status: 'accepted';
+  scope: RebuildScope;
+  requestedAt: string;
+  lockTtlSeconds: number;
+};
+
 export type CurrencyRate = {
   id: number;
   year: number;
@@ -284,7 +353,7 @@ export type ImportAdapter = {
   name: string;
   columnMapping: Record<string, string | string[]>;
   dateFormat?: string | null;
-  amountStrategy: 'SINGLE_SIGNED' | 'DEBIT_CREDIT_COLUMNS' | 'AMOUNT_WITH_TYPE';
+  amountStrategy: 'SINGLE_SIGNED' | 'SINGLE_SIGNED_INVERTED' | 'DEBIT_CREDIT_COLUMNS' | 'AMOUNT_WITH_TYPE';
   currencyDefault?: string | null;
   skipRows: number;
   tenantId?: string | null;
@@ -295,7 +364,8 @@ export type DetectAdapterResult = {
   adapter?: ImportAdapter;
   confidence?: number;
   headers?: string[];
-  sampleData?: Record<string, string>[];
+  // ExcelJS-derived rows may contain numbers/booleans — use unknown, coerce with String()
+  sampleData?: Record<string, unknown>[];
 };
 
 export type StagedImport = {
@@ -351,6 +421,15 @@ export type StagedImportRow = {
 export type StagedImportResponse = {
   import: StagedImport;
   rows: StagedImportRow[];
+  categorySummary?: Array<{
+    categoryId: number | null;
+    category: { id: number; name: string; group: string; type: string } | null;
+    count: number;
+    /** Server-side count of rows in this category that bulk-confirm would actually approve
+     *  (status in PENDING/ERROR/STAGED, requiresEnrichment !== true). Drives the
+     *  "Approve All (N)" badge so it reflects all pages, not just the current page. */
+    eligibleCount?: number;
+  }>;
   pagination: {
     page: number;
     limit: number;
@@ -364,7 +443,7 @@ export type CreateAdapterRequest = {
   matchSignature: { headers: string[] };
   columnMapping: Record<string, string | string[]>;
   dateFormat?: string;
-  amountStrategy: 'SINGLE_SIGNED' | 'DEBIT_CREDIT_COLUMNS' | 'AMOUNT_WITH_TYPE';
+  amountStrategy: 'SINGLE_SIGNED' | 'SINGLE_SIGNED_INVERTED' | 'DEBIT_CREDIT_COLUMNS' | 'AMOUNT_WITH_TYPE';
   currencyDefault?: string;
   skipRows?: number;
 };

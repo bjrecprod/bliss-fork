@@ -8,6 +8,8 @@ This specification covers the testing infrastructure and error-logging strategy 
 2. **Verify contracts** — integration tests that exercise the real Express routes and Prisma layer end-to-end, catching issues that unit tests cannot (middleware order, query correctness, auth enforcement).
 3. **Surface production errors** — structured Sentry integration that captures every unhandled worker failure with full context, while filtering known-safe non-errors.
 
+> **LLM provider abstraction update.** After the multi-LLM refactor, tests mock `../../../services/llm` instead of the legacy `../../../services/geminiService`. The test file previously named `geminiService.test.js` is now `unit/services/llm/geminiAdapter.test.js`, and companion tests cover `openaiAdapter`, `anthropicAdapter`, `jsonExtractor`, and the `factory`. Exact counts in the tables below reflect the historical Gemini-only topology; current counts live in the repository. See [Spec 20 — LLM Provider Abstraction](./20-llm-provider-abstraction.md).
+
 The backend uses a **two-layer test pyramid**:
 
 ```
@@ -21,7 +23,7 @@ The backend uses a **two-layer test pyramid**:
       └────────────────────────────────┘
 ```
 
-The backend test suite consists of **39 unit test files (395 tests)** and **8 integration test files (66 tests)** for a total of **461 tests across 47 files**. Run `pnpm test:backend` to execute all tests.
+The backend test suite consists of **59 unit test files** and **9 integration test files** for a total of **942 tests across 68 files**. Run `pnpm test:backend` to execute all tests.
 
 E2E tests (Playwright, across all services) live at `e2e/` — see `docs/specs/frontend/13-automated-testing-and-error-logging.md §13.5`.
 
@@ -337,7 +339,7 @@ docs/specs/frontend/13-automated-testing-and-error-logging.md
 - **Runner**: Vitest 2.x + `@vitejs/plugin-react-swc` + jsdom
 - **Component testing**: `@testing-library/react` + `@testing-library/jest-dom`
 - **API mocking**: MSW v2 (node server via `setupServer`)
-- **Status**: 45 test files, 206 tests covering hooks, pages, contexts, and lib utilities
+- **Status**: 75 test files, 472 tests covering hooks, pages, components, contexts, and lib utilities
 
 ```bash
 pnpm test:web         # run all frontend tests

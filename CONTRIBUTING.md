@@ -54,8 +54,8 @@ These files prevent the most common mistakes: using the wrong module system, har
 The fastest way to get started is Docker:
 
 ```bash
-git clone https://github.com/danielvsantos/bijoyai.git
-cd bijoyai
+git clone https://github.com/bjrecprod/bliss-fork.git
+cd bliss-fork
 ./scripts/setup.sh
 docker compose up --build
 ```

@@ -24,7 +24,7 @@ export function useExportTransactions() {
       const a = document.createElement('a');
       a.href = url;
       const today = new Date().toISOString().slice(0, 10);
-      a.download = `bijoyai-export-${today}.csv`;
+      a.download = `bijoy-export-${today}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

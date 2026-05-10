@@ -10,12 +10,16 @@ Get Bijoy.ai running locally in under 5 minutes.
 ## Start everything
 
 ```bash
-git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
-./scripts/setup.sh          # generates secrets, creates .env
-docker compose up --build   # starts all 5 services
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+./scripts/setup.sh          # prompts for LLM provider, generates secrets, creates .env
+docker compose up           # pulls images and starts all 5 services
 ```
 
+During `setup.sh` you'll be asked to pick an LLM provider (Gemini / OpenAI / Anthropic) and paste its API key. An LLM is required for AI classification and financial insights — without one, new transactions won't be auto-categorized. You can skip the key prompt and add it to `.env` later, but the app will run in degraded mode until you do. See [Choosing Your External Services](/docs/guides/external-services) for the comparison.
+
 Open [http://localhost:8080](http://localhost:8080) once all containers are healthy. The database is auto-migrated and seeded with reference data (countries, currencies, banks) on first boot.
+
+> **Contributing?** Use `docker compose up --build` to build images from source instead of pulling from Docker Hub. This lets you test your local code changes.
 
 ## Create your account
 
@@ -78,7 +82,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### Setup
 
 ```bash
-git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
 cp .env.example .env
 ./scripts/setup.sh          # generates secrets
 pnpm install
@@ -116,7 +120,8 @@ pnpm dev                    # starts all services
 
 ## Next steps
 
+- [Choosing Your External Services](/docs/guides/external-services) -- required for AI classification and insights (Gemini, OpenAI, or Anthropic)
 - [Initial Account Setup](/docs/guides/tenant-seed-setup) -- set up accounts, banks, and categories
-- [Choosing Your External Services](/docs/guides/external-services) -- configure Gemini, Twelve Data, Plaid, and more
+- [Choosing Your External Services](/docs/guides/external-services) -- configure Twelve Data, Plaid, CurrencyLayer
 - [Import transactions](/docs/guides/importing-transactions) -- bring in your CSV/XLSX data
 - [Connect a bank](/docs/guides/plaid-bank-sync) -- automatic sync with Plaid

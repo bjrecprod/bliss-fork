@@ -223,7 +223,7 @@ export function CapybaraIllustration({
           stroke="#9A95A4" strokeWidth="1.25" strokeLinecap="round" opacity="0.5"
         />
 
-        {/* ── Floating "bijoy.ai" decorations ─────────────── */}
+        {/* ── Floating "bijoy" decorations ─────────────── */}
 
         {/* Zzz floats above head */}
         <text

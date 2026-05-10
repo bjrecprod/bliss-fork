@@ -73,9 +73,21 @@ export default function Dashboard() {
   }, [historyResponse]);
 
   const previousNetWorth = useMemo(() => {
-    if (sparklineData.length < 2) return null;
-    return sparklineData[0];
-  }, [sparklineData]);
+    const history = historyResponse?.history ?? [];
+    if (history.length === 0) return null;
+
+    const targetTime = subMonths(new Date(), 1).getTime();
+    const closest = history.reduce((best, entry) => {
+      const diff = Math.abs(new Date(entry.date).getTime() - targetTime);
+      const bestDiff = Math.abs(new Date(best.date).getTime() - targetTime);
+      return diff < bestDiff ? entry : best;
+    });
+
+    const assets = closest.Asset?.total ?? 0;
+    const investments = closest.Investments?.total ?? 0;
+    const debt = closest.Debt?.total ?? 0;
+    return assets + investments - Math.abs(debt);
+  }, [historyResponse]);
 
   const mostRecentSync = useMemo(() => {
     return accounts
@@ -140,8 +152,8 @@ export default function Dashboard() {
             <HeroNetWorth
               netWorth={metrics?.netWorth ?? 0}
               previousNetWorth={previousNetWorth}
-              netIncome={metrics?.netIncome ?? 0}
-              grossProfit={metrics?.grossProfit ?? 0}
+              income={metrics?.netIncome ?? 0}
+              netSavings={metrics?.netSavings ?? 0}
               currency={portfolioCurrency}
               lastSyncDate={mostRecentSync}
               sparklineData={sparklineData}
@@ -151,16 +163,16 @@ export default function Dashboard() {
 
           {/* ── 3-Column Grid ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">
-            <motion.div {...fadeUp} transition={{ delay: 0.1, duration: 0.4 }}>
+            <motion.div {...fadeUp} transition={{ delay: 0.1, duration: 0.4 }} className="order-2 lg:order-1">
               <SyncedAccountsCard
                 accounts={accounts}
                 isLoading={accountsLoading}
               />
             </motion.div>
-            <motion.div {...fadeUp} transition={{ delay: 0.15, duration: 0.4 }}>
+            <motion.div {...fadeUp} transition={{ delay: 0.15, duration: 0.4 }} className="order-1 lg:order-2">
               <ExpenseSplitCard currency={portfolioCurrency} />
             </motion.div>
-            <motion.div {...fadeUp} transition={{ delay: 0.2, duration: 0.4 }}>
+            <motion.div {...fadeUp} transition={{ delay: 0.2, duration: 0.4 }} className="order-3 lg:order-3">
               <QuickActionsCard
                 actions={quickActions}
                 signals={signals}

@@ -298,7 +298,7 @@ async function main() {
     console.log('  1. Verify that the application reads and writes data correctly');
     console.log('  2. Remove ENCRYPTION_SECRET_PREVIOUS from all environment configs');
     console.log('     (Vercel, Railway, or wherever your services are hosted)');
-    console.log('  3. Restart both bijoyai-api and bijoyai-backend-service');
+    console.log('  3. Restart both @bijoyai/api and @bijoyai/backend');
 
   } finally {
     await prisma.$disconnect();

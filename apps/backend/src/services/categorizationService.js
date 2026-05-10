@@ -1,7 +1,7 @@
 const { getCategoriesForTenant } = require('../utils/categoryCache');
 const { lookupDescription, addDescriptionEntry } = require('../utils/descriptionCache');
 const { computeDescriptionHash } = require('../utils/descriptionHash');
-const geminiService = require('./geminiService');
+const geminiService = require('./llm');
 const prisma = require('../../prisma/prisma');
 const logger = require('../utils/logger');
 const {
@@ -34,10 +34,19 @@ const {
  * @param {string|null} merchantName — Optional merchant name for LLM context
  * @param {string} tenantId          — Tenant ID for category scoping
  * @param {number} [reviewThreshold=0.70] — Minimum cosine similarity to accept a vector match
- * @param {Object|null} [plaidCategory=null] — Optional Plaid personal_finance_category object
- * @returns {Promise<{categoryId: number, confidence: number, source: string, reasoning?: string}>}
+ * @param {string|Object|null} [bankCategoryHint=null] — Optional bank-supplied category: Plaid
+ *   personal_finance_category object {primary, detailed?, confidence_level?} or a plain string
+ *   from a CSV category column. Injected as advisory context into the Tier 3 LLM prompt only;
+ *   Tiers 1 and 2 are unaffected.
+ * @param {Object} [options]
+ * @param {number|string|null} [options.amount]   — Transaction amount magnitude (signal for LLM disambiguation)
+ * @param {string|null}        [options.currency] — ISO currency code
+ * @returns {Promise<{categoryId: number|null, confidence: number, source: string, reasoning?: string}>}
+ *   `categoryId` is `null` and `source` is `'LLM_UNKNOWN'` when the LLM
+ *   declines to classify via the prompt's explicit ambiguity FALLBACK. Earlier
+ *   tiers (EXACT_MATCH, VECTOR_MATCH*) always return a non-null categoryId.
  */
-async function classify(description, merchantName, tenantId, reviewThreshold = 0.70, plaidCategory = null) {
+async function classify(description, merchantName, tenantId, reviewThreshold = 0.70, bankCategoryHint = null, options = {}) {
   if (!description || !tenantId) {
     throw new Error('description and tenantId are required for classification');
   }
@@ -101,7 +110,24 @@ async function classify(description, merchantName, tenantId, reviewThreshold = 0
       throw new Error(`No categories found for tenant ${tenantId}`);
     }
 
-    const llmResult = await geminiService.classifyTransaction(description, merchantName, categories, plaidCategory);
+    const llmResult = await geminiService.classifyTransaction(description, merchantName, categories, bankCategoryHint, options);
+
+    // The model's explicit "too ambiguous to classify" fallback. Routed to
+    // the LLM_UNKNOWN source so workers can distinguish it from a genuine
+    // failure (which throws above) and from a low-confidence guess (which
+    // would have a non-null categoryId here). Workers handle null
+    // categoryId by leaving the suggested category empty and queuing the
+    // row for manual review.
+    if (llmResult.categoryId === null) {
+      logger.info(`LLM_UNKNOWN for "${description}" — model declined to classify (reason: ${llmResult.reasoning})`);
+      return {
+        categoryId: null,
+        confidence: 0,
+        source: 'LLM_UNKNOWN',
+        reasoning: llmResult.reasoning || null,
+      };
+    }
+
     logger.info(
       `LLM classified "${description}" → categoryId ${llmResult.categoryId} ` +
       `(confidence: ${llmResult.confidence.toFixed(2)}, reason: ${llmResult.reasoning})`

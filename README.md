@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="apps/api/assets/logobijoyaigh.png" alt="Bijoy.ai" width="400" />
+  <strong style="font-size: 2rem; letter-spacing: -0.02em;">bijoy.ai</strong><br />
+  <span>Personal finance, self-hosted.</span>
 </p>
 <p align="center">
   <strong>Self-Hosted Personal Finance for Global Citizens.</strong><br>
@@ -17,7 +18,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License" />
-  <img src="https://img.shields.io/badge/tests-1178%20passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-2035%20passing-brightgreen" alt="Tests" />
   <img src="https://img.shields.io/badge/docker-compose%20ready-2496ED?logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Claude%20Code-ready-6D657A?logo=anthropic&logoColor=white" alt="Claude Code Ready" />
 </p>
@@ -33,7 +34,7 @@
 
 Most financial tools force you to trade privacy for convenience. If your financial footprint spans multiple countries, currencies, and asset classes, you're usually handing your most sensitive data to a third-party SaaS — or stitching it together in spreadsheets.
 
-**Bijoy.ai is the open-source alternative.** A single, self-hostable dashboard that unifies bank accounts, investment portfolios, expense tracking, and P&L reporting across borders. Everything runs on your infrastructure, classified by AI, normalized to your chosen currency, and encrypted at rest.
+**Bijoy.ai is the open-source alternative.** A single, self-hostable dashboard that unifies bank accounts, investment portfolios, expense tracking, and financial summary reporting across borders. Everything runs on your infrastructure, classified by AI, normalized to your chosen currency, and encrypted at rest.
 
 > Built with [Spec-Driven Development](https://bijoy.ai/docs/specifications) — every feature was documented in detailed technical specs before a line of code was written.
 
@@ -50,18 +51,18 @@ A deterministic AI waterfall that learns from your behavior and gets smarter ove
 | Tier | Method | Speed | How it works |
 |------|--------|-------|-------------|
 | **1. Exact Match** | In-memory cache | < 1ms | O(1) lookup against your transaction history. Instantly recognizes recurring merchants. |
-| **2. Vector Match (tenant)** | pgvector cosine search | ~10ms | Semantic matching using Gemini embeddings (768-dim). Catches variations like "AMZN" vs "Amazon.com". |
+| **2. Vector Match (tenant)** | pgvector cosine search | ~10ms | Semantic matching using 768-dim embeddings (Gemini or OpenAI). Catches variations like "AMZN" vs "Amazon.com". |
 | **3. Vector Match (global)** | Cross-tenant pgvector | ~10ms | Falls back to global embeddings, discounted by 0.92x, for new tenants with sparse data. |
-| **4. LLM Fallback** | Gemini Flash | ~500ms | Full AI classification with reasoning for truly novel transactions. |
+| **4. LLM Fallback** | Configured LLM provider (Gemini, OpenAI, or Anthropic) | ~500ms | Full AI classification with reasoning for truly novel transactions. Confidence is hard-capped at 0.90, with the top band reserved for cases where merchant + Plaid hint + amount all agree. The model can decline genuinely opaque transactions instead of guessing. |
 
 Every correction feeds the loop immediately — your override updates the in-memory cache and generates a new vector embedding, so the same merchant is auto-classified next time.
 
 #### Smart CSV/XLSX Import
 
-Adapter-driven ingestion for any bank's export format:
+Adapter-driven ingestion with 30+ preconfigured bank formats (Chase, Bank of America, Citi, Capital One, Amex, HSBC, Barclays, Revolut, N26, BBVA, CaixaBank, Nubank, and more):
 
-1. **Adapter auto-detection** — Upload a CSV and Bijoy.ai identifies the format by matching column headers
-2. **Custom adapter builder** — Define column mappings for any bank format via a TypeScript interface
+1. **Adapter auto-detection** — Upload a CSV and Bijoy.ai identifies the format by matching column headers against 30+ known bank formats
+2. **Custom adapter builder** — Define column mappings for unsupported banks via TypeScript adapters
 3. **AI classification** — Every imported row goes through the same 4-tier classification engine
 4. **Investment enrichment** — Automatically detects stock/crypto transactions and fetches current prices
 5. **SHA-256 deduplication** — Hash-based dedup scoped to the batch's date range prevents double-counting
@@ -76,18 +77,18 @@ Fifteen financial lenses organized into six categories (Spending, Income, Saving
 - **Annual Report** — Comprehensive year-in-review, triggered on January 3rd
 - **Portfolio Intelligence** — Equity-specific analysis (sector concentration, valuation risk, dividend opportunities) using `SecurityMaster` fundamentals, triggered every Monday
 
-Each tier is calendar-gated and runs a data-completeness check before generation, so partial periods never get compared to full ones. Insights are persisted additively — old batches are kept for historical context and deduplicated by `(tier, periodKey, dataHash)` so identical data never regenerates. Tiered TTL retention keeps monthlies for 2 years, quarterlies for 5 years, and annual reports forever. Dismissed state persists across regenerations, and you can manually refresh any tier for any period from the UI.
+Each tier is calendar-gated and runs a strict data-completeness check before generation, so partial periods never get compared to full ones. A deterministic pre-pass computes all financial deltas, baselines, and anomalies locally — the LLM writes prose about verified math rather than attempting to calculate numbers itself. Insights persist across runs, and you can manually refresh any tier for any period from the UI.
 
 ### The Global Ledger
 
-#### Multi-Currency, Multi-Country P&L
+#### Multi-Currency, Multi-Country Financial Summary
 
-Your personal income statement, across borders and currencies. Bijoy.ai organizes finances like a corporate P&L — Income flows through Essentials, Lifestyle, and Growth spending to produce Gross Profit, Operating Profit, and Net Profit.
+Your personal income statement, across borders and currencies. Bijoy.ai organizes finances into a structured financial summary — Income flows through Essentials, Lifestyle, and Growth spending to produce Discretionary Income, Savings Capacity, and Net Savings.
 
 - **115+ pre-built categories across 9 types** — A ready-made chart of accounts so classification works from day one
 - **Automatic currency normalization** — Every transaction converted to your display currency using historical FX rates from the transaction date
 - **Drill down by year, quarter, or month** — Group-level breakdowns, period comparisons, and trend spotting
-- **Filter by country** — See your full global P&L or isolate a single country's activity
+- **Filter by country** — See your full global financial summary or isolate a single country's activity
 
 #### Real-Time Portfolio Tracking
 
@@ -95,6 +96,7 @@ Your personal income statement, across borders and currencies. Bijoy.ai organize
 - **FIFO lot tracking** — Automatic cost-basis calculation with historical FX rates per buy lot
 - **Realized & unrealized P&L** — Per-holding and aggregate, in both native and display currencies
 - **Sector and geography analysis** — Break down your equity portfolio by industry, sector, or country
+- **Fundamentals trust gate** — Stock metrics (P/E, EPS, yield) are validated during nightly refreshes. When exchange data is inconsistent or stale, Bijoy.ai hides the affected metrics from the equity page and insight prompts rather than surfacing bad numbers
 - **Debt tracking** — Model amortizing loans with interest rates, terms, and paydown schedules
 - **Manual asset support** — Track illiquid assets (real estate, private equity) with user-provided valuations
 
@@ -149,7 +151,7 @@ Three services. Ten asynchronous workers. Sixty endpoints. One configuration fil
             │   └── AI Embeddings: 768-dim Vectors
             │
             └─► 3rd Party Integrations:
-                ├─► AI: Gemini LLM (Classification)
+                ├─► AI: LLM provider abstraction (Gemini / OpenAI / Anthropic)
                 ├─► Banks: Plaid (Sync + Tokens)
                 ├─► Prices: TwelveData (Real-time Stocks)
                 ├─► FX: CurrencyLayer (Historical Rates)
@@ -167,10 +169,12 @@ See the full [Architecture Documentation](https://bijoy.ai/docs/architecture) fo
 Three commands to a running instance:
 
 ```bash
-git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
-./scripts/setup.sh        # generates secrets, creates .env
-docker compose up --build  # starts all services
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
+./scripts/setup.sh        # prompts for LLM provider, generates secrets, creates .env
+docker compose up --build # builds and starts API, backend, web, infra
 ```
+
+During `setup.sh` you're asked to pick an LLM provider (Gemini / OpenAI / Anthropic) and paste its API key. An LLM is required for AI classification and financial insights. See [Choosing an LLM Provider](https://bijoy.ai/docs/guides/external-services) for the full comparison.
 
 Open **http://localhost:8080** and create your account. The database is automatically migrated and seeded with reference data (countries, currencies, banks).
 
@@ -179,7 +183,7 @@ Open **http://localhost:8080** and create your account. The database is automati
 Prerequisites: Node.js 20+, pnpm 9+, PostgreSQL 16 with pgvector, Redis 7+
 
 ```bash
-git clone https://github.com/danielvsantos/bijoyai.git && cd bijoyai
+git clone https://github.com/bjrecprod/bliss-fork.git && cd bliss-fork
 cp .env.example .env       # edit DATABASE_URL and REDIS_URL for your local setup
 ./scripts/setup.sh          # generates secrets (skip if you already have .env)
 pnpm install                # installs all workspace dependencies
@@ -199,7 +203,7 @@ See the [Guides](https://bijoy.ai/docs/guides) for detailed setup instructions.
 Bijoy.ai ships with carefully crafted [`CLAUDE.md`](CLAUDE.md) files that give AI assistants full context on the architecture, conventions, and subsystems. Combined with 43 technical specification files and 19 OpenAPI YAML definitions, the repo is designed for AI coding agents to onboard instantly. If you use [Claude Code](https://claude.ai/code), just open the repo and start working -- it already knows the codebase.
 
 ```bash
-cd bijoyai
+cd bliss-fork
 claude   # Claude Code automatically loads the project context
 ```
 
@@ -217,31 +221,30 @@ Claude Code loads the root file everywhere, plus the app-specific file when you'
 
 ---
 
-## Service Overview
+## Integrations
 
-| Service | Tech | Port | Role |
-|---------|------|------|------|
-| **web** | React + Vite + shadcn/ui | 8080 | SPA frontend served by nginx (Docker) or Vite dev server |
-| **api** | Next.js | 3000 | Auth, REST API, Prisma ORM, file uploads |
-| **backend** | Express + BullMQ | 3001 | 10 async workers: AI classification, portfolio valuation, Plaid sync, analytics |
-| **postgres** | PostgreSQL 16 + pgvector | 5432 | Primary datastore with vector similarity search |
-| **redis** | Redis 7 | 6379 | Job queues (BullMQ) and caching |
+### Required: LLM provider
 
----
+AI classification and financial insights are powered by an LLM. Pick one — Gemini, OpenAI, or Anthropic — at setup time.
 
-## Optional Integrations
+| Provider | Role | Env Vars |
+|---|---|---|
+| [Google Gemini](https://ai.google.dev) | Default. Native embedding support. | `LLM_PROVIDER=gemini`, `GEMINI_API_KEY` |
+| [OpenAI](https://platform.openai.com) | Native embedding support. | `LLM_PROVIDER=openai`, `OPENAI_API_KEY` |
+| [Anthropic Claude](https://console.anthropic.com) | Best prose quality for insights. Requires a secondary provider (Gemini or OpenAI) for embeddings. | `LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`, `EMBEDDING_PROVIDER`, matching embedding-provider key |
 
-Bijoy.ai works out of the box with just a database. Enable additional features by adding API keys:
+Without an LLM configured, Tier 1 (exact match) still works for already-categorized merchants, but new merchants stay unclassified and the insights page is empty. See the [LLM provider guide](https://bijoy.ai/docs/guides/external-services) for details.
+
+Bijoy.ai works out of the box with a database and migrations. Enable additional integrations by adding API keys below — everything degrades gracefully if missing.
 
 | Feature | Provider | Env Var | What it unlocks |
 |---------|----------|---------|----------------|
 | Bank sync | [Plaid](https://plaid.com) | `PLAID_CLIENT_ID` | One-click bank account linking and automatic transaction sync |
-| AI classification | [Google Gemini](https://ai.google.dev) | `GEMINI_API_KEY` | 4-tier classification waterfall (vector search + LLM fallback) |
 | Stock prices | [Twelve Data](https://twelvedata.com) | `TWELVE_DATA_API_KEY` | Real-time and historical pricing for 10,000+ symbols |
 | Currency rates | [CurrencyLayer](https://currencylayer.com) | `CURRENCYLAYER_API_KEY` | Live and historical FX rates for multi-currency conversion |
 | Error tracking | [Sentry](https://sentry.io) | `SENTRY_DSN` | Production error monitoring and performance tracing |
 
-Without these keys, Bijoy.ai still provides full manual transaction management, CSV import (with rule-based classification), and portfolio management with manual valuations.
+Without these keys, Bijoy.ai still provides full manual transaction management, CSV import (including rule-based classification tiers that do not require an LLM for already-learned merchants), and portfolio management with manual valuations.
 
 ---
 
@@ -261,7 +264,7 @@ Without these keys, Bijoy.ai still provides full manual transaction management, 
 | Banking | Plaid |
 | Observability | Sentry, OpenTelemetry |
 | Testing | Jest (backend), Vitest (API + frontend), MSW, Playwright (E2E stubs) |
-| CI/CD | GitHub Actions (5 jobs), Docker Compose |
+| CI/CD | GitHub Actions, Docker Compose |
 
 ---
 
@@ -289,10 +292,10 @@ bijoyai/
 ## Testing
 
 ```bash
-pnpm test              # run all 1,178 tests across all apps
-pnpm test:api          # 428 tests (Vitest) — unit + integration
-pnpm test:backend      # 531 tests (Jest) — unit + integration
-pnpm test:web          # 219 tests (Vitest + MSW) — hooks, pages, components, contexts
+pnpm test              # run all 2,035 tests across all apps
+pnpm test:api          # 621 tests (Vitest) — unit + integration
+pnpm test:backend      # 942 tests (Jest) — unit + integration
+pnpm test:web          # 472 tests (Vitest + MSW) — hooks, pages, components, contexts
 ```
 
 ---

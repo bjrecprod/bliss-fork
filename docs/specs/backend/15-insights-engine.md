@@ -7,11 +7,13 @@ This document specifies the backend architecture of the Bijoy.ai Insights engine
 The insights engine replaces the v0 single-tier architecture (one daily cron over 6 months of data, 7 lenses, atomic batch replacement) with a four-tier model that separates cadence from depth. Each tier uses the prompt, model, data window, and LLM temperature appropriate to its purpose.
 
 > **Note — DAILY tier retired.** A fifth DAILY tier (Gemini Flash, 30-day window) shipped briefly in v1 but was removed in the insights-v1.1 refactor. Daily deltas were too noisy to produce signal — single-transaction swings inflated into dramatic percentage changes, and MONTHLY insights already covered the same observations with a full-period comparison. The Flash model path, the `generate-daily-pulse` job, and the `INSIGHT_MODEL_FAST` environment variable have all been removed.
+>
+> **Note — LLM provider abstraction.** Insight generation no longer imports the Gemini SDK directly. `insightService.js` calls `generateInsightContent()` from `services/llm/`, which dispatches to Gemini, OpenAI, or Anthropic based on the `LLM_PROVIDER` env var. The `INSIGHT_MODEL` override still works but is now interpreted as "the insight model for the active provider" (defaults: `gemini-3.1-pro-preview` for Gemini, `gpt-4.1` for OpenAI, `claude-sonnet-4-6` for Anthropic). See [Spec 20 — LLM Provider Abstraction](./20-llm-provider-abstraction.md).
 
 The pipeline is event-driven and calendar-aware:
 
 1. A daily cron (`generate-all-insights`, 06:00 UTC) scans every tenant and checks whether MONTHLY / QUARTERLY / ANNUAL are due today under the calendar rules in 15.6.3. On a non-trigger day the cron is a no-op.
-2. A weekly cron (`generate-portfolio-intel`, Mondays 05:00 UTC) runs the PORTFOLIO tier for tenants with priced equity holdings.
+2. A weekly cron (`generate-portfolio-intel`, Mondays 05:00 UTC) runs the PORTFOLIO tier for tenants with any portfolio items (completeness gating inside `generateTieredInsights` handles tenants without meaningful data).
 3. Any tier can be triggered on-demand via `POST /api/insights/generate` with `{ tier, year?, month?, quarter?, force? }`. `tier` is **required** — there is no DAILY fallback.
 
 All runs pass through a completeness gate, a data-hash dedup, and a dismissed-state preservation step before persisting insights. Old insights are **never** deleted by new runs — only by the TTL cleanup job.
@@ -107,8 +109,9 @@ Each tier has a dedicated gatherer in `insightService.js`. All gatherers return 
 | `gatherMonthlyData(tenantId, year, month, comparisonAvailable)`| `AnalyticsCacheMonthly` (target + prior + YoY month)              |
 | `gatherQuarterlyData(tenantId, year, quarter, comparisonAvailable)` | `AnalyticsCacheMonthly` (3 months × target + prior Q + YoY Q) |
 | `gatherAnnualData(tenantId, year, comparisonAvailable)`        | `AnalyticsCacheMonthly` (12 months × target + 1–2 prior years)    |
-| `gatherPortfolioIntelligenceData(tenantId)`                    | `PortfolioItem`, `SecurityMaster` (sector, P/E, yield, 52W)       |
-| `gatherEquityFundamentals(tenantId)`                           | `PortfolioItem` ⋈ `SecurityMaster` (trailing EPS, dividend yield) |
+| `gatherPortfolioIntelligenceData(tenantId)`                    | `PortfolioItem`, `SecurityMaster`, `AnalyticsCacheMonthly` (Passive Income last 90d) |
+| `gatherEquityFundamentals(tenantId)`                           | `PortfolioItem` ⋈ `SecurityMaster` (sector, industry, P/E, dividend yield, 52W). Returns sector AND industry allocations side-by-side. |
+| `gatherPassiveIncomeRecent(tenantId, currency, monthsBack)`    | `AnalyticsCacheMonthly` rows where `type='Income'` AND `group='Passive Income'`. Returns null when the tenant has no such category — caller treats that as "skip the signal," not "$0 reported." |
 
 All monetary values are converted to the tenant's portfolio currency before being passed to the LLM. Currency rate access is **strictly read-only** — see 15.4.1 below for the planner pattern that enforces this. Currency symbols used in prompts are looked up from the `CURRENCY_SYMBOLS` map.
 
@@ -208,38 +211,76 @@ If a future refactor reintroduces the write-through path — directly, transitiv
 
 ## 15.5. Prompt Architecture
 
-- **Entry point**: `buildTieredPrompt(tier, tenantData, activeLenses)`
-- **Helper**: `filterActiveLenses(tier, tenantData)` — prunes lenses that have no data (e.g. PORTFOLIO lenses when a tenant has no equity holdings)
+The prompt is layered into four cacheable system blocks plus a per-call user message. Content lives in `src/services/insightPrompts/`; the orchestration lives in `src/services/insightService.js` and the three LLM adapters under `src/services/llm/`.
 
-All tiers share a base voice contract: financial concierge, no exclamation points, precise numbers (with currency symbol), one paragraph per insight, no explicit advice. All tiers return the same JSON schema:
+### 15.5.1. Layered system message
+
+| Layer | What | File | Cache scope |
+|-------|------|------|-------------|
+| L1 | Identity, fiduciary principle, voice rules, severity calibration, global readership, output contract | `insightPrompts/identity.js` | global |
+| L2 | Tier addendum (length, comparison expectations, title cap) | `insightPrompts/tiers/{monthly,quarterly,annual,portfolio}.js` | per tier |
+| L3 | Lens-specific rubrics (15 files, one per lens) — severity quantization, focus, personalization guidance | `insightPrompts/lenses/*.js` | per lens-set |
+| L4 | Few-shot examples filtered to the active lenses for this run (≤8 monthly, ≤10 quarterly/annual, ≤4 portfolio) | `insightPrompts/examples/{monthly,quarterly,annual,portfolio}.js` | per lens-set |
+
+Provider-specific caching mechanics:
+- **Anthropic**: each layer is a separate content block in the `system` array, each tagged `cache_control: { type: 'ephemeral' }`.
+- **OpenAI**: layers are concatenated into a single `system` message; OpenAI's automatic prompt cache picks up the prefix once it's over the size threshold.
+- **Gemini**: layers are concatenated into a single `systemInstruction`.
+
+### 15.5.2. KEY SIGNALS pre-pass
+
+Before the LLM call, a deterministic JS module (`insightPrompts/keySignals.js`) computes a tier-appropriate signal summary from the gathered `tenantData`:
+
+- **MONTHLY**: spending MoM/YoY, top movers (3 by absolute $ change), top-category share with a 6-month tenant baseline, savings-rate delta, income arrival check + CoV, anomalies (categories above 2σ from their own 6-month mean), net-worth split between contributions and market change.
+- **QUARTERLY**: quarter totals, within-quarter monthly savings-rate path, top category share, income stability, net-worth decomposition.
+- **ANNUAL**: full-year totals, quarterly savings-rate breakdown, top category share, net-worth decomposition.
+- **PORTFOLIO**: total equity, top 3 holdings by weight, top sector, **top 3 industries** (each carries its parent sector and constituent symbols, so the lens can unpack "Technology 47%" into "Semiconductors 28% via NVDA, AMD"), weighted P/E across trusted holdings, weighted dividend yield across trusted holdings, **dividend-paying stock value** (the correct denominator for the yield — never total equity, never total portfolio), **passive income recent actuals** when the tenant has a "Passive Income" category (last 90 days from `AnalyticsCacheMonthly`, summed and broken down per month), count of holdings with trusted fundamentals.
+
+The KEY SIGNALS object is serialized at the top of the user message under a `KEY SIGNALS:` heading. The model writes prose about pre-computed signals rather than recomputing arithmetic — this is the largest single quality lever in v1.1 over v1.0.
+
+### 15.5.3. Structured output contract
+
+The schema lives in `insightPrompts/schema.js` and is fed to each provider's structured-output mechanism:
+
+- **Anthropic**: forced tool use — `tools: [{ name: 'submit_insights', input_schema }]`, `tool_choice: { type: 'tool', name: 'submit_insights' }`. The adapter reads `tool_use.input.insights` directly. No regex parsing, no `<json>…</json>` wrapping.
+- **OpenAI**: `response_format: { type: 'json_schema', json_schema: { strict: true } }`. Wrapped under `{ insights: [...] }` because OpenAI strict mode rejects bare arrays at the root.
+- **Gemini**: `generationConfig.responseSchema` with the bare array form.
+
+Each insight's shape:
 
 ```json
-[
-  {
-    "lens": "SPENDING_VELOCITY",
-    "title": "Short headline",
-    "body": "2–6 sentence observation",
-    "severity": "POSITIVE | INFO | WARNING | CRITICAL",
-    "priority": 1,
-    "category": "SPENDING",
-    "metadata": {
-      "dataPoints": { },
-      "actionTypes": ["BUDGET_OPTIMIZATION"],
-      "relatedLenses": ["SAVINGS_RATE"],
-      "suggestedAction": "Optional single-sentence CTA"
-    }
+{
+  "lens": "SPENDING_VELOCITY",
+  "title": "Short headline (≤8 words for monthly, ≤12 for annual)",
+  "body": "2-5 sentences with 4-6 numbers",
+  "severity": "POSITIVE | INFO | WARNING | CRITICAL",
+  "priority": 55,
+  "category": "SPENDING",
+  "metadata": {
+    "dataPoints": { "current": <number|null>, "prior": <number|null>, "yoy": <number|null>, "deltaPct": <number|null> },
+    "actionTypes": ["BUDGET_OPTIMIZATION"],
+    "relatedLenses": ["SAVINGS_RATE"],
+    "suggestedAction": "Single-sentence option, ≤25 words"
   }
-]
+}
 ```
 
-Tier-specific rules:
+`metadata.dataPoints` has a fixed four-field shape (no `additionalProperties`) — this is the lowest common denominator across the three providers' strict-schema modes.
+
+### 15.5.4. Active-lens filtering
+
+`filterActiveLenses(tier, tenantData)` prunes lenses that have no data (PORTFOLIO lenses when a tenant has no equity holdings; DEBT lenses when no debts; etc.). Both L3 and L4 are filtered to the active set before injection — a tenant whose data only fires 3 of the 8 monthly lenses pays for 3 rubrics + 3 examples in the prompt, not 8 + 8.
+
+### 15.5.5. Tier-specific output rules
 
 | Tier      | Title cap | Body length | Output volume                                  |
 |-----------|-----------|-------------|------------------------------------------------|
-| MONTHLY   | 8 words   | 2–4 sent.   | 1 insight per active lens                      |
-| QUARTERLY | 10 words  | 3–5 sent.   | 1–2 insights per active lens                   |
-| ANNUAL    | 12 words  | 4–6 sent.   | 2–3 insights per category (not per lens)       |
+| MONTHLY   | 8 words   | 2–3 sent.   | 1 insight per active lens                      |
+| QUARTERLY | 10 words  | 3–4 sent.   | 1 insight per active lens                      |
+| ANNUAL    | 12 words  | 4–5 sent.   | 1 insight per active lens                      |
 | PORTFOLIO | 8 words   | 2–4 sent.   | 1 insight per active portfolio lens            |
+
+Calibration enforced by L1 + L4 combined: 4–6 numbers per body, observation-first opening, no exclamation points, no explicit advice in the body (suggestions live in `metadata.suggestedAction`).
 
 ## 15.6. Generation Orchestration
 
@@ -255,9 +296,9 @@ Full flow for one (tenant, tier) pair:
 4. **Compute `dataHash`** (SHA-256 of `tenantData` + active lenses).
 5. **Dedup check**: `prisma.insight.findFirst({ where: { tenantId, tier, periodKey, dataHash } })`. If a row exists and `force !== true`, return `{ skipped: true, reason: 'DEDUP' }`.
 6. **Filter active lenses** via `filterActiveLenses(tier, tenantData)` — drops PORTFOLIO lenses when no equity, etc.
-7. **Build prompt** via `buildTieredPrompt(tier, tenantData, activeLenses)`.
-8. **LLM call** via `generateInsightContent(prompt)` — always uses the Pro model (no fast-model path in v1.1).
-9. **Validate response**: each insight must carry a known `lens`, `severity ∈ VALID_SEVERITIES`, `priority ∈ [1, 100]`, `actionTypes ⊆ VALID_ACTION_TYPES`. Invalid insights are dropped with a warning log.
+7. **Build the layered prompt** via `insightPrompts/builder.js`: `buildSystemBlocks(tier, activeLenses)` returns the four content blocks (identity / tier / lens rubrics / examples), `buildUserMessage(tier, tenantData, activeLenses)` returns the per-call user message including the KEY SIGNALS pre-pass.
+8. **LLM call** via `generateInsightContent({ systemBlocks, userMessage, schema })` — always uses the Pro model. Adapters route through provider-specific structured-output mechanisms (Anthropic forced tool use / OpenAI strict json_schema / Gemini responseSchema).
+9. **Validate response**: each insight must carry a known `lens`, `severity ∈ VALID_SEVERITIES`, `priority ∈ [1, 100]`, `actionTypes ⊆ VALID_ACTION_TYPES`. Invalid insights are dropped with a warning log. If the model returns an empty array (no insights for the period) or all insights fail validation, the service returns `{ skipped: true, reason: 'No insights for this period yet — try regenerating in a few minutes' }` instead of persisting an empty batch — the frontend renders this as an empty-state toast.
 10. **Dismissed state preservation**: for any returned insight whose `(tenantId, lens, periodKey)` already has a dismissed row, inherit `dismissed: true`.
 11. **Compute `expiresAt`** from `TIER_TTL_DAYS[tier]` (null for ANNUAL).
 12. **Persist** via `prisma.insight.createMany(...)` (additive — no deletion of prior batches).
@@ -344,7 +385,7 @@ Returns per-tier counts + oldest/newest timestamps, plus the total number of cur
 |------------------------------|---------------------------------|-------------------------------------------------------------------------|
 | `generate-tenant-insights`   | On-demand (POST `/generate`)    | Routes to `generateTieredInsights(tenantId, tier, options)` — `tier` is required |
 | `generate-all-insights`      | Daily cron 06:00 UTC            | Loops tenants with transactions, calls `generateAllDueTiers` (no-op on non-trigger days) |
-| `generate-portfolio-intel`   | Weekly cron Mon 05:00 UTC       | Loops tenants with priced equity, calls `generateTieredInsights(PORTFOLIO)` |
+| `generate-portfolio-intel`   | Weekly cron Mon 05:00 UTC       | Loops tenants with portfolio items, calls `generateTieredInsights(PORTFOLIO)` |
 
 > The `generate-daily-pulse` job type was removed in v1.1. Enqueuing it now throws from the worker handler as an unknown job name.
 
@@ -390,39 +431,44 @@ worker.on('failed', (job, error) => {
 
 The helper downgrades intermediate retries to `warn` and only calls `Sentry.captureException` on the final exhausted attempt. Never call `Sentry.captureException` directly from `worker.on('failed')` — BullMQ fires it on every attempt, which would produce false alarms for transient errors (Prisma Accelerate cold starts, Gemini 429s, Redis blips).
 
-## 15.10. Gemini Integration
+## 15.10. LLM Provider Integration
 
-- **File**: `src/services/geminiService.js`
-- **Insight entry point**: `generateInsightContent(prompt, options)`
+- **Entry point**: `generateInsightContent({ systemBlocks, userMessage, schema, options })` exported from `src/services/llm/index.js`
+- **Adapters**: `src/services/llm/{anthropicAdapter,openaiAdapter,geminiAdapter}.js`
+- **Selection**: the active provider is resolved at module load from `LLM_PROVIDER`. See [Spec 20 — LLM Provider Abstraction](./20-llm-provider-abstraction.md) for the full contract.
 
-### 15.10.1. Single-Model Selection
+### 15.10.1. Single-Model Selection per Provider
 
-```javascript
-const INSIGHT_MODEL = process.env.INSIGHT_MODEL || 'gemini-3.1-pro-preview';
+All tiers use the configured provider's Pro/insight model. There is no per-tier model selection — the Flash-model path (`useFastModel`) was removed in v1.1 along with the DAILY tier.
 
-function generateInsightContent(prompt, { temperature = 0.4 } = {}) {
-  const model   = INSIGHT_MODEL;
-  const timeout = 60_000;
-  // …
-}
-```
+| Provider  | Default insight model        | Override |
+|-----------|------------------------------|----------|
+| Gemini    | `gemini-3.1-pro-preview`     | `INSIGHT_MODEL` |
+| OpenAI    | `gpt-4.1`                    | `INSIGHT_MODEL` |
+| Anthropic | `claude-sonnet-4-6`          | `INSIGHT_MODEL` |
 
-All tiers use the Pro model. The Flash-model path (`useFastModel`) was removed in v1.1 along with the DAILY tier — the only caller that used Flash.
+### 15.10.2. Structured Output per Provider
 
-### 15.10.2. Retry & Backoff
+Each adapter routes the same shared schema through its native strict-output mechanism (see 15.5.3): Anthropic forced tool use with `cache_control: 'ephemeral'` per system block, OpenAI strict `response_format: json_schema`, Gemini `responseSchema` (with a dialect converter that strips `additionalProperties` and rewrites `type: ['T', 'null']` → `nullable: true`).
 
-`MAX_RETRIES = 5`. Non-429 errors back off 1s → 2s → 4s. Rate-limit (429) errors back off 60s → 120s → 180s. `isRateLimitError(error)` classifies errors by status code and message pattern.
+### 15.10.3. Retry & Backoff
+
+Implemented once in `src/services/llm/baseAdapter.js`. `MAX_RETRIES = 5`. Non-429 errors back off 1s → 2s → 4s. Rate-limit (429) errors back off 60s → 120s → 180s. `isRateLimitError(error)` classifies errors by status code and message pattern across all three providers.
 
 ## 15.11. Environment Variables
 
-| Variable             | Default                    | Purpose                                          |
-|----------------------|----------------------------|--------------------------------------------------|
-| `INSIGHT_MODEL`      | `gemini-3.1-pro-preview`   | Model for every tier                             |
-| `GEMINI_API_KEY`     | —                          | Required for any insight generation              |
+| Variable               | Default                        | Purpose                                          |
+|------------------------|--------------------------------|--------------------------------------------------|
+| `LLM_PROVIDER`         | `gemini`                       | `gemini` \| `openai` \| `anthropic`              |
+| `INSIGHT_MODEL`        | provider default (see 15.10.1) | Model for every tier                             |
+| `GEMINI_API_KEY`       | —                              | Required when `LLM_PROVIDER=gemini`              |
+| `OPENAI_API_KEY`       | —                              | Required when `LLM_PROVIDER=openai`              |
+| `ANTHROPIC_API_KEY`    | —                              | Required when `LLM_PROVIDER=anthropic`           |
+| `EMBEDDING_PROVIDER`   | `LLM_PROVIDER`                 | Required when `LLM_PROVIDER=anthropic` (Anthropic has no native embeddings — must point to `gemini` or `openai`) |
 
 > `INSIGHT_MODEL_FAST` was removed in v1.1. If present in an old `.env` file it is ignored.
 
-When `GEMINI_API_KEY` is unset the service logs a warning and returns `{ skipped: true, reason: 'NO_API_KEY' }` rather than throwing.
+When the active provider's API key is unset the service logs a warning and returns `{ skipped: true, reason: 'NO_API_KEY' }` rather than throwing.
 
 ## 15.12. Observability
 
@@ -459,7 +505,7 @@ When `GEMINI_API_KEY` is unset the service logs a warning and returns `{ skipped
   - `generate-tenant-insights` tiered path — asserts `tier` is required
   - `generate-tenant-insights` skipped-result handling
   - `generate-all-insights` per-tier aggregation + skipped counting + error continuation (MONTHLY/QUARTERLY/ANNUAL only)
-  - `generate-portfolio-intel` equity query shape + error continuation
+  - `generate-portfolio-intel` portfolio-items query shape + error continuation
   - Unknown job name throws (including the retired `generate-daily-pulse`)
 
 ### Integration Tests
@@ -469,4 +515,8 @@ When `GEMINI_API_KEY` is unset the service logs a warning and returns `{ skipped
   - Enqueue contract (job name + payload)
   - `POST /api/insights/cleanup` auth + happy-path + error path
 
-Tests mock BullMQ, Prisma, Gemini, and the retention service. The `dataCompletenessService` date helpers (`getPeriodKey`, `getQuarterMonths`, `getQuarterFromMonth`) are kept as real implementations via `jest.requireActual` so period-key assertions exercise real logic.
+Tests mock BullMQ, Prisma, the LLM adapter (`services/llm/index.js`), and the retention service. The `dataCompletenessService` date helpers (`getPeriodKey`, `getQuarterMonths`, `getQuarterFromMonth`) are kept as real implementations via `jest.requireActual` so period-key assertions exercise real logic.
+
+- **File**: `src/__tests__/unit/services/insightPrompts/keySignals.test.js`
+  - MONTHLY: spending/MoM, top movers, top-category share + 6-month baseline, savings-rate delta, income stability, anomalies, period-anchored net-worth (start/end derived from the breakdown's per-group sums, not from trend-window endpoints), single-month-tenant fallback
+  - PORTFOLIO: top holdings, top sector, weighted P/E, weighted dividend yield, **top industries with parent sector + constituent symbols** (e.g. Semiconductors → NVDA, AMD), **dividend-paying stock value** as the correct yield denominator, **passiveIncomeRecent passthrough** when the tenant has the corresponding category

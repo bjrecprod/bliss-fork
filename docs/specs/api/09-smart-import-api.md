@@ -18,7 +18,10 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 **POST** `/api/imports/adapters`
 
 - **Purpose**: Creates a new tenant-specific adapter.
-- **Body**: `{ name, description, columnMappings, dateFormat, amountStrategy, matchSignature }`
+- **Body**: `{ name, description, columnMapping, dateFormat, amountStrategy, matchSignature, currencyDefault?, skipRows? }`
+  - `amountStrategy`: one of `SINGLE_SIGNED`, `SINGLE_SIGNED_INVERTED`, `DEBIT_CREDIT_COLUMNS`, `AMOUNT_WITH_TYPE`
+  - `matchSignature`: `{ headers: string[] }` — the ordered list of column names that identify this file format
+  - `columnMapping`: `{ date, description, amount?, debit?, credit?, type?, currency? }` — maps logical fields to CSV column names. `type` is only required for `AMOUNT_WITH_TYPE` strategy.
 - **Security**: Adapter is scoped to the authenticated tenant; global adapters cannot be created via this endpoint.
 
 **PUT** `/api/imports/adapters/:id`
@@ -44,7 +47,12 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 - **Body**: `multipart/form-data` with `file` field.
 - **Accepted file types**: `text/csv`, `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (XLSX), `application/vnd.ms-excel` (XLS). Any other MIME type returns `400` with `{ error: "Unsupported file type..." }`.
 - **Size limit**: 10 MB maximum. Exceeding this returns `400` with `{ error: "File exceeds maximum allowed size of 10 MB" }`.
-- **Response**: `{ matchedAdapter, rawHeaders, previewRows }` — returns the best-matching adapter (if any) and raw data for manual mapping fallback.
+- **Response**: `{ matched: boolean, adapter?: ImportAdapter, confidence?: number, headers?: string[], sampleData?: Record<string, unknown>[] }`
+  - `matched` — `true` if a known adapter was identified.
+  - `adapter` — the matched adapter object (omitted when `matched: false`).
+  - `confidence` — header-intersection confidence score (omitted when `matched: false`).
+  - `headers` — the raw column names extracted from the file's first row (always present).
+  - `sampleData` — up to 3 parsed data rows as key→value maps (always present when the file is readable). ExcelJS may return numbers or booleans for non-text cells.
 - **XLSX**: Reads the first non-empty sheet unless a sheet name is specified.
 - **Header filtering**: `__EMPTY` columns (from merged cells) are excluded.
 
@@ -77,14 +85,24 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 - **`seedReady` field**: When the worker finishes and `StagedImport.seedReady === true`, the response includes this flag. The frontend uses it to gate the Quick Classify step — the status transition to `'review'` is intentionally blocked when `seedReady=true` so the seeds can be presented first.
 - **Query params**:
   - `?page` (default 1), `?limit` (default 50, max 200)
-  - `?status` — filter by row status. Accepts a **single value** (e.g. `status=CONFIRMED`) or a **comma-separated list** (e.g. `status=STAGED,POTENTIAL_DUPLICATE`). When multiple values are provided, the query uses an `IN` clause.
+  - `?status` — filter by row status. Accepts a **single value** (e.g. `status=CONFIRMED`) or a **comma-separated list** (e.g. `status=STAGED,POTENTIAL_DUPLICATE`). When multiple values are provided, the query uses an `IN` clause. **When omitted, the endpoint defaults to `['PENDING', 'POTENTIAL_DUPLICATE', 'CONFIRMED', 'ERROR', 'STAGED', 'DUPLICATE']`** — only `SKIPPED` (explicit user dismissal) is hidden by default. `DUPLICATE` rows (hard wall-clock-timestamp matches) are surfaced so the user can audit what the dedup pipeline filtered; bulk-confirm and the per-row PUT both refuse `DUPLICATE`, so visibility is safe.
   - `?categoryId` — optional integer. Filters rows to a single `suggestedCategoryId`. Used by the grouped-view to paginate within one category group without re-fetching all rows.
+  - `?uncategorized=true` — optional boolean. Filters rows to those with `suggestedCategoryId IS NULL`. Mutually exclusive with `?categoryId` (when both are sent, `?uncategorized` wins). Needed so the "Uncategorized" group in the grouped view is drillable.
 - **Response**: `{ import, rows, categorySummary, pagination }`:
   - `import` — the `StagedImport` record, including a `statusSummary` map of `{ PENDING: N, CONFIRMED: N, STAGED: N, POTENTIAL_DUPLICATE: N, ... }` and `earliestTransactionDate`.
   - `rows` — paginated `StagedImportRow` records, each enriched with `suggestedCategory: { id, name, group, type }`.
-  - `categorySummary` — **server-side groupBy across all pending rows** (regardless of the current page). Each entry is `{ categoryId, category: { id, name, group, type }, count }`, sorted descending by count. Computed against `status IN [STAGED, POTENTIAL_DUPLICATE]` so unconfirmed rows that need action are always represented. Used by the grouped-view headers to show accurate cross-page totals without additional requests.
+  - `categorySummary` — **server-side groupBy across all pending rows** (regardless of the current page). Each entry is `{ categoryId, category: { id, name, group, type }, count, eligibleCount }`, sorted descending by `count`. `count` is computed against the same status filter used for `rows` (so grouped-view headers match the items visible in the paginated list). `eligibleCount` is a separate count of rows that **bulk-confirm would actually approve** — `status IN ('PENDING','ERROR','STAGED')` AND `requiresEnrichment !== true` — used to drive the "Approve All (N)" button so the badge reflects all pages, not just the current page.
   - `pagination` — `{ page, limit, total, totalPages }`.
 - **Polling**: The frontend polls this endpoint every 2 seconds while `import.status === 'PROCESSING'`.
+
+**POST** `/api/imports/:id/bulk-confirm`
+
+- **Purpose**: Confirms every eligible row in a category in a single request — replaces the legacy client-side fan-out (one PUT per row) that broke the grouped-view "Approve All" button: it tripped the `importsRead` rate limiter (returning 429) and only confirmed the visible page even when the group spanned multiple pages.
+- **Auth**: JWT.
+- **Body** (mutually exclusive — at most one filter): `{ categoryId?: number, uncategorized?: boolean }`. When both are sent, `uncategorized` wins. Omitting both confirms all eligible rows for the import (used by future "approve everything" flows; current UI always sends one filter).
+- **Eligibility**: only rows with `status IN ('PENDING','ERROR','STAGED')` AND `requiresEnrichment !== true` are confirmed. `POTENTIAL_DUPLICATE` and rows needing investment enrichment are intentionally skipped — they must be reviewed via the deep-dive drawer so re-imported transactions and missing ticker/qty/price data can never auto-commit.
+- **Response**: `{ confirmed: number }`.
+- **Errors**: `404` when the import doesn't exist or belongs to another tenant; `400` for `COMMITTED`/`CANCELLED` imports or invalid `categoryId`.
 
 **GET** `/api/imports/pending`
 
@@ -133,7 +151,7 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
   2. Sets `StagedImport.status = 'COMMITTING'` and `progress = 0`.
   3. Dispatches a `SMART_IMPORT_COMMIT` event to the backend service via `produceEvent()`.
   4. Returns `202 Accepted` immediately.
-- **Body (optional)**: `{ rowIds: string[] }` — partial commit; if omitted, all CONFIRMED rows are promoted.
+- **Body (optional)**: `{ rowIds: string[] }` — partial commit; if omitted, every row with `status === 'CONFIRMED'` is promoted. `POTENTIAL_DUPLICATE` and `DUPLICATE` rows are **never** promoted regardless of `rowIds` — the user must first override them to `CONFIRMED` via `PUT /api/imports/:id/rows/:rowId`. This is the data-integrity guard that prevents accidental re-imports from silently landing in the `Transaction` table.
 - **Response**: `202 { status: 'COMMITTING', message: 'Commit process started. Poll for progress.' }`
 - **Error handling**: If `produceEvent()` fails, the status is reverted to `READY` (with `progress: 100`) and the endpoint returns `500 { error: 'Failed to start commit process' }`.
 - **Frontend polling**: The frontend polls `GET /api/imports/:id` while `status === 'COMMITTING'`. The backend `commitWorker` updates `StagedImport.progress` (0→85% batch processing, 90% embeddings, 100% done) and stores the final result in `StagedImport.errorDetails.commitResult` as `{ transactionCount: N, remaining: M }`.
@@ -183,7 +201,8 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 - **`StagedImport`**: Import session record. See `docs/specs/backend/09-smart-import.md` for full schema.
 - **`StagedImportRow`**: Individual staged row. See `docs/specs/backend/09-smart-import.md` for full schema.
-- **`ImportAdapter`**: Adapter definition with `matchSignature`, `columnMappings`, `amountStrategy`, `dateFormat`. Can be global (`tenantId: null`) or tenant-specific.
+- **`ImportAdapter`**: Adapter definition with `matchSignature`, `columnMapping`, `amountStrategy`, `dateFormat`, `currencyDefault`, `skipRows`. Can be global (`tenantId: null`) or tenant-specific.
+  - **Amount strategies**: `SINGLE_SIGNED` (one column, negative = debit), `SINGLE_SIGNED_INVERTED` (one column, positive = debit — used by Amex), `DEBIT_CREDIT_COLUMNS` (separate debit and credit columns), `AMOUNT_WITH_TYPE` (amount column + type indicator column).
 
 ---
 
@@ -191,14 +210,14 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 **GET** `/api/transactions/export`
 
-- **Purpose**: Exports the user's transactions as a downloadable Bijoy.ai Native CSV with the `id` column populated, enabling round-trip editing through re-import.
+- **Purpose**: Exports the user's transactions as a downloadable Bijoy Native CSV with the `id` column populated, enabling round-trip editing through re-import.
 - **File**: `pages/api/transactions/export.js`
 - **Auth**: JWT.
 - **Query params**: Same filter set as `GET /api/transactions` — `startDate`, `endDate`, `accountId`, `categoryId`, `categoryGroup`, `type`, `tags`, `source`, `currencyCode`, `group`.
 - **No pagination**: All matching transactions are streamed as a single CSV response.
 - **Response headers**:
   - `Content-Type: text/csv; charset=utf-8`
-  - `Content-Disposition: attachment; filename="bijoyai-export-YYYY-MM-DD.csv"`
+  - `Content-Disposition: attachment; filename="bijoy-export-YYYY-MM-DD.csv"`
 - **Response body**: UTF-8 CSV with BOM (`\uFEFF`) for Excel compatibility. Columns: `id`, `transactiondate`, `description`, `debit`, `credit`, `account`, `category`, `currency`, `details`, `ticker`, `assetquantity`, `assetprice`, `tags` (pipe-separated).
 - **Empty export**: Returns only the header row if no transactions match (no 404).
 - **Rate limit**: `transactions` limiter (same as `GET /api/transactions`).
@@ -209,7 +228,7 @@ See `docs/specs/backend/09-smart-import.md` for the backend worker pipeline that
 
 ## Update Support (CSV Round-Trip)
 
-When a Bijoy.ai Native CSV with an `id` column is re-imported, the Smart Import pipeline detects existing transactions and treats matching rows as updates rather than inserts. The following changes support this flow.
+When a Bijoy Native CSV with an `id` column is re-imported, the Smart Import pipeline detects existing transactions and treats matching rows as updates rather than inserts. The following changes support this flow.
 
 ### Import Status — Additional Fields
 

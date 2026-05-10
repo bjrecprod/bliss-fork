@@ -1,25 +1,34 @@
-# Bijoy.ai — Agent Instructions
+# Bijoy.ai — agent notes
 
-See `CLAUDE.md` for full architecture, subsystem, and coding convention details.
+Upstream architecture and conventions live in `CLAUDE.md` (repo root and per-app).
 
-## Cursor Cloud specific instructions
+## Local infra expectations
 
-### Infrastructure (started automatically via Docker)
+| Service | Default | Notes |
+|--------|---------|--------|
+| PostgreSQL (dev) | user/db **`bijoyai`** | Matches `docker-compose.yml` and `.env.example`. |
+| PostgreSQL (Vitest/API + Jest/backend integration) | db **`bijoyai_test`**, role **`bjrectest`** | Set in `apps/api/.env.test` and `apps/backend/.env.test`; use trust auth for `bjrectest` **before** the global `scram-sha-256` rule in `pg_hba.conf` when running tests locally. |
+| Redis | `REDIS_PASSWORD` from `.env` | Required for backend workers in dev. |
+
+## Useful commands
+
+```bash
+pnpm install          # prisma generate runs via postinstall
+pnpm dev              # api, backend, web, docs (parallel)
+pnpm test             # all workspace test scripts
+```
+
+## Cursor Cloud / Docker (optional)
+
+### Infrastructure (`bijoyai-postgres`, `bijoyai-redis`)
 
 | Service | Container | Port | Notes |
 |---------|-----------|------|-------|
-| PostgreSQL 16 + pgvector | `bijoyai-postgres` | 5432 | User `bijoyai`, DB `bijoyai`. Test DB: `bijoyai_test` (user `bijoybenny`, trust auth) |
-| Redis 7 | `bijoyai-redis` | 6379 | Password from `.env` `REDIS_PASSWORD` |
-
-### Starting infrastructure
+| PostgreSQL 16 + pgvector | `bijoyai-postgres` | 5432 | User `bijoyai`, DB `bijoyai`. Test DB: `bijoyai_test` ( dedicated role **`bjrectest`**, trust auth locally) |
+| Redis 7 | `bijoyai-redis` | 6379 | Password from `.env` → `REDIS_PASSWORD` |
 
 ```bash
-# Ensure Docker daemon is running
-sudo dockerd &>/tmp/dockerd.log &
-sleep 3
-sudo chmod 666 /var/run/docker.sock
-
-# Start containers (idempotent)
+# Start containers (idempotent) — snippet only; paths match typical Cursor sandboxes.
 docker start bijoyai-postgres bijoyai-redis 2>/dev/null || \
   (PGPASS=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2) && \
    RDPASS=$(grep '^REDIS_PASSWORD=' .env | cut -d= -f2) && \
@@ -27,47 +36,36 @@ docker start bijoyai-postgres bijoyai-redis 2>/dev/null || \
    docker run -d --name bijoyai-redis -p 6379:6379 redis:7-alpine redis-server --requirepass "$RDPASS")
 ```
 
-### Starting dev services
+### Running tests locally (integration DB)
 
-```bash
-pnpm dev   # starts api (3000), backend (3001), web (8080), docs (3002) in parallel
-```
-
-### Running tests
-
-All 1178 tests (219 web + 428 api + 531 backend):
-
-```bash
-pnpm test          # all
-pnpm test:web      # Vitest — 219 tests
-pnpm test:api      # Vitest — 428 tests (needs bijoyai_test DB)
-pnpm test:backend  # Jest — 531 tests (needs bijoyai_test DB)
-```
-
-Integration tests require the `bijoyai_test` database with pgvector extension and user `bijoybenny` (trust auth). If the test DB is missing:
+Integration tests expect **`bijoyai_test`** with pgvector plus role **`bjrectest`** (trust auth before the SCRAM rule in `pg_hba.conf`). Example bootstrap:
 
 ```bash
 docker exec bijoyai-postgres psql -U bijoyai -d bijoyai -c "CREATE DATABASE bijoyai_test;"
 docker exec bijoyai-postgres psql -U bijoyai -d bijoyai_test -c "CREATE EXTENSION IF NOT EXISTS vector;"
-docker exec bijoyai-postgres psql -U bijoyai -d bijoyai -c "CREATE ROLE bijoybenny WITH LOGIN SUPERUSER;"
-# Add trust rule BEFORE the catch-all scram-sha-256 rule in pg_hba.conf
-docker exec bijoyai-postgres bash -c "sed -i '/^host all all all scram-sha-256/i host all bijoybenny 0.0.0.0/0 trust' /var/lib/postgresql/data/pg_hba.conf"
+docker exec bijoyai-postgres psql -U bijoyai -d bijoyai -c "CREATE ROLE bjrectest WITH LOGIN SUPERUSER;"
+docker exec bijoyai-postgres bash -c "sed -i '/^host all all all scram-sha-256/i host all bjrectest 0.0.0.0/0 trust' /var/lib/postgresql/data/pg_hba.conf"
 docker exec bijoyai-postgres psql -U bijoyai -d bijoyai -c "SELECT pg_reload_conf();"
-DATABASE_URL="postgresql://bijoybenny@localhost:5432/bijoyai_test" pnpm exec prisma migrate deploy --schema=prisma/schema.prisma
 ```
 
 ### Linting
 
 ```bash
-pnpm --filter @bijoyai/web lint     # ESLint (--max-warnings 0)
-pnpm --filter @bijoyai/api lint     # next lint
+pnpm --filter @bijoyai/web lint
+pnpm --filter @bijoyai/api lint
+pnpm --filter @bijoyai/backend lint
 ```
 
-### Gotchas discovered during setup
+### Gotchas
 
-- The `.env.test` files in `apps/api/` and `apps/backend/` use `postgresql://bijoybenny@localhost:5432/bijoyai_test` — this user must exist with trust auth in pg_hba.conf **before** the catch-all `scram-sha-256` rule.
-- The `postinstall` script runs `prisma generate` automatically on `pnpm install`.
-- The Prisma `package.json#prisma` config triggers a deprecation warning — safe to ignore.
-- The signup API requires `countries`, `currencies`, and `bankIds` arrays (even if empty). Without them, it crashes with a `.length` error on undefined.
-- Cookie `Secure` flag is set even in dev — use `Authorization: Bearer <token>` header for curl-based API testing instead of cookies.
-- External API keys (Gemini, Plaid, TwelveData, CurrencyLayer) are optional; the app degrades gracefully without them.
+- `.env.test` overrides `DATABASE_URL` first; then tests layer fixed secrets (`ENCRYPTION_SECRET`, etc.).
+- `postinstall` runs `prisma generate`.
+- Signup API requires `countries`, `currencies`, and `bankIds` arrays (may be empty).
+- Cookie `Secure` is enforced in production-like setups — prefer `Authorization: Bearer` for scripted API probes.
+
+## Product identity
+
+- **Domain:** https://bijoy.ai  
+- **App host (demo):** https://app.bijoy.ai  
+- **Upstream fork:** https://github.com/bjrecprod/bliss-fork  
+- **Demo login (hosted demo UI):** `bjrec@bijoy.ai` (see auth panel on `app.bijoy.ai`)

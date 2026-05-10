@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 const PAGE_TO_CHECKLIST: Record<string, string> = {
   "/agents/review": "reviewTransactions",
   "/reports/expenses": "exploreExpenses",
-  "/reports/pnl": "checkPnL",
+  "/reports/financial-summary": "checkPnL",
 };
 
 interface AppShellProps {
@@ -55,7 +55,7 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-dvh overflow-hidden">
       {/* Sidebar - hidden on mobile unless toggled */}
       <div
         className={cn(

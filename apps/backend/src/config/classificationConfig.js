@@ -12,7 +12,15 @@
  * EXACT_MATCH          | Fixed constant  | always 1.00
  * VECTOR_MATCH         | Cosine sim.     | 0.70–1.00  (tenant-scoped)
  * VECTOR_MATCH_GLOBAL  | cosine × 0.92   | 0.64–0.92  (cross-tenant, discounted)
- * LLM                  | Gemini-assigned | 0.00–0.85  (hard-capped in geminiService)
+ * LLM                  | LLM-assigned    | 0.00–0.90  (hard-capped in classificationPromptHelpers)
+ * LLM_UNKNOWN          | Fixed 0.0       | always 0.00 (model-declared ambiguous fallback)
+ *
+ * The 0.86–0.90 LLM band is the ABSOLUTE CERTAINTY tier — only valid when
+ * the merchant is a globally recognized brand AND the Plaid hint matches
+ * the chosen category AND the amount is typical. With the default 0.90
+ * autoPromoteThreshold this is the only way an LLM classification
+ * auto-promotes; tenants who want LLM never to auto-promote raise their
+ * threshold to 0.91+.
  *
  * System actions by score (thresholds are per-tenant and stored in the DB;
  * the constants below are the defaults used when no DB record exists):
@@ -25,9 +33,8 @@
  * (LIMIT 1 query) — not a cumulative or average score.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NOTE: The Prisma Tenant model (bijoyai-api/prisma/schema.prisma, lines 42–43)
- * has matching @default values for autoPromoteThreshold and reviewThreshold.
- * Keep those in sync manually if you change the defaults here.
+ * NOTE: `prisma/schema.prisma` Tenant model defaults for `autoPromoteThreshold`,
+ *       `reviewThreshold`, and related fields must mirror the defaults here — keep sync manually.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -65,7 +72,7 @@ const DEFAULT_REVIEW_THRESHOLD = 0.70;
 // ── Phase 1 / 2 processing ───────────────────────────────────────────────────
 /** Maximum number of seed descriptions held for the Quick Seed interview.
  *  Phase 1 stops once this many seeds are accumulated. */
-const TOP_N_SEEDS = 15;
+const TOP_N_SEEDS = 10;
 
 /** Maximum concurrent LLM calls during Phase 2 classification.
  *  Kept low (5) to avoid bursting into Gemini's per-minute quota.

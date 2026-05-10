@@ -7,6 +7,8 @@ The AI classification pipeline automatically assigns categories to transactions 
 The pipeline is implemented in `src/services/` and called directly by `plaidProcessorWorker.js` and `smartImportWorker.js`.
 
 > **Configuration**: All tuning constants (thresholds, dimensions, concurrency limits) are centralised in `src/config/classificationConfig.js`. Edit only that file to change system-wide classification behaviour. See §9.10 for details.
+>
+> **LLM provider abstraction (post v1.1)**: The pipeline no longer calls the Gemini SDK directly. All LLM calls route through `src/services/llm/` — a factory-backed adapter layer that supports Gemini, OpenAI, and Anthropic Claude. The public surface (`generateEmbedding`, `classifyTransaction`, `generateInsightContent`, `isRateLimitError`) is unchanged, so the sections below describe the pipeline in provider-agnostic terms even where historical prose still mentions "Gemini". For full details see [Spec 20 — LLM Provider Abstraction](./20-llm-provider-abstraction.md).
 
 ---
 
@@ -64,26 +66,36 @@ When no tenant-scoped vector match exists, the same embedding is compared agains
 
 ---
 
-### Tier 3 — LLM Classification (`geminiService.js`)
+### Tier 3 — LLM Classification (`services/llm/`)
 
-When neither exact nor vector match is found, the description is sent to the Google Gemini API for classification.
+When neither exact nor vector match is found, the description is sent to the configured LLM provider (Gemini, OpenAI, or Anthropic) for classification.
 
 **Workflow**:
 1. `categorizationService.classify()` fetches the tenant's category list via `categoryCache.getCategoriesForTenant(tenantId)`.
-2. Builds a prompt: description + tenant category list → Gemini `generateContent()` with `responseMimeType: 'application/json'`.
-3. **Plaid Category Hint**: When a `plaidCategory` object is provided (Plaid transactions only), it is injected into the prompt between TRANSACTION and AVAILABLE CATEGORIES:
-   ```
-   PLAID CATEGORY (from the bank — use as a hint, NOT as the answer):
-   Primary: "FOOD_AND_DRINK"
-   Detailed: "FOOD_AND_DRINK_RESTAURANTS"
-   Confidence: "HIGH"
-   ```
-   A classification rule is added: *"If a PLAID CATEGORY is provided, use it as a contextual hint but always map to the most appropriate category from your list."* This improves accuracy for first-time merchants that miss Tiers 1 & 2.
+2. Builds a prompt via the shared `services/llm/classificationPromptHelpers.js` module → adapter sends to its provider with structured JSON response. The prompt body is identical across providers; only the API envelope (system role, JSON mode, `<json>` tags) differs.
+3. **Transaction context injected** in the prompt body:
+   - **Description + merchant** between sentinel delimiters (`[TRANSACTION_DESCRIPTION_START]`/`[END]`, `[MERCHANT_START]`/`[END]`).
+   - **Amount + currency** as a disambiguation signal (e.g. `Amount: USD 4.85`). The same merchant at $5 vs $500 often belongs in different categories.
+   - **Bank category hint** (Plaid transactions OR CSV imports with a category column):
+     ```
+     BANK CATEGORY HINT (from the source file — use as context, NOT as the answer):
+     Primary: "FOOD_AND_DRINK"
+     Detailed: "FOOD_AND_DRINK_RESTAURANTS"
+     Confidence: "HIGH"
+     ```
+     Plaid passes the `personal_finance_category` object; CSV adapters pass the raw cell value as a plain string (normalized to `{ primary: string }` internally). Both shapes are handled by `buildClassificationBody()` in `classificationPromptHelpers.js`.
+   - **Few-shot examples** (5) covering: a clear single-merchant match, an ambiguous merchant disambiguated by amount, an ABSOLUTE CERTAINTY case (bank hint + recognized brand + typical amount), a bank-hint-elevated case that doesn't reach absolute certainty, and a FALLBACK ambiguity.
 4. Parses the structured JSON response: `{ categoryId, confidence, reasoning }`.
-5. Returns `{ categoryId, confidence, reasoning, source: 'LLM' }`. The confidence is **hard-capped at 0.85** in code (`Math.min(..., 0.85)`) so LLM classifications can never auto-promote. The `reasoning` string is stored in `PlaidTransaction.classificationReasoning` and surfaced in the Transaction Review deep-dive drawer.
-6. On Gemini API failure: retries up to 5 times with exponential backoff, then throws an `Error` (`'All classification tiers failed...'`). The calling worker handles this by leaving the transaction without a category.
+5. Returns one of three result shapes:
+   - **Normal classification**: `{ categoryId: <int>, confidence: 0.30–0.90, reasoning, source: 'LLM' }`. Confidence is **hard-capped at 0.90** in `validateClassificationResponse()`.
+   - **ABSOLUTE CERTAINTY**: A confidence in the **0.86–0.90** band, only valid when ALL of: (a) merchant is a globally recognized brand, (b) bank category hint matches the chosen category, (c) amount is typical for that category. With the default `autoPromoteThreshold` of 0.90, this is the only path an LLM classification can auto-promote.
+   - **LLM_UNKNOWN**: `{ categoryId: null, confidence: 0, reasoning, source: 'LLM_UNKNOWN' }`. The model invoked the explicit FALLBACK in the prompt because no category fit with confidence ≥0.30. Workers route these rows to manual review (the description shows up unclassified — better than a wrong guess).
+   The `reasoning` string is stored in `PlaidTransaction.classificationReasoning` and surfaced in the Transaction Review deep-dive drawer.
+6. On API failure: retries up to 5 times with exponential backoff (shared `withRetry` in `baseAdapter.js`), then throws `'All classification tiers failed…'`. The calling worker handles this by leaving the transaction without a category.
 
-**Retry/backoff**: Implemented in `geminiService.js` with `MAX_RETRIES = 5` and `BASE_DELAY_MS = 1000`. Rate-limit errors (429) use a longer `RATE_LIMIT_BASE_DELAY_MS = 60_000` (60s → 120s → 180s).
+**Retry/backoff**: Shared `withRetry` in `services/llm/baseAdapter.js` with `MAX_RETRIES = 5` and `BASE_DELAY_MS = 1000`. Rate-limit errors (429) use a longer `RATE_LIMIT_BASE_DELAY_MS = 60_000` (60s → 120s → 180s).
+
+**Shared prompt module**: `services/llm/classificationPromptHelpers.js` exports `sanitizeDescription`, `buildClassificationBody`, and `validateClassificationResponse`. All three adapters route through it, so prompt-engineering changes (new examples, tightening the format spec, raising the cap) land in one place. The unit-test coverage for the four Phase-2 quick wins (amount/currency, few-shot examples, FALLBACK, STRICT format) lives in `__tests__/unit/services/llm/classificationPromptHelpers.test.js`.
 
 ---
 
@@ -111,7 +123,7 @@ Provides an O(1) description → categoryId lookup per tenant.
 
 The main classification orchestrator. Key functions:
 
-- **`classify(description, merchantName, tenantId, reviewThreshold, plaidCategory?)`** — Runs the 4-tier waterfall in sequence, returning the first successful result. The optional 5th parameter `plaidCategory` is the raw Plaid `personal_finance_category` JSON object. When present, it is injected as a hint into the Tier 3 LLM prompt (see §9.6). Tiers 1 and 2 are unaffected.
+- **`classify(description, merchantName, tenantId, reviewThreshold, bankCategoryHint?, options?)`** — Runs the 4-tier waterfall in sequence, returning the first successful result. The optional 5th parameter `bankCategoryHint` accepts either a Plaid `personal_finance_category` object `{ primary, detailed?, confidence_level? }` or a plain string (CSV category column value); when present it is injected as a hint into the Tier 3 LLM prompt — Tiers 1 and 2 are unaffected. The optional 6th parameter `options` carries `{ amount, currency }` from the calling worker. When the LLM returns the explicit ambiguous fallback (categoryId `null`), `classify` resolves with `source: 'LLM_UNKNOWN'` so workers can distinguish a model-declared "no category" from an outright failure.
 
 - **`findVectorMatch(embedding, tenantId, threshold)`** — Executes the pgvector cosine similarity query against `TransactionEmbedding`. Returns `{ categoryId, confidence }` if similarity ≥ threshold, otherwise `null`.
 
@@ -130,7 +142,7 @@ The main classification orchestrator. Key functions:
 After staging a `PlaidTransaction`, the processor calls `categorizationService.classify(description, merchantName, tenantId, reviewThreshold, plaidTx.category)` and writes the result back to the `PlaidTransaction` row:
 - `suggestedCategoryId`
 - `aiConfidence`
-- `classificationSource` (`'EXACT_MATCH'` | `'VECTOR_MATCH'` | `'VECTOR_MATCH_GLOBAL'` | `'LLM'` | `'USER_OVERRIDE'`)
+- `classificationSource` (`'EXACT_MATCH'` | `'VECTOR_MATCH'` | `'VECTOR_MATCH_GLOBAL'` | `'LLM'` | `'LLM_UNKNOWN'` | `'USER_OVERRIDE'`)
 - `classificationReasoning` — LLM reasoning string (only for `'LLM'` tier; `null` otherwise)
 - `promotionStatus` → `'CLASSIFIED'`
 
@@ -205,17 +217,20 @@ Two Gemini API capabilities are used:
 - The prompt includes: tenant category list (ID, name, group, type), classification rules, the transaction description, and optionally the Plaid `personal_finance_category` hint.
 - The `reasoning` field is stored in `PlaidTransaction.classificationReasoning` and displayed in the Transaction Review deep-dive drawer to help users understand why a category was chosen.
 
-**LLM Confidence Scale** (instructed in the prompt, hard-capped at 0.85 in code):
+**LLM Confidence Scale** (instructed in the prompt, hard-capped at 0.90 in `validateClassificationResponse`):
 
 | Range | Label | Meaning | System effect |
 |---|---|---|---|
-| 0.78–0.85 | Certain | Only one category clearly fits | Held for review (LLM can never auto-promote) |
+| 0.86–0.90 | Absolute certainty | Globally recognized brand AND matching Plaid hint AND typical amount — all three conditions hold | Auto-promotes at the default 0.90 `autoPromoteThreshold` |
+| 0.78–0.85 | Certain | Only one category clearly fits | Held for review |
 | 0.65–0.77 | Very confident | Clearly fits; minor ambiguity | Held for review |
 | 0.50–0.64 | Confident | Best fit; 1–2 alternatives possible | Held for review |
 | 0.30–0.49 | Uncertain | Multiple categories apply | Held for review |
-| 0.00–0.29 | Very uncertain | Too ambiguous | Held for review |
+| 0.00–0.29 | Very uncertain — prefer FALLBACK | Too ambiguous to classify with confidence | Held for review (or model invokes the FALLBACK and returns `null` → `LLM_UNKNOWN`) |
 
-> **Design decision**: LLM confidence is hard-capped at 0.85 and the auto-promote threshold defaults to 0.90, so LLM classifications always require human review. Only EXACT_MATCH (1.0) and high-confidence tenant-scoped VECTOR_MATCH (≥0.90) can auto-promote.
+> **Design decision**: LLM confidence is hard-capped at 0.90, with the 0.86–0.90 band gated by a strict triple criterion (recognized brand + matching Plaid hint + typical amount). At the default `autoPromoteThreshold` of 0.90 this is the single path that lets an LLM classification auto-promote. EXACT_MATCH (1.0) and high-confidence tenant-scoped VECTOR_MATCH (≥0.90) auto-promote unconditionally. Tenants who want LLM never to auto-promote (the pre-Phase-2 behavior) raise their threshold to 0.91+.
+
+> **`LLM_UNKNOWN` fallback**: When no category fits with confidence ≥0.30, the prompt instructs the model to return `categoryId: null` instead of guessing. The service surfaces this as `source: 'LLM_UNKNOWN'`, `confidence: 0`, and workers route the row to manual review with no suggested category. See §10.6 Tier 3 for details.
 
 ---
 
@@ -225,7 +240,7 @@ Two float fields on the `Tenant` model control classification behaviour. Their d
 
 | Field | Default | Effect |
 |---|---|---|
-| `autoPromoteThreshold` | `0.90` | Transactions classified at or above this confidence (from any tier) are promoted/confirmed automatically, bypassing the review queue. In practice only EXACT_MATCH (1.0) and high-confidence tenant-scoped VECTOR_MATCH routinely reach this threshold. LLM is hard-capped at 0.85. |
+| `autoPromoteThreshold` | `0.90` | Transactions classified at or above this confidence (from any tier) are promoted/confirmed automatically, bypassing the review queue. EXACT_MATCH (1.0) and high-confidence tenant-scoped VECTOR_MATCH routinely reach this threshold. LLM is hard-capped at 0.90 and only enters the 0.86–0.90 band under the strict ABSOLUTE CERTAINTY criterion (recognized brand + matching Plaid hint + typical amount), so an LLM classification auto-promotes only when all three signals agree. Raise to 0.91+ if you want LLM never to auto-promote. |
 | `reviewThreshold` | `0.70` | Minimum cosine similarity for a Tier 2/2b VECTOR_MATCH to be accepted. Matches below this score fall through to the next tier. In the review UI, rows below this threshold are also flagged as uncertain. |
 
 Both workers fetch these values from the `Tenant` table at job start. Managed via `GET/PUT /api/tenants/settings`.
@@ -287,7 +302,7 @@ All tuning constants for the four-tier waterfall live in `src/config/classificat
 | `EMBEDDING_DIMENSIONS` | `768` | `geminiService.js` — Gemini embedding output dimensionality |
 | `DEFAULT_AUTO_PROMOTE_THRESHOLD` | `0.90` | Worker fallback when `Tenant.autoPromoteThreshold` is null |
 | `DEFAULT_REVIEW_THRESHOLD` | `0.70` | Worker fallback when `Tenant.reviewThreshold` is null |
-| `TOP_N_SEEDS` | `15` | Phase 1 — max distinct descriptions held for the Quick Seed interview |
+| `TOP_N_SEEDS` | `10` | Phase 1 — max distinct descriptions held for the Quick Seed interview |
 | `DEFAULT_PLAID_HISTORY_DAYS` | `1` (from `PLAID_HISTORY_DAYS` env var) | Default days of Plaid transaction history fetched on initial connect; written to `Tenant.plaidHistoryDays` at creation |
 | `PHASE2_CONCURRENCY` | `5` | Phase 2 — p-limit concurrency cap for parallel LLM calls |
 

@@ -4,6 +4,8 @@ Internal administration endpoints for managing default categories and the cross-
 
 The admin endpoints live in the Next.js API (`apps/api`) and are documented here for cross-repo context since the backend service owns the classification pipeline that produces and consumes `GlobalEmbedding` data.
 
+> **LLM provider abstraction.** Embedding regeneration uses whichever provider is configured via `EMBEDDING_PROVIDER` (defaults to `LLM_PROVIDER`). Vectors across providers are not interchangeable — switching providers requires regenerating the index. For tenant-scoped regeneration use the `scripts/regenerate-embeddings.js` operator script; this admin endpoint targets `GlobalEmbedding` rows under a default-category code. See [Spec 20 — LLM Provider Abstraction](./20-llm-provider-abstraction.md).
+
 ---
 
 ## Authentication
@@ -94,7 +96,7 @@ Single source of truth for all AI classification tuning constants. All threshold
 | `EXACT_MATCH_CONFIDENCE` | `1` | Fixed confidence assigned to all EXACT_MATCH results |
 | `GLOBAL_VECTOR_DISCOUNT` | `0.92` | Multiplier applied to GlobalEmbedding similarity scores |
 | `EMBEDDING_DIMENSIONS` | `768` | Gemini embedding output dimensionality |
-| `TOP_N_SEEDS` | `15` | Max unique descriptions held for the Quick Seed interview (Phase 1 stops once this many are accumulated) |
+| `TOP_N_SEEDS` | `10` | Max unique descriptions held for the Quick Seed interview (Phase 1 stops once this many are accumulated) |
 | `PHASE2_CONCURRENCY` | `5` | Max concurrent LLM calls during Phase 2 (lowered from 15 to avoid Gemini quota bursting) |
 
 > **Note**: `autoPromoteThreshold` and `reviewThreshold` are also stored on the `Tenant` model so tenants can customise them. Workers fetch fresh values per-job. The constants above are the system defaults applied when creating new tenants.

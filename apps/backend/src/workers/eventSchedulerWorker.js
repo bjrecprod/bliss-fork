@@ -1,8 +1,7 @@
-const Sentry = require('@sentry/node');
 const { Worker } = require('bullmq');
 const logger = require('../utils/logger');
 const { getRedisConnection } = require('../utils/redis');
-const { getEventsQueue, EVENTS_QUEUE_NAME, enqueueEvent } = require('../queues/eventsQueue');
+const { EVENTS_QUEUE_NAME, enqueueEvent } = require('../queues/eventsQueue');
 const { getPortfolioQueue } = require('../queues/portfolioQueue');
 const { getAnalyticsQueue } = require('../queues/analyticsQueue');
 const { getPlaidSyncQueue } = require('../queues/plaidSyncQueue');
@@ -25,7 +24,6 @@ const processEventJob = async (job) => {
         source: data?.source || null,
         keys: data ? Object.keys(data) : [],
     });
-    const redis = getRedisConnection();
 
     // This is a new helper function to transform the debounced scopes array.
     const consolidateScopes = (scopes) => {
@@ -141,7 +139,7 @@ const processEventJob = async (job) => {
 
             case 'MANUAL_TRANSACTION_MODIFIED': // Fall-through
             case 'MANUAL_TRANSACTION_CREATED': {
-                const { tenantId, transactionId, categoryType, transaction_date, currency, country, categoryGroup } = data;
+                const { tenantId, transactionId, categoryType, transaction_date, currency, country, categoryGroup, isDeletion, portfolioItemId } = data;
                 if (!tenantId || !transactionId) {
                     logger.warn(`${name} event is missing tenantId or transactionId.`);
                     return;
@@ -150,8 +148,21 @@ const processEventJob = async (job) => {
                 // Path A: For transactions that affect complex portfolio items (Investments/Debt).
                 // These MUST run through the portfolio processor first to link the transaction to an item.
                 if (['Investments', 'Debt'].includes(categoryType)) {
-                    logger.info(`[Event] Routing Investment/Debt transaction to portfolio processor.`);
-                    await getPortfolioQueue().add('process-portfolio-changes', { tenantId, transactionId });
+                    if (isDeletion && portfolioItemId) {
+                        // Transaction is already deleted — rebuild the portfolio item from remaining history
+                        // instead of process-portfolio-changes, which requires the transaction to exist.
+                        logger.info(`[Event] Routing deleted Investment/Debt transaction to portfolio item recalculation.`);
+                        await scheduleDebouncedJob(
+                            getPortfolioQueue(),
+                            'recalculate-portfolio-items',
+                            { tenantId, portfolioItemIds: [portfolioItemId] },
+                            'portfolioItemIds',
+                            DEBOUNCE_DELAY_SECONDS
+                        );
+                    } else if (!isDeletion) {
+                        logger.info(`[Event] Routing Investment/Debt transaction to portfolio processor.`);
+                        await getPortfolioQueue().add('process-portfolio-changes', { tenantId, transactionId });
+                    }
                     // Cash processing will be triggered by PORTFOLIO_CHANGES_PROCESSED
 
                 } else {
@@ -212,7 +223,7 @@ const processEventJob = async (job) => {
             }
 
             case 'PORTFOLIO_CHANGES_PROCESSED': {
-                const { tenantId, isFullRebuild, portfolioItemIds, dateScopes } = data;
+                const { tenantId, isFullRebuild, portfolioItemIds, dateScopes, _rebuildMeta } = data;
                 if (!tenantId) {
                     logger.warn('PORTFOLIO_CHANGES_PROCESSED event is missing tenantId.');
                     return;
@@ -224,7 +235,7 @@ const processEventJob = async (job) => {
                     await scheduleDebouncedJob(
                         getPortfolioQueue(),
                         'process-cash-holdings',
-                        { tenantId, needsCashRebuild: [true] },
+                        { tenantId, needsCashRebuild: [true], ...(_rebuildMeta ? { _rebuildMeta } : {}) },
                         'needsCashRebuild',
                         DEBOUNCE_DELAY_SECONDS
                     );
@@ -244,7 +255,7 @@ const processEventJob = async (job) => {
                     await scheduleDebouncedJob(
                         getPortfolioQueue(),
                         'process-cash-holdings',
-                        { tenantId, scope: cashScope, originalScope: finalScope, portfolioItemIds, needsCashRebuild: [true] },
+                        { tenantId, scope: cashScope, originalScope: finalScope, portfolioItemIds, needsCashRebuild: [true], ...(_rebuildMeta ? { _rebuildMeta } : {}) },
                         'needsCashRebuild',
                         DEBOUNCE_DELAY_SECONDS
                     );
@@ -253,7 +264,7 @@ const processEventJob = async (job) => {
             }
 
             case 'CASH_HOLDINGS_PROCESSED': {
-                const { tenantId, isFullRebuild, scope, originalScope, portfolioItemIds } = data;
+                const { tenantId, isFullRebuild, originalScope, portfolioItemIds, _rebuildMeta } = data;
                 if (!tenantId) {
                     logger.warn('CASH_HOLDINGS_PROCESSED event is missing tenantId.');
                     return;
@@ -265,7 +276,7 @@ const processEventJob = async (job) => {
                     await scheduleDebouncedJob(
                         getAnalyticsQueue(),
                         'full-rebuild-analytics',
-                        { tenantId, needsRecalc: [true] },
+                        { tenantId, needsRecalc: [true], ...(_rebuildMeta ? { _rebuildMeta } : {}) },
                         'needsRecalc',
                         DEBOUNCE_DELAY_SECONDS
                     );
@@ -275,7 +286,7 @@ const processEventJob = async (job) => {
                     await scheduleDebouncedJob(
                         getAnalyticsQueue(),
                         'scoped-update-analytics',
-                        { tenantId, scopes: [originalScope], portfolioItemIds },
+                        { tenantId, scopes: [originalScope], portfolioItemIds, ...(_rebuildMeta ? { _rebuildMeta } : {}) },
                         'scopes',
                         DEBOUNCE_DELAY_SECONDS
                     );
@@ -284,17 +295,36 @@ const processEventJob = async (job) => {
             }
 
             case 'ANALYTICS_RECALCULATION_COMPLETE': {
-                const { tenantId, portfolioItemIds, isFullRebuild } = data;
+                const { tenantId, portfolioItemIds, isFullRebuild, _rebuildMeta } = data;
                 if (!tenantId) {
                     logger.warn('ANALYTICS_RECALCULATION_COMPLETE event is missing tenantId.');
                     return;
                 }
 
+                // Manual `full-analytics` rebuild: user asked for analytics
+                // only, so suppress the downstream valuation cascade.
+                // (Manual `scoped-analytics` doesn't have `isFullRebuild=true`,
+                // so it naturally falls into the scoped branch which only
+                // re-values explicitly-affected items — no special-case
+                // suppression needed there.)
+                if (_rebuildMeta?.rebuildType === 'full-analytics') {
+                    logger.info(`[Event] Analytics recalculation complete (manual full-analytics) for tenant ${tenantId}. Suppressing valuation cascade per admin request.`);
+                    break;
+                }
+
                 if (isFullRebuild) {
                     // This is a full rebuild, so trigger a full valuation for ALL assets.
                     // The valuation worker will now handle cash vs. non-cash assets correctly.
+                    // `value-all-assets` carries `_rebuildMeta` through so its
+                    // completion handler can release the full-portfolio
+                    // single-flight lock (see `utils/rebuildLock.js`). The
+                    // loan processors run independently and don't gate lock
+                    // release.
                     logger.info(`Analytics recalculation complete (full) for tenant ${tenantId}. Enqueuing full valuation for ALL assets.`);
-                    await getPortfolioQueue().add('value-all-assets', { tenantId });
+                    await getPortfolioQueue().add('value-all-assets', {
+                        tenantId,
+                        ...(_rebuildMeta ? { _rebuildMeta } : {}),
+                    });
                     await getPortfolioQueue().add('process-amortizing-loan', { tenantId });
                     await getPortfolioQueue().add('process-simple-liability', { tenantId });
                 } else if (portfolioItemIds && portfolioItemIds.length > 0) {
@@ -373,6 +403,115 @@ const processEventJob = async (job) => {
                     DEBOUNCE_DELAY_SECONDS * 2
                 );
 
+                break;
+            }
+
+            case 'MANUAL_REBUILD_REQUESTED': {
+                // Admin-triggered rebuild from the settings Maintenance UI.
+                // Unlike the other event types (which carry implicit cause
+                // semantics — e.g. "currency settings changed"), this event
+                // is an explicit operator request that can target one of
+                // four scopes. The `_rebuildMeta` marker attached to the
+                // downstream job data lets us filter BullMQ's completed
+                // queue for rebuild history, and per-job `removeOnComplete`
+                // overrides keep that history available for 30 days
+                // without bloating Redis with every routine cron run.
+                const { tenantId, scope, requestedBy, requestedAt, payload } = data;
+                if (!tenantId || !scope) {
+                    logger.warn('MANUAL_REBUILD_REQUESTED event is missing tenantId or scope.');
+                    return;
+                }
+
+                const rebuildMeta = {
+                    requestedBy: requestedBy || null,
+                    requestedAt: requestedAt || new Date().toISOString(),
+                    rebuildType: scope,
+                };
+                // 30-day retention specifically for manual rebuilds so the
+                // maintenance-tab history can show last month's operations.
+                const RETENTION_SECONDS = 30 * 24 * 3600;
+                const retentionOpts = {
+                    removeOnComplete: { age: RETENTION_SECONDS },
+                    removeOnFail: { age: RETENTION_SECONDS },
+                };
+                // Dedupe ID: timestamp-per-scope lets the same admin re-run
+                // a rebuild after a completed one finishes, while preventing
+                // double-clicks from double-enqueueing.
+                const jobId = `manual-rebuild-${scope}-${tenantId}-${Date.now()}`;
+
+                logger.info(`[Event] MANUAL_REBUILD_REQUESTED received`, { tenantId, scope, requestedBy });
+
+                switch (scope) {
+                    case 'full-portfolio': {
+                        // Kicks off the same cascade as TENANT_CURRENCY_SETTINGS_UPDATED:
+                        // process-portfolio-changes → cash-holdings → full-rebuild-analytics → value-all-assets.
+                        await getPortfolioQueue().add(
+                            'process-portfolio-changes',
+                            { tenantId, _rebuildMeta: rebuildMeta },
+                            { jobId, ...retentionOpts },
+                        );
+                        break;
+                    }
+                    case 'full-analytics': {
+                        // Jumps straight to a full analytics rebuild, skipping
+                        // the portfolio-changes leg. Use when analytics cache
+                        // is stale but valuations are already current (e.g.
+                        // the March-rows-missing scenario from 2026-04-22).
+                        await getAnalyticsQueue().add(
+                            'full-rebuild-analytics',
+                            { tenantId, _rebuildMeta: rebuildMeta },
+                            { jobId, ...retentionOpts },
+                        );
+                        break;
+                    }
+                    case 'scoped-analytics': {
+                        // Scoped analytics rebuild from a given start date.
+                        // Matches the existing `scope.earliestDate` shape
+                        // consumed by analyticsWorker's Pass 1/2 filters.
+                        const { earliestDate } = payload || {};
+                        if (!earliestDate) {
+                            logger.warn('MANUAL_REBUILD_REQUESTED (scoped-analytics) missing payload.earliestDate.');
+                            return;
+                        }
+                        await getAnalyticsQueue().add(
+                            'scoped-update-analytics',
+                            {
+                                tenantId,
+                                scopes: [{ earliestDate }],
+                                _rebuildMeta: rebuildMeta,
+                            },
+                            { jobId, ...retentionOpts },
+                        );
+                        break;
+                    }
+                    case 'single-asset': {
+                        // Re-value one or more portfolio items (asset). Uses the
+                        // existing `value-portfolio-items` job which accepts a
+                        // `portfolioItemIds` array. Accepts either the legacy
+                        // scalar `portfolioItemId` or the newer `portfolioItemIds`
+                        // array (sent when the same symbol spans multiple accounts).
+                        const { portfolioItemId, portfolioItemIds } = payload || {};
+                        const ids = portfolioItemIds?.length
+                            ? portfolioItemIds
+                            : portfolioItemId ? [portfolioItemId] : [];
+                        if (ids.length === 0) {
+                            logger.warn('MANUAL_REBUILD_REQUESTED (single-asset) missing payload.portfolioItemId(s).');
+                            return;
+                        }
+                        await getPortfolioQueue().add(
+                            'value-portfolio-items',
+                            {
+                                tenantId,
+                                portfolioItemIds: ids,
+                                _rebuildMeta: rebuildMeta,
+                            },
+                            { jobId, ...retentionOpts },
+                        );
+                        break;
+                    }
+                    default:
+                        logger.warn(`Unknown MANUAL_REBUILD_REQUESTED scope: ${scope}`);
+                }
                 break;
             }
 

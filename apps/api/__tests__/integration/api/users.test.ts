@@ -77,7 +77,7 @@ function makeRes(): MockRes {
 // ---------------------------------------------------------------------------
 
 function uniqueEmail(label = '') {
-  return `user-test${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoyai`;
+  return `user-test${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoy.ai`;
 }
 
 // ---------------------------------------------------------------------------

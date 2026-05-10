@@ -1,4 +1,3 @@
-const Sentry = require('@sentry/node');
 const { Worker } = require('bullmq');
 const fs = require('fs');
 const path = require('path');
@@ -66,6 +65,36 @@ function buildAiFrequencyMap(entries) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// DUPLICATE STATUS HELPER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Check a row's hash against the known-hash set and mutate its status when a
+ * collision is found. Rows whose source date carries a wall-clock timestamp
+ * are treated as hard duplicates (`DUPLICATE` — hidden from the Review UI by
+ * default). Date-only rows are flagged `POTENTIAL_DUPLICATE` — surfaced in
+ * the UI with a warning badge so the user can explicitly override them to
+ * CONFIRMED if they really are distinct transactions.
+ *
+ * The first occurrence of a given hash is added to the set so that subsequent
+ * rows in the same CSV with the same hash are also flagged as intra-CSV dups.
+ *
+ * @param {object} rowData — Staged row being built; status is mutated in place
+ * @param {Set<string>} hashSet — Known hashes (existing DB + prior CSV rows)
+ * @param {string} hash — This row's transaction hash
+ * @param {boolean} hasTime — True when the parsed date carried a time component
+ * @returns {boolean} true when the row was flagged as a duplicate
+ */
+function applyDuplicateStatus(rowData, hashSet, hash, hasTime) {
+    if (hashSet.has(hash)) {
+        rowData.status = hasTime ? 'DUPLICATE' : 'POTENTIAL_DUPLICATE';
+        return true;
+    }
+    hashSet.add(hash);
+    return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // CLASSIFICATION HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -96,7 +125,6 @@ function applyClassificationToRowData(rowData, result, autoPromoteThreshold, cat
         rowData.status === 'PENDING'
     ) {
         rowData.status = 'CONFIRMED';
-        rowData.classificationSource = 'USER_OVERRIDE';
         return true; // signals autoConfirmed
     }
     return false;
@@ -217,7 +245,7 @@ function computeUpdateDiff(csvRow, existingTx, resolvedCategoryId, categoryById)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const processSmartImportJob = async (job) => {
-    const { tenantId, userId, accountId, adapterId, fileStorageKey, stagedImportId } = job.data;
+    const { tenantId, accountId, adapterId, fileStorageKey, stagedImportId } = job.data;
 
     // Initialize storage lazily so @google-cloud/storage is only required at job
     // execution time, not at module load time (avoids startup failure when the
@@ -261,7 +289,7 @@ const processSmartImportJob = async (job) => {
         const fileContent = fileType === 'csv'
             ? fs.readFileSync(tempFilePath, 'utf8')
             : fs.readFileSync(tempFilePath);
-        const { rows: normalizedRows, hasTimeInDates } = await parseFile(fileContent, adapter, fileType);
+        const { rows: normalizedRows } = await parseFile(fileContent, adapter, fileType);
 
         if (normalizedRows.length === 0) {
             await prisma.stagedImport.update({
@@ -369,8 +397,28 @@ const processSmartImportJob = async (job) => {
         // AI rows are collected for Phase 1/2 classification below.
         // This separates data prep from AI calls, allowing frequency-based ordering.
 
-        await job.updateProgress(1);
-        await prisma.stagedImport.update({ where: { id: stagedImportId }, data: { progress: 1 } });
+        // Progress reporter — writes at most once per second regardless of
+        // row count. Row-count strides (e.g. "every 5%" or "every 50 rows")
+        // either spam Prisma on small imports or leave the bar frozen for
+        // tens of seconds on large ones; a time-based throttle keeps the
+        // cadence smooth at any scale (~1 update/s) and the write itself is
+        // a single-row UPDATE by PK so it's essentially free.
+        // `force` bypasses the throttle — use it for guaranteed-land values
+        // like the start (1%) and end-of-phase boundaries.
+        let lastProgressWriteMs = 0;
+        const PROGRESS_MIN_INTERVAL_MS = 1000;
+        const reportProgress = async (pct, { force = false } = {}) => {
+            const now = Date.now();
+            if (!force && now - lastProgressWriteMs < PROGRESS_MIN_INTERVAL_MS) return;
+            lastProgressWriteMs = now;
+            await job.updateProgress(pct);
+            await prisma.stagedImport.update({
+                where: { id: stagedImportId },
+                data: { progress: pct },
+            });
+        };
+
+        await reportProgress(1, { force: true });
 
         const allRowData = [];     // Complete list of rowData objects (all rows)
         const aiEntries = [];      // Subset of allRowData entries needing AI classification
@@ -419,15 +467,12 @@ const processSmartImportJob = async (job) => {
             const amount = row.debit || row.credit;
             if (!isNativeAdapter) {
                 const hash = computeTransactionHash(row.date, row.description, amount, accountId);
-                if (duplicateHashSet.has(hash)) {
-                    rowData.status = row.hasTime ? 'DUPLICATE' : 'POTENTIAL_DUPLICATE';
+                // Rows flagged here are still classified so the user can see the
+                // suggested category if they choose to override POTENTIAL_DUPLICATE
+                // rows to CONFIRMED. DUPLICATE rows are hidden from the UI by the
+                // GET /api/imports/[id] endpoint's default status filter.
+                if (applyDuplicateStatus(rowData, duplicateHashSet, hash, !!row.hasTime)) {
                     duplicateCount++;
-                    // Still classify so user sees category if they override to CONFIRMED
-                } else {
-                    // Track this hash so subsequent CSV rows with the same
-                    // date+description+amount+account are flagged as intra-CSV duplicates.
-                    // The first occurrence stays PENDING; the 2nd+ get POTENTIAL_DUPLICATE.
-                    duplicateHashSet.add(hash);
                 }
             }
 
@@ -517,12 +562,8 @@ const processSmartImportJob = async (job) => {
                         );
                     }
 
-                    if (acctHashSet.has(nativeHash)) {
-                        rowData.status = row.hasTime ? 'DUPLICATE' : 'POTENTIAL_DUPLICATE';
+                    if (applyDuplicateStatus(rowData, acctHashSet, nativeHash, !!row.hasTime)) {
                         duplicateCount++;
-                    } else {
-                        // Track so subsequent CSV rows with the same hash are flagged
-                        acctHashSet.add(nativeHash);
                     }
                 }
 
@@ -540,6 +581,17 @@ const processSmartImportJob = async (job) => {
             }
 
             allRowData.push(rowData);
+
+            // First-pass progress: 1% → 19% while we normalize, dedup, and
+            // resolve native-adapter rows. Without this, large imports sat
+            // at 1% for the entire duration of this loop before jumping to
+            // 30% when Phase 1 finished. Time-throttled so even a 15k-row
+            // import stays continuously updating.
+            // Ceiling is 19% (not 29%) to reserve 20→29 for Phase 1's LLM
+            // seed interview — that loop used to run silently for 100+
+            // seconds between this bar and the jump to 30%.
+            const pct = Math.min(19, 1 + Math.floor(((i + 1) / normalizedRows.length) * 18));
+            await reportProgress(pct);
         }
 
         // ── Phase 1: Frequency-First Seed Classification ──────────────────────────
@@ -554,17 +606,32 @@ const processSmartImportJob = async (job) => {
         const sortedDescAi = [...aiFreqMap.entries()].sort((a, b) => b[1].length - a[1].length);
         const phase1Start = Date.now();
 
+        // Progress band for Phase 1: 20% → 29%. Each LLM classify call can
+        // take 3-5s (sometimes longer), and the loop runs up to TOP_N_SEEDS
+        // slow iterations plus any fast EXACT/VECTOR hits. Denominator is
+        // whichever completes first so the bar fills smoothly in both the
+        // small-list-all-LLM case (e.g. 5 unique desc → 5 slow iters fill
+        // 5/5 of the band) and the large-list-with-cache-hits case (many
+        // fast iters + up to TOP_N_SEEDS slow ones → bar caps at 29%).
+        const phase1Denom = Math.max(1, Math.min(sortedDescAi.length, TOP_N_SEEDS));
+        let phase1Done = 0;
+
         for (const [normalizedName, entries] of sortedDescAi) {
             if (seedCount >= TOP_N_SEEDS) break;
 
             const rep = entries[0];
             try {
-                // ONE classify() call per unique description
+                // ONE classify() call per unique description. Amount + currency
+                // are passed through as a disambiguation signal — the same
+                // merchant name at $5 vs $500 often belongs in different
+                // categories.
                 const result = await categorizationService.classify(
                     rep.description,
                     null, // No merchantName for CSV imports
                     tenantId,
                     reviewThreshold,
+                    rep.rowData?.category ?? null, // Bank category column — advisory hint for LLM tier
+                    { amount: rep.rowData?.amount ?? null, currency: rep.rowData?.currency ?? null },
                 );
 
                 // Apply to all rows with this description
@@ -583,6 +650,13 @@ const processSmartImportJob = async (job) => {
                 logger.warn(`Phase 1 classify failed for "${normalizedName}": ${classifyError.message}`);
                 // Leave rowData.classificationSource = null — user will classify manually
             }
+
+            // Tick progress after each iteration so the bar advances even
+            // when the loop is blocked on slow LLM calls. The 1s throttle
+            // in reportProgress() keeps the Prisma write cadence sane.
+            phase1Done++;
+            const pct = Math.min(29, 20 + Math.floor((phase1Done / phase1Denom) * 9));
+            await reportProgress(pct);
         }
 
         logger.info(
@@ -591,11 +665,15 @@ const processSmartImportJob = async (job) => {
 
         // ── Signal frontend: Quick Seed interview can be shown ────────────────────
         // seedReady = true even if seedCount = 0 (all hit Tier 1/2 — interview skipped)
+        // NOTE: we update `seedReady` separately from the generic progress
+        // reporter because the boolean field must land with the progress
+        // write regardless of the time-throttle.
         await prisma.stagedImport.update({
             where: { id: stagedImportId },
             data: { seedReady: true, progress: 30 },
         });
         await job.updateProgress(30);
+        lastProgressWriteMs = Date.now(); // keep the throttle in sync with the manual write above
 
         // ── Phase 2: Parallel Classification of Remaining AI Rows ─────────────────
         // Rows not touched by Phase 1 (still have classificationSource === null).
@@ -621,6 +699,8 @@ const processSmartImportJob = async (job) => {
                             null,
                             tenantId,
                             reviewThreshold,
+                            entry.rowData?.category ?? null, // Bank category column hint
+                            { amount: entry.rowData?.amount ?? null, currency: entry.rowData?.currency ?? null },
                         );
                         const wasAutoConfirmed = applyClassificationToRowData(
                             entry.rowData, result, autoPromoteThreshold, categoryById
@@ -634,12 +714,8 @@ const processSmartImportJob = async (job) => {
                         // rowData stays with no category — user must manually assign
                     }
                     phase2Done++;
-                    // Update DB progress every 50 rows during Phase 2
-                    if (phase2Done % 50 === 0) {
-                        const pct = 30 + Math.round((phase2Done / sortedAsc.length) * 50);
-                        await job.updateProgress(pct);
-                        await prisma.stagedImport.update({ where: { id: stagedImportId }, data: { progress: pct } });
-                    }
+                    const pct = 30 + Math.round((phase2Done / sortedAsc.length) * 50);
+                    await reportProgress(pct, { force: phase2Done === sortedAsc.length });
                 }))
             );
 
@@ -774,7 +850,10 @@ const processSmartImportJob = async (job) => {
             logger.info(`[SmartImport] Ticker metadata resolution complete.`);
         }
 
-        await job.updateProgress(90);
+        // Persist the 90% milestone (end of ticker resolution, before
+        // Step 7 batch insert). Forced write so the bar is guaranteed to
+        // advance here even if the last Phase 2 tick fired recently.
+        await reportProgress(90, { force: true });
 
         // ── Step 7: Batch insert all staged rows ──────────────────────────────────
         // NOTE: Embeddings are intentionally NOT saved here — only at commit time after
@@ -851,7 +930,7 @@ const processSmartImportJob = async (job) => {
         throw error;
     } finally {
         // Cleanup temp file only — GCS file preserved for retries on failure
-        try { fs.unlinkSync(tempFilePath); } catch (e) { logger.warn(`Failed to cleanup temp file: ${tempFilePath}`); }
+        try { fs.unlinkSync(tempFilePath); } catch (_e) { logger.warn(`Failed to cleanup temp file: ${tempFilePath}`); }
     }
 };
 
@@ -913,6 +992,7 @@ module.exports = {
     computeTransactionHash,
     // Exported for testing
     applyClassificationToRowData,
+    applyDuplicateStatus,
     computeUpdateDiff,
     buildAiFrequencyMap,
 };

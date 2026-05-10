@@ -67,7 +67,7 @@ export default function HomePage() {
               Live Demo
             </a>
             <a
-              href="https://github.com/danielvsantos/bijoyai"
+              href="https://github.com/bjrecprod/bliss-fork"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors hover:text-[#6D657A]"
@@ -96,7 +96,7 @@ export default function HomePage() {
             <Link href="/docs" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>Documentation</Link>
             <Link href="/docs/api-reference" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>API Reference</Link>
             <a href="https://app.bijoy.ai/auth?origin=docs-site" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#6D657A' }}>Live Demo</a>
-            <a href="https://github.com/danielvsantos/bijoyai" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
+            <a href="https://github.com/bjrecprod/bliss-fork" target="_blank" rel="noopener noreferrer" className="text-sm font-medium py-1" style={{ color: '#3A3542' }}>GitHub</a>
           </div>
         )}
       </nav>
@@ -131,7 +131,7 @@ export default function HomePage() {
                   Get Started
                 </Link>
                 <a
-                  href="https://github.com/danielvsantos/bijoyai"
+                  href="https://github.com/bjrecprod/bliss-fork"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm transition-colors hover:bg-gray-50"
@@ -191,7 +191,7 @@ export default function HomePage() {
           <div className="hidden lg:block glass-card p-3 overflow-hidden" style={{ backgroundColor: 'transparent' }}>
             <div className="mx-auto" style={{ maxWidth: 1200 }}>
               <Image
-                src="/images/bijoyaiarchitecture.svg"
+                src="/images/bijoyarchitecture.svg"
                 alt="Bijoy.ai architecture: Nginx entrypoint routing to React SPA, Next.js API, and Express backend with 8 BullMQ workers, PostgreSQL with pgvector, Redis, and third-party integrations"
                 width={1200}
                 height={700}
@@ -245,7 +245,7 @@ export default function HomePage() {
             │   └── AI Embeddings: 768-dim Vectors
             │
             └─► 3rd Party Integrations:
-                ├─► AI: Gemini LLM (Classification)
+                ├─► AI: LLM provider abstraction (Gemini / OpenAI / Anthropic)
                 ├─► Banks: Plaid (Sync + Tokens)
                 ├─► Prices: TwelveData (Real-time Stocks)
                 ├─► FX: CurrencyLayer (Historical Rates)
@@ -293,7 +293,7 @@ export default function HomePage() {
               <div className="space-y-8">
                 <div>
                   <h3 className="text-base font-semibold mb-2" style={{ color: '#3A3542' }}>
-                    The Unified P&L Engine
+                    The Unified Financial Engine
                   </h3>
                   <p className="text-sm leading-relaxed" style={{ color: '#5A5266' }}>
                     Automatically normalizes income and expenses across borders using historical FX rates
@@ -367,9 +367,11 @@ export default function HomePage() {
                   4-Tier Classification Engine
                 </h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#5A5266' }}>
-                  A deterministic AI waterfall eradicates manual entry. Transactions cascade through an
-                  exact-match Redis cache, a pgvector similarity search, and a Gemini LLM fallback. User
-                  corrections automatically generate new vector embeddings, creating a reinforcement learning loop.
+                  A deterministic AI waterfall that gets smarter with every correction. Transactions cascade
+                  through an in-memory exact-match cache, pgvector similarity search across your own and
+                  cross-tenant embeddings, and an LLM fallback (Gemini, OpenAI, or Anthropic). Each user
+                  override updates the cache and generates a new embedding — the same merchant is auto-classified
+                  on the next sight.
                 </p>
                 <Link
                   href="/docs/guides/ai-classification"
@@ -630,7 +632,7 @@ export default function HomePage() {
                   Bulletproof Reliability
                 </h3>
                 <p className="text-sm leading-relaxed" style={{ color: '#5A5266' }}>
-                  Orchestrated by 8 independent BullMQ workers and protected by over 1,000 automated CI pipeline tests.
+                  Orchestrated by 8 independent BullMQ workers and protected by over 2,000 automated CI pipeline tests.
                 </p>
               </div>
             </div>
@@ -738,7 +740,7 @@ export default function HomePage() {
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FF5F56' }} />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#FFBD2E' }} />
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: '#27C93F' }} />
-                  <span className="ml-3 text-xs" style={{ color: '#888' }}>~/bijoyai</span>
+                  <span className="ml-3 text-xs" style={{ color: '#888' }}>~/bijoy</span>
                 </div>
                 <div className="p-5 overflow-x-auto">
                   <pre className="text-xs leading-relaxed font-mono" style={{ color: '#D4D4D4' }}>
@@ -771,7 +773,7 @@ export default function HomePage() {
           </h2>
           <div className="flex flex-col items-center gap-4">
             <a
-              href="https://github.com/danielvsantos/bijoyai"
+              href="https://github.com/bjrecprod/bliss-fork"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-colors hover:bg-[#2A2631]"
@@ -799,7 +801,7 @@ export default function HomePage() {
           </span>
           <div className="flex items-center gap-6">
             <Link href="/docs" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>Docs</Link>
-            <a href="https://github.com/danielvsantos/bijoyai" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
+            <a href="https://github.com/bjrecprod/bliss-fork" target="_blank" rel="noopener noreferrer" className="text-sm transition-colors hover:text-[#3A3542]" style={{ color: '#6D657A' }}>GitHub</a>
           </div>
         </div>
       </footer>

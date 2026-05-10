@@ -82,7 +82,7 @@ export default withAuth(async function handler(req, res) {
     // Set response headers and start streaming
     const today = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="bijoyai-export-${today}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="bijoy-export-${today}.csv"`);
     res.setHeader('X-Total-Count', String(totalCount));
     res.setHeader('Transfer-Encoding', 'chunked');
 

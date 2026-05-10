@@ -12,7 +12,7 @@ type ThemeProviderProps = {
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "bijoy.ai-ui-theme",
+  storageKey = "bijoyai-ui-theme",
   forceLightMode = false,
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);

@@ -1,5 +1,4 @@
 const logger = require('../../utils/logger');
-const { decrypt } = require('../../utils/encryption');
 
 /**
  * Generates a consistent, unique key for an asset based on a transaction and a defined strategy.
@@ -33,10 +32,11 @@ const generateAssetKey = (transaction, decryptFn) => {
         case 'CATEGORY_NAME':
             return categoryName;
 
-        case 'CATEGORY_NAME_PLUS_DESCRIPTION':
+        case 'CATEGORY_NAME_PLUS_DESCRIPTION': {
             if (!description) return null;
             const decryptedDescription = decryptFn(description);
             return `${categoryName}:${decryptedDescription}`;
+        }
 
         case 'IGNORE':
         default:

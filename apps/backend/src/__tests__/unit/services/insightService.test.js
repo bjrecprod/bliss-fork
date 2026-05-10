@@ -32,6 +32,7 @@ const mockSecurityMasterFindMany = jest.fn();
 const mockInsightFindFirst = jest.fn();
 const mockInsightFindMany = jest.fn();
 const mockInsightCreateMany = jest.fn();
+const mockInsightDeleteMany = jest.fn().mockResolvedValue({ count: 0 });
 jest.mock('../../../../prisma/prisma.js', () => ({
   tenant: {
     findUnique: (...args) => mockTenantFindUnique(...args),
@@ -55,12 +56,13 @@ jest.mock('../../../../prisma/prisma.js', () => ({
     findFirst: (...args) => mockInsightFindFirst(...args),
     findMany: (...args) => mockInsightFindMany(...args),
     createMany: (...args) => mockInsightCreateMany(...args),
+    deleteMany: (...args) => mockInsightDeleteMany(...args),
   },
   $transaction: jest.fn((ops) => Promise.all(ops)),
 }));
 
 const mockGenerateInsightContent = jest.fn();
-jest.mock('../../../services/geminiService', () => ({
+jest.mock('../../../services/llm', () => ({
   generateInsightContent: (...args) => mockGenerateInsightContent(...args),
 }));
 
@@ -240,9 +242,14 @@ describe('insightService (v1)', () => {
       expect(mockCheckTierCompleteness).toHaveBeenCalledWith(
         'tenant-1', 'MONTHLY', expect.any(Object),
       );
-      // The Flash model path was retired with DAILY; generateInsightContent
-      // is called with a single positional argument (the prompt).
-      expect(mockGenerateInsightContent).toHaveBeenCalledWith(expect.any(String));
+      // Phase 3: generateInsightContent now receives the structured shape
+      // { systemBlocks, userMessage, schema } so adapters can attach
+      // per-block prompt caching and forced-tool/json_schema output.
+      expect(mockGenerateInsightContent).toHaveBeenCalledWith(expect.objectContaining({
+        systemBlocks: expect.any(Array),
+        userMessage: expect.any(String),
+        schema: expect.any(Object),
+      }));
       expect(result.periodKey).toBe('2026-03');
       expect(mockInsightCreateMany).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.arrayContaining([
@@ -299,7 +306,11 @@ describe('insightService (v1)', () => {
         year: 2026, quarter: 1, periodKey: '2026-Q1',
       });
 
-      expect(mockGenerateInsightContent).toHaveBeenCalledWith(expect.any(String));
+      expect(mockGenerateInsightContent).toHaveBeenCalledWith(expect.objectContaining({
+        systemBlocks: expect.any(Array),
+        userMessage: expect.any(String),
+        schema: expect.any(Object),
+      }));
       expect(result.periodKey).toBe('2026-Q1');
     });
   });
@@ -452,7 +463,10 @@ describe('insightService (v1)', () => {
       expect(result.insights[0].category).toBe(LENS_CATEGORY_MAP.SAVINGS_RATE);
     });
 
-    it('returns empty when LLM returns an empty array', async () => {
+    it('returns skipped state when LLM returns an empty array', async () => {
+      // Phase 3: empty-array LLM responses surface as a skipped state with
+      // a user-facing reason rather than an "insights: []" payload.
+      // Frontend uses this to render "No insights for this period yet".
       setupBasicTenantData();
       completenessPasses();
       mockGenerateInsightContent.mockResolvedValue([]);
@@ -460,7 +474,8 @@ describe('insightService (v1)', () => {
       const result = await generateTieredInsights('tenant-1', 'MONTHLY', {
         year: 2026, month: 3,
       });
-      expect(result.insights).toEqual([]);
+      expect(result.skipped).toBe(true);
+      expect(result.reason).toMatch(/No insights for this period yet/);
       expect(mockInsightCreateMany).not.toHaveBeenCalled();
     });
   });
@@ -768,6 +783,45 @@ describe('insightService (v1)', () => {
       // fallback the rest of the service uses.
       expect(h.currentValue).toBe(1000);
       expect(h.costBasis).toBe(800);
+    });
+
+    it('uses category processingHint as sector fallback when SecurityMaster has no record', async () => {
+      mockPortfolioItemFindMany.mockResolvedValue([
+        {
+          id: 1, symbol: 'SPY', currency: 'USD',
+          currentValue: 5000, costBasis: 4500, quantity: 10, realizedPnL: 0,
+          category: { name: 'ETFs', processingHint: 'API_FUND' },
+        },
+        {
+          id: 2, symbol: 'BTC', currency: 'USD',
+          currentValue: 3000, costBasis: 2000, quantity: 0.05, realizedPnL: 0,
+          category: { name: 'Crypto', processingHint: 'API_CRYPTO' },
+        },
+        {
+          id: 3, symbol: 'HOUSE', currency: 'USD',
+          currentValue: 200000, costBasis: 180000, quantity: 1, realizedPnL: 0,
+          category: { name: 'Real Estate', processingHint: 'MANUAL' },
+        },
+      ]);
+      // No SecurityMaster records for any of these
+      mockSecurityMasterFindMany.mockResolvedValue([]);
+
+      const result = await gatherEquityFundamentals('tenant-1', 'USD', {});
+
+      expect(result.holdings).toHaveLength(3);
+      // ETF → 'ETFs & Funds' from processingHint map
+      expect(result.holdings[0].sector).toBe('ETFs & Funds');
+      // Crypto → 'Cryptocurrency' from processingHint map
+      expect(result.holdings[1].sector).toBe('Cryptocurrency');
+      // Manual → 'Alternative Assets' from processingHint map
+      expect(result.holdings[2].sector).toBe('Alternative Assets');
+      // Country fallback should be 'Global', not 'Unknown'
+      expect(result.holdings[0].country).toBe('Global');
+      // Sector allocation should use the derived labels
+      expect(result.sectorAllocation['ETFs & Funds']).toBeDefined();
+      expect(result.sectorAllocation['Cryptocurrency']).toBeDefined();
+      expect(result.sectorAllocation['Alternative Assets']).toBeDefined();
+      expect(result.sectorAllocation['Unknown']).toBeUndefined();
     });
   });
 });

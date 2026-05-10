@@ -58,7 +58,7 @@ describe('useExportTransactions', () => {
     
     expect(appendedNode).toBeDefined();
     expect(appendedNode.tagName).toBe('A');
-    expect(appendedNode.download).toBe(`bijoyai-export-${today}.csv`);
+    expect(appendedNode.download).toBe(`bijoy-export-${today}.csv`);
     expect(appendedNode.href).toContain('blob:http://localhost/mock-url');
     
     expect(document.body.removeChild).toHaveBeenCalledWith(appendedNode);

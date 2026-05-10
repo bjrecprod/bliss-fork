@@ -1,19 +1,18 @@
 const prisma = require('../../prisma/prisma');
-const logger = require('./logger');
 
 /**
  * Find or create tags by name for a tenant.
  * For each name string: looks up existing tag, creates if not found.
  * Handles P2002 race condition (concurrent creates) gracefully.
  *
- * Ported from bijoyai-api/utils/tagUtils.js (ESM → CJS).
+ * Ported from @bijoyai/api/utils/tagUtils.js (ESM → CJS).
  *
  * @param {string[]} tagNames - Array of tag name strings
  * @param {string} tenantId - Tenant ID
  * @param {string} userId - User ID (email) for audit logging
  * @returns {Promise<Array<{id: number, name: string}>>}
  */
-async function resolveTagsByName(tagNames, tenantId, userId) {
+async function resolveTagsByName(tagNames, tenantId, _userId) {
     if (!tagNames || !Array.isArray(tagNames) || tagNames.length === 0) {
         return [];
     }

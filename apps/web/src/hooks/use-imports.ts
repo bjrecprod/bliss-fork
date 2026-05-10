@@ -81,7 +81,7 @@ export function useUploadSmartImport() {
 
 export function useStagedImport(
   id: string | null,
-  params?: { page?: number; limit?: number; status?: string; categoryId?: number },
+  params?: { page?: number; limit?: number; status?: string; categoryId?: number; uncategorized?: boolean },
 ) {
   return useQuery({
     queryKey: importKeys.stagedWithParams(id ?? '', params ?? {}),
@@ -106,6 +106,21 @@ export function useUpdateImportRow(importId: string | null) {
       api.updateImportRow(importId!, params.rowId, params.data),
     onSuccess: () => {
       // Invalidate all staged queries for this import to refresh data
+      if (importId) {
+        queryClient.invalidateQueries({ queryKey: importKeys.staged(importId) });
+      }
+    },
+  });
+}
+
+// --- Bulk Confirm (server-side approve-all) ---
+
+export function useBulkConfirmImportRows(importId: string | null) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { categoryId?: number; uncategorized?: boolean }) =>
+      api.bulkConfirmImportRows(importId!, body),
+    onSuccess: () => {
       if (importId) {
         queryClient.invalidateQueries({ queryKey: importKeys.staged(importId) });
       }

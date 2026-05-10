@@ -88,6 +88,7 @@ jest.mock('../../../../prisma/prisma.js', () => ({
     findFirst: jest.fn().mockResolvedValue(null),
     findMany: jest.fn().mockResolvedValue([]),
     createMany: jest.fn().mockResolvedValue({ count: 1 }),
+    deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
   },
   transaction: {
     count: jest.fn().mockResolvedValue(0),
@@ -140,7 +141,7 @@ jest.mock('../../../services/currencyService', () => ({
 
 // Gemini is the only allowed external side effect, and it is mocked so we
 // never actually leave the process.
-jest.mock('../../../services/geminiService', () => ({
+jest.mock('../../../services/llm', () => ({
   generateInsightContent: jest.fn().mockResolvedValue([
     {
       lens: 'SPENDING_VELOCITY',

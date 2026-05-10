@@ -9,7 +9,7 @@ The frontend application is responsible for the entire user experience. Its prim
 -   **User Interface**: To provide a clean, intuitive, and responsive interface for all platform features, including transaction management, portfolio tracking, and analytics.
 -   **Data Visualization**: To present complex financial data in an understandable way through a suite of charts, tables, and interactive dashboards.
 -   **Client-Side State Management**: To efficiently manage client-side state, including user authentication, UI state, and cached data fetched from the API.
--   **API Interaction**: To act as a robust client for the `bijoyai-api`, handling all data fetching, mutation, and error handling gracefully.
+-   **API Interaction**: To act as a robust client for the `@bijoyai/api`, handling all data fetching, mutation, and error handling gracefully.
 -   **Equity Analysis**: A dedicated stock portfolio analysis page (`/reports/equity-analysis`) with sector/industry/country allocation charts, fundamental metrics (P/E, dividend yield, EPS), and a sortable holdings table.
 -   **AI Insights**: A tiered insights page (`/insights`) with category tabs (Spending, Income, Savings, Portfolio, Debt, Net Worth), severity filter chips, tier badges (Monthly, Quarterly, Annual, Portfolio), per-tier manual refresh, and dismissal/restore actions. Insight history is preserved additively so users can browse prior periods.
 
@@ -29,7 +29,7 @@ The frontend application is responsible for the entire user experience. Its prim
 ### State Management & Data Fetching
 -   **[TanStack Query (React Query)](https://tanstack.com/query/latest)**: The core of the data-fetching layer. It handles server-state management, including caching, background refetching, and optimistic updates.
 -   **[React Context](https://reactjs.org/docs/context.html)**: Used for managing global UI state that needs to be shared across the application, such as the authenticated user session.
--   **[Axios](https://axios-http.com/)**: The HTTP client used to make requests to the `bijoyai-api`.
+-   **[Axios](https://axios-http.com/)**: The HTTP client used to make requests to the `@bijoyai/api`.
 
 ### Forms & Validation
 -   **[React Hook Form](https://react-hook-form.com/)**: A performant, flexible, and extensible library for managing form state and validation.

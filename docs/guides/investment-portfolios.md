@@ -6,12 +6,14 @@ Bijoy.ai tracks investment holdings with FIFO lot calculation, multi-currency Pn
 
 When you import or create buy/sell transactions with a `ticker` symbol, the portfolio pipeline processes them automatically:
 
-1. **Portfolio initialization** — Creates or updates portfolio items for each ticker
-2. **FIFO lot calculation** — Each buy creates a lot; sells consume the oldest lots first
-3. **FX rate capture** — Each lot records the buy-date exchange rate for accurate cross-currency PnL
-4. **Valuation** — Current prices fetched via a 4-stage waterfall: memory cache, live API, 7-day DB lookback, manual value fallback
+1. **Portfolio initialization** — Creates or updates portfolio items for each (ticker, account) pair. The same ticker held in two different brokerage accounts produces two independent portfolio items with separate lot stacks and PnL tracking.
+2. **FIFO lot calculation** — Each buy creates a lot; sells consume the oldest lots first, scoped to that account.
+3. **FX rate capture** — Each lot records the buy-date exchange rate for accurate cross-currency PnL.
+4. **Valuation** — Current prices fetched via a 4-stage waterfall: memory cache, live API, 7-day DB lookback, manual value fallback.
 
 The pipeline runs automatically whenever transactions change, triggered by the event-driven architecture.
+
+> **Data-quality flag**: If a sell transaction has no matching buy lot in the same account (e.g., a cross-account transfer recorded as a close), the portfolio item is flagged with `hasLotMismatch: true`. This warning appears in the transaction form to prompt correction.
 
 ## Setting up investment accounts
 
@@ -19,11 +21,11 @@ Investment accounts work like any other account but hold transactions with ticke
 
 - Create them via the UI (**Accounts** > **Add Manual Account**)
 - Include them in your [tenant seed script](/docs/guides/tenant-seed-setup)
-- Import transactions with ticker data via [Bijoy.ai Native CSV](/docs/guides/importing-transactions#bijoyai-native-csv-format)
+- Import transactions with ticker data via [Bijoy Native CSV](/docs/guides/importing-transactions#bijoy-native-csv-format)
 
 ## Importing investment transactions
 
-The key columns for investment transactions in the Bijoy.ai Native CSV format:
+The key columns for investment transactions in the Bijoy Native CSV format:
 
 ```csv
 transactiondate,description,debit,credit,account,category,ticker,assetquantity,assetprice,currency

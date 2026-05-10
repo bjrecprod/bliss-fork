@@ -38,6 +38,9 @@ import type {
   SeedItem,
   Insight,
   UserSignal,
+  RebuildStatusResponse,
+  RebuildTriggerRequest,
+  RebuildTriggerResponse,
 } from '../types/api';
 
 export interface AggregatedPortfolioHistory {
@@ -555,18 +558,41 @@ class APIClient {
 
   // --- Portfolio ---
 
-  async getPortfolioItems(filters: { assetType?: string; source?: string; include_manual_values?: boolean } = {}): Promise<{ portfolioCurrency: string; items: PortfolioItem[] }> {
+  async getPortfolioItems(filters: {
+    assetType?: string;
+    source?: string;
+    include_manual_values?: boolean;
+    /** Filter by brokerage account ID */
+    accountId?: number | null;
+    /** Filter by account country (ISO 3166-1 alpha-3, e.g. "USA") */
+    countryId?: string;
+  } = {}): Promise<{ portfolioCurrency: string; items: PortfolioItem[] }> {
     const response = await this.client.get('/api/portfolio/items', { params: filters });
     return response.data;
   }
 
-  async getPortfolioHoldings(filters: { account?: string; category?: string; categoryGroup?: string; ticker?: string } = {}): Promise<PortfolioHolding[]> {
+  async getPortfolioHoldings(filters: {
+    /** Filter by brokerage account ID */
+    account?: number;
+    /** Filter by account country (ISO 3166-1 alpha-3) */
+    countryId?: string;
+    category?: string;
+    categoryGroup?: string;
+    ticker?: string;
+  } = {}): Promise<PortfolioHolding[]> {
     const response = await this.client.get('/api/portfolio/holdings', { params: filters });
     return response.data;
   }
 
   async getPortfolioHistory(
-    filters: { from?: string; to?: string; type?: string; group?: string } = {}
+    filters: {
+      from?: string;
+      to?: string;
+      type?: string;
+      group?: string;
+      /** Filter history to a specific brokerage account */
+      accountId?: number;
+    } = {}
   ): Promise<{ portfolioCurrency: string; history: AggregatedPortfolioHistory[] }> {
     const response = await this.client.get('/api/portfolio/history', { params: filters });
     return response.data;
@@ -693,7 +719,7 @@ class APIClient {
     return response.data;
   }
 
-  async getStagedImport(id: string, params?: { page?: number; limit?: number; status?: string }): Promise<StagedImportResponse> {
+  async getStagedImport(id: string, params?: { page?: number; limit?: number; status?: string; categoryId?: number; uncategorized?: boolean }): Promise<StagedImportResponse> {
     const response = await this.client.get(`/api/imports/${id}`, { params });
     return response.data;
   }
@@ -708,6 +734,14 @@ class APIClient {
     assetPrice?: number | null;
   }): Promise<StagedImportRow> {
     const response = await this.client.put(`/api/imports/${importId}/rows/${rowId}`, data);
+    return response.data;
+  }
+
+  async bulkConfirmImportRows(
+    id: string,
+    body: { categoryId?: number; uncategorized?: boolean },
+  ): Promise<{ confirmed: number }> {
+    const response = await this.client.post(`/api/imports/${id}/bulk-confirm`, body);
     return response.data;
   }
 
@@ -734,6 +768,8 @@ class APIClient {
     plaidItemId?: string;
     minConfidence?: number;
     maxConfidence?: number;
+    categoryId?: number;
+    uncategorized?: boolean;
   }): Promise<PlaidTransactionsResponse> {
     const response = await this.client.get('/api/plaid/transactions', { params });
     return response.data;
@@ -934,8 +970,29 @@ class APIClient {
 
   // --- Equity Analysis ---
 
-  async getEquityAnalysis(params: { groupBy?: string } = {}): Promise<import('@/types/equity-analysis').EquityAnalysisResponse> {
+  async getEquityAnalysis(params: {
+    groupBy?: string;
+    /** Filter to a specific brokerage account */
+    accountId?: number;
+  } = {}): Promise<import('@/types/equity-analysis').EquityAnalysisResponse> {
     const response = await this.client.get('/api/portfolio/equity-analysis', { params });
+    return response.data;
+  }
+
+  // --- Admin Maintenance (tenant-admin only) ---
+
+  async getRebuildStatus(): Promise<RebuildStatusResponse> {
+    const response = await this.client.get('/api/admin/rebuild');
+    return response.data;
+  }
+
+  async triggerRebuild(body: RebuildTriggerRequest): Promise<RebuildTriggerResponse> {
+    const response = await this.client.post('/api/admin/rebuild', body);
+    return response.data;
+  }
+
+  async refreshStockFundamentals(): Promise<{ message: string; jobId: string }> {
+    const response = await this.client.post('/api/admin/refresh-fundamentals');
     return response.data;
   }
 }

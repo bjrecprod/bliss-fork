@@ -38,7 +38,7 @@ export async function createIsolatedTenant(suffix = ''): Promise<IsolatedTenant>
   // Email is encrypted by the Prisma middleware automatically
   const user = await prisma.user.create({
     data: {
-      email: `admin${label}-${timestamp}@test.bijoyai`,
+      email: `admin${label}-${timestamp}@test.bijoy.ai`,
       tenantId: tenant.id,
       role: 'admin',
     },

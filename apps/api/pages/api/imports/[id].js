@@ -61,31 +61,51 @@ async function handleGet(req, res, user, stagedImportId) {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
   const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50));
 
-  // status param: single value OR comma-separated list (e.g. "STAGED,POTENTIAL_DUPLICATE")
+  // status param: single value OR comma-separated list (e.g. "STAGED,POTENTIAL_DUPLICATE").
+  // When no filter is supplied we surface every status the user might want to audit —
+  // including DUPLICATE rows (hard wall-clock-timestamp matches), so the user can see what
+  // the dedup pipeline filtered without opting in via `?status=DUPLICATE`. SKIPPED is the
+  // only status hidden by default since those reflect explicit user dismissal. Bulk-confirm
+  // and the per-row PUT both refuse DUPLICATE rows, so visibility is safe.
+  const DEFAULT_VISIBLE_STATUSES = ['PENDING', 'POTENTIAL_DUPLICATE', 'CONFIRMED', 'ERROR', 'STAGED', 'DUPLICATE'];
   const statusParam = req.query.status || null;
-  const statusValues = statusParam ? statusParam.split(',').map((s) => s.trim()).filter(Boolean) : null;
-  const statusClause = statusValues
-    ? (statusValues.length === 1 ? { status: statusValues[0] } : { status: { in: statusValues } })
-    : {};
+  const statusValues = statusParam
+    ? statusParam.split(',').map((s) => s.trim()).filter(Boolean)
+    : DEFAULT_VISIBLE_STATUSES;
+  const statusClause = statusValues.length === 1
+    ? { status: statusValues[0] }
+    : { status: { in: statusValues } };
 
-  // Optional category filter (used by grouped view to paginate within a single category)
-  const categoryIdFilter = req.query.categoryId ? parseInt(req.query.categoryId, 10) : null;
+  // Optional category filter (used by grouped view to paginate within a single category).
+  // `uncategorized=true` is mutually exclusive with `categoryId` and matches rows where
+  // suggestedCategoryId IS NULL — needed so the "Uncategorized" group is drillable.
+  const uncategorizedFilter = req.query.uncategorized === 'true';
+  const categoryIdFilter = !uncategorizedFilter && req.query.categoryId
+    ? parseInt(req.query.categoryId, 10)
+    : null;
+
+  const categoryClause = uncategorizedFilter
+    ? { suggestedCategoryId: null }
+    : categoryIdFilter
+      ? { suggestedCategoryId: categoryIdFilter }
+      : {};
 
   const rowWhere = {
     stagedImportId,
     ...statusClause,
-    ...(categoryIdFilter && { suggestedCategoryId: categoryIdFilter }),
+    ...categoryClause,
   };
 
-  // Statuses that still need user action — used for the category breakdown summary
-  // Must match the status filter sent by the frontend for grouped view to work
-  const pendingStatuses = statusValues || ['PENDING', 'POTENTIAL_DUPLICATE', 'ERROR', 'DUPLICATE'];
+  // Statuses that still need user action — used for the category breakdown summary.
+  // Must match the effective status filter so grouped-view headers show the same
+  // rows visible in the paginated list. DUPLICATE is excluded by default (see above).
+  const pendingStatuses = statusValues;
   const pendingWhere = {
     stagedImportId,
     status: { in: pendingStatuses },
   };
 
-  const [rows, total, statusCounts, earliestRow, categorySummaryRaw] = await Promise.all([
+  const [rows, total, statusCounts, earliestRow, categorySummaryRaw, eligibleCountsRaw] = await Promise.all([
     prisma.stagedImportRow.findMany({
       where: rowWhere,
       orderBy: { rowNumber: 'asc' },
@@ -110,6 +130,18 @@ async function handleGet(req, res, user, stagedImportId) {
       where: pendingWhere,
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
+    }),
+    // Per-category count of rows that "Approve All" (bulk-confirm) would actually confirm.
+    // Mirrors the bulk-confirm endpoint's eligibility predicate so the GroupCard's
+    // "Approve All (N)" badge reflects all pages, not just the current page.
+    prisma.stagedImportRow.groupBy({
+      by: ['suggestedCategoryId'],
+      where: {
+        stagedImportId,
+        status: { in: ['PENDING', 'ERROR', 'STAGED'] },
+        requiresEnrichment: { not: true },
+      },
+      _count: { id: true },
     }),
   ]);
 
@@ -140,10 +172,14 @@ async function handleGet(req, res, user, stagedImportId) {
   }));
 
   // Build enriched category summary for grouped view
+  const eligibleCountByCategoryId = new Map(
+    eligibleCountsRaw.map((s) => [s.suggestedCategoryId, s._count.id]),
+  );
   const categorySummary = categorySummaryRaw.map((s) => ({
     categoryId: s.suggestedCategoryId,
     category: s.suggestedCategoryId ? categoryMap[s.suggestedCategoryId] || null : null,
     count: s._count.id,
+    eligibleCount: eligibleCountByCategoryId.get(s.suggestedCategoryId) ?? 0,
   }));
 
   return res.status(StatusCodes.OK).json({

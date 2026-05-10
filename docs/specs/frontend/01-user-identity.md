@@ -52,7 +52,7 @@ Note: The register form does **not** include a confirm-password field. Instead, 
 - **Full name** input (`autoComplete="name"`)
 - **Email address** input (`autoComplete="email"`)
 - **Password** input with hint text (`autoComplete="new-password"`)
-- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/danielvsantos/bijoyai/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
+- **License text**: "By creating an account you agree to our **License**." — a single underlined `<a>` tag linking to `https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE`, styled with `--brand-primary`, opens in a new tab.
 - **"Create Account"** primary button (full width, loading spinner when pending)
 - Error messages displayed inline
 
@@ -79,7 +79,7 @@ The auth page supports a **demo mode** for visitors arriving from the documentat
 - **UI changes in demo mode**:
   - The tab switcher is hidden — only the **Sign In** form is shown (no Sign Up tab).
   - A **demo banner** is displayed above the form explaining this is a live demo environment.
-  - The sign-in form fields are **pre-filled** with demo credentials: `email: "daniel@bijoy.ai"`, `password: "bijoyai1234"`.
+  - The sign-in form fields are **pre-filled** with demo credentials: `email: "daniel@bijoy.ai"`, `password: "bijoy1234"`.
   - The user can click "Sign In" immediately without typing anything.
 - **`SignInForm` component**: Accepts an optional `demoMode` prop. When `true`, `useForm()` is initialized with the pre-filled demo credentials as `defaultValues`.
 
@@ -147,7 +147,7 @@ After setup completes, a post-onboarding checklist is tracked via the `onboardin
 | Review transactions | `reviewTransactions` | User visits the review page |
 | Set portfolio currency | `setPortfolioCurrency` | User updates currency in settings |
 | Explore expenses | `exploreExpenses` | User visits the analytics page |
-| Check P&L | `checkPnL` | User visits the portfolio page |
+| Check Financial Summary | `checkPnL` | User visits the financial summary page |
 
 The checklist is dismissible via `dismissChecklist` step. Future enhancement: auto-complete items on relevant page visits.
 

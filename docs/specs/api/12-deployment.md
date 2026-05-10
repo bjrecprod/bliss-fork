@@ -23,7 +23,7 @@ The standalone build bundles only the files required to run the server, producin
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://bijoyai:pass@postgres:5432/bijoyai`) |
+| `DATABASE_URL` | PostgreSQL connection string (e.g. `postgresql://bijoyai:pass@postgres:5432/bliss`) |
 | `JWT_SECRET_CURRENT` | Secret for signing JWT tokens |
 | `NEXTAUTH_SECRET` | Secret for NextAuth session encryption |
 | `ENCRYPTION_SECRET` | AES-256-GCM key for encrypting sensitive fields |
@@ -43,7 +43,10 @@ The standalone build bundles only the files required to run the server, producin
 | `LOCAL_STORAGE_DIR` | Path for local file uploads (default: `/app/data/uploads`) |
 | `GCS_BUCKET_NAME` | GCS bucket for file uploads (when `STORAGE_BACKEND=gcs`) |
 | `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV` | Plaid integration (app degrades gracefully without these) |
-| `GEMINI_API_KEY` | Google Gemini for AI classification |
+| `LLM_PROVIDER` | `gemini` (default) \| `openai` \| `anthropic`. Powers AI classification + insights. |
+| `EMBEDDING_PROVIDER` | Override embedding provider. **Required** when `LLM_PROVIDER=anthropic` (Anthropic has no embedding API). |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | API key for the selected provider(s). |
+| `EMBEDDING_MODEL` / `CLASSIFICATION_MODEL` / `INSIGHT_MODEL` | Optional model overrides per slot. |
 | `SENTRY_DSN` | Sentry error tracking |
 
 ## 12.4. Migration on Startup

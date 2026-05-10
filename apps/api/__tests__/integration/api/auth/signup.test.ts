@@ -76,7 +76,7 @@ function makeRes(): MockRes {
 const createdTenantIds: string[] = [];
 
 function uniqueEmail() {
-  return `signup-test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoyai`;
+  return `signup-test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.bijoy.ai`;
 }
 
 function validBody(overrides = {}) {

@@ -81,20 +81,20 @@ pnpm exec prisma db seed
 pnpm dev                    # starts all 3 services
 ```
 
-Open http://localhost:8080. Plaid, Gemini, and Twelve Data API keys are optional -- the app degrades gracefully without them.
+Open http://localhost:8080. `./scripts/setup.sh` prompts for an LLM provider (Gemini / OpenAI / Anthropic) and its API key — the LLM is **required** for AI classification and financial insights. Plaid and Twelve Data keys remain optional and degrade gracefully.
 
 ## Testing
 
 | Scope | Command | Framework | Notes |
 |-------|---------|-----------|-------|
-| All | `pnpm test` | -- | 1,178 tests |
-| API | `pnpm test:api` | Vitest (ESM) | 428 tests (unit + integration) |
-| Backend | `pnpm test:backend` | Jest (CJS) | 531 tests (unit + integration) |
-| Frontend | `pnpm test:web` | Vitest + RTL | 219 tests |
+| All | `pnpm test` | -- | 2,035 tests |
+| API | `pnpm test:api` | Vitest (ESM) | 621 tests (unit + integration) |
+| Backend | `pnpm test:backend` | Jest (CJS) | 942 tests (unit + integration) |
+| Frontend | `pnpm test:web` | Vitest + RTL | 472 tests |
 
 Coverage thresholds: 70% lines, 70% functions, 60% branches.
 
-**Integration tests** use `createIsolatedTenant()` for tenant isolation with cascade teardown. External APIs (Gemini, Twelve Data, Plaid) are mocked; Postgres and Redis are real.
+**Integration tests** use `createIsolatedTenant()` for tenant isolation with cascade teardown. External APIs (LLM providers, Twelve Data, Plaid) are mocked; Postgres and Redis are real.
 
 **Backend mocking convention:** Declare `jest.mock()` calls before `require()` imports. Use `jest.clearAllMocks()` in `beforeEach`.
 
@@ -142,9 +142,9 @@ bijoyai/
 Transaction classification flows through tiers until one succeeds:
 
 1. **Exact Match** -- O(1) in-memory cache per tenant, backed by the `DescriptionMapping` table (SHA-256 hash → categoryId). Confidence: `1.0`
-2. **Vector Match (tenant)** -- pgvector cosine similarity on `TransactionEmbedding` (768-dim, Gemini embeddings). Threshold: `reviewThreshold` (default 0.70)
+2. **Vector Match (tenant)** -- pgvector cosine similarity on `TransactionEmbedding` (768-dim embeddings from the configured provider — Gemini or OpenAI). Threshold: `reviewThreshold` (default 0.70)
 3. **Vector Match (global)** -- Cross-tenant `GlobalEmbedding` table, discounted by `0.92x`
-4. **LLM** -- Gemini (`gemini-3-flash-preview`), temperature 0.1, confidence hard-capped at `0.85`
+4. **LLM** -- configured LLM provider via `services/llm/` factory (Gemini `gemini-3-flash-preview` / OpenAI `gpt-4.1-mini` / Anthropic `claude-sonnet-4-6`), temperature 0.1, confidence hard-capped at `0.90`. The 0.86–0.90 band is the **ABSOLUTE CERTAINTY** tier — only valid when the merchant is a globally recognized brand AND the Plaid hint matches AND the amount is typical, and is the single path that lets an LLM classification auto-promote at the default `autoPromoteThreshold` of 0.90. The model can also return `categoryId: null` (`LLM_UNKNOWN`) when no category fits with confidence ≥0.30, surfacing genuinely ambiguous transactions to manual review instead of guessing.
 
 Thresholds are per-tenant (`Tenant.autoPromoteThreshold`, `Tenant.reviewThreshold`). Config constants live in `apps/backend/src/config/classificationConfig.js` and must stay in sync with Prisma schema defaults.
 
@@ -172,9 +172,11 @@ Key patterns:
 
 Adapter-driven pipeline: detect format -> stage rows -> AI classify -> user review -> commit.
 
-- Adapters matched by header intersection against `matchSignature`
+- 30+ preconfigured global adapters for major banks (US, UK, Spain, France, EU, Brazil, Canada, Australia) plus 2 generic fallbacks
+- Adapters matched by header intersection against `matchSignature`, sorted by specificity (more headers = higher priority)
+- Four amount strategies: `SINGLE_SIGNED`, `SINGLE_SIGNED_INVERTED` (e.g. Amex), `DEBIT_CREDIT_COLUMNS`, `AMOUNT_WITH_TYPE`
 - Deduplication via SHA-256 hash of `(date + description + amount + accountId)`
-- Bijoy.ai Native CSV adapter enables direct import without AI classification
+- Bijoy Native CSV adapter enables direct import without AI classification
 - Batch commit (200 rows/batch) with tag resolution via `resolveTagsByName()`
 
 ### Plaid integration
@@ -184,7 +186,7 @@ Two-worker system: `plaidSyncWorker` (IO-bound fetch) -> `plaidProcessorWorker` 
 - Incremental sync via cursor-based pagination
 - Hash-based dedup catches manual-entry duplicates
 - Raw payloads encrypted with AES-256-GCM in `PlaidTransaction.rawJson`
-- Plaid category hints are passed to Gemini as additional context
+- Plaid category hints are passed to the LLM provider as additional context
 
 ### Analytics pipeline
 
@@ -206,7 +208,7 @@ AI-generated financial insights with 4 cadence tiers (DAILY was retired in v1.1 
 | ANNUAL | Jan 3rd | Pro | Comprehensive year-in-review |
 | PORTFOLIO | Weekly Mon 5 AM | Pro | Equity analysis via SecurityMaster |
 
-The daily 6 AM UTC cron is retained purely as a scheduling heartbeat for the calendar-gated tiers. All tiers use the Gemini Pro model (`INSIGHT_MODEL`, default `gemini-3.1-pro-preview`).
+The daily 6 AM UTC cron is retained purely as a scheduling heartbeat for the calendar-gated tiers. All tiers use the configured LLM provider's insight model — defaults are `gemini-3.1-pro-preview` (Gemini), `gpt-4.1` (OpenAI), `claude-sonnet-4-6` (Anthropic). Override via `INSIGHT_MODEL`.
 
 - 15 financial lenses across 6 categories (SPENDING, INCOME, SAVINGS, PORTFOLIO, DEBT, NET_WORTH)
 - Data completeness gating: each tier checks period coverage before generation
@@ -248,8 +250,9 @@ All services read from a single `.env` file at the repo root. Run `./scripts/set
 **Required:** `DATABASE_URL`, `POSTGRES_PASSWORD`, `REDIS_URL`, `REDIS_PASSWORD`, `ENCRYPTION_SECRET`, `JWT_SECRET_CURRENT`, `NEXTAUTH_SECRET`, `INTERNAL_API_KEY`, `NEXTAUTH_URL`, `BACKEND_URL`, `NEXT_PUBLIC_API_URL`, `FRONTEND_URL`
 
 **Optional integrations (degrade gracefully):**
+- Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — enables Google Sign-In; email/password auth works without it
 - Plaid: `PLAID_CLIENT_ID`, `PLAID_SECRET`, `PLAID_ENV`, `PLAID_WEBHOOK_URL`, `PLAID_HISTORY_DAYS`
-- AI: `GEMINI_API_KEY`, `INSIGHT_MODEL`
+- AI (required): `LLM_PROVIDER` (gemini|openai|anthropic), `EMBEDDING_PROVIDER` (required when `LLM_PROVIDER=anthropic`), `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` (matching your provider), optional overrides `EMBEDDING_MODEL` / `CLASSIFICATION_MODEL` / `INSIGHT_MODEL`
 - Market data: `TWELVE_DATA_API_KEY`
 - Currency rates: `CURRENCYLAYER_API_KEY`
 - Storage: `STORAGE_BACKEND`, `LOCAL_STORAGE_DIR`, `GCS_BUCKET_NAME`, `GCS_SERVICE_ACCOUNT_JSON`

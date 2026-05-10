@@ -34,6 +34,7 @@ services:
   # API layer (Next.js)
   # ────────────────────────────────────────────────────────────────────────────
   api:
+    image: bjrecprod/bijoyai-api:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.api
@@ -55,12 +56,22 @@ services:
       # Optional: GCS (only needed when STORAGE_BACKEND=gcs)
       GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-}
       GCS_SERVICE_ACCOUNT_JSON: ${GCS_SERVICE_ACCOUNT_JSON:-}
+      # Optional: Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       # Optional: Plaid
       PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:-}
       PLAID_SECRET: ${PLAID_SECRET:-}
       PLAID_ENV: ${PLAID_ENV:-sandbox}
-      # Optional: AI
+      # AI provider (REQUIRED — gemini | openai | anthropic)
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      CLASSIFICATION_MODEL: ${CLASSIFICATION_MODEL:-}
+      INSIGHT_MODEL: ${INSIGHT_MODEL:-}
       # Optional: Sentry / OTEL
       SENTRY_DSN: ${SENTRY_DSN:-}
       SENTRY_ORG: ${SENTRY_ORG:-}
@@ -77,6 +88,7 @@ services:
   # Backend service (Express + BullMQ workers)
   # ────────────────────────────────────────────────────────────────────────────
   backend:
+    image: bjrecprod/bijoyai-backend:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.backend
@@ -96,8 +108,15 @@ services:
       # Optional: GCS
       GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-}
       GCS_SERVICE_ACCOUNT_JSON: ${GCS_SERVICE_ACCOUNT_JSON:-}
-      # Optional: AI
+      # AI provider (REQUIRED — gemini | openai | anthropic)
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-}
+      CLASSIFICATION_MODEL: ${CLASSIFICATION_MODEL:-}
+      INSIGHT_MODEL: ${INSIGHT_MODEL:-}
       # Optional: Plaid
       PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:-}
       PLAID_SECRET: ${PLAID_SECRET:-}
@@ -122,6 +141,7 @@ services:
   # Web (Vite React SPA served by nginx)
   # ────────────────────────────────────────────────────────────────────────────
   web:
+    image: bjrecprod/bijoyai-web:latest
     build:
       context: .
       dockerfile: docker/Dockerfile.web

@@ -4,7 +4,7 @@
 
 The Smart Import pipeline provides an intelligent, adapter-driven import flow for CSV and XLSX/XLS files. It is designed to handle the variety of export formats produced by different banks and financial institutions, deduplicating against existing transactions and classifying each row via the AI pipeline before presenting results for user review.
 
-Smart import uses its own queue (`smart-import`), worker (`smartImportWorker.js`), staging tables (`StagedImport`, `StagedImportRow`), and API (`/api/imports/*`). The "Bijoy.ai Native CSV" global system adapter (`matchSignature.isNative: true`) enables direct CSV import without AI classification — it resolves account and category by name or ID from CSV columns and auto-confirms fully-resolved rows.
+Smart import uses its own queue (`smart-import`), worker (`smartImportWorker.js`), staging tables (`StagedImport`, `StagedImportRow`), and API (`/api/imports/*`). The "Bijoy Native CSV" global system adapter (`matchSignature.isNative: true`) enables direct CSV import without AI classification — it resolves account and category by name or ID from CSV columns and auto-confirms fully-resolved rows.
 
 ---
 
@@ -33,15 +33,22 @@ Detection logic:
 
 ### Amount Strategies
 
-Adapters declare one of three amount parsing strategies via `amountStrategy`:
+Adapters declare one of four amount parsing strategies via `amountStrategy`:
 
-- `SINGLE_SIGNED` — one amount column; positive = credit, negative = debit (or vice versa based on `signConvention`).
+- `SINGLE_SIGNED` — one amount column; positive = credit, negative = debit.
+- `SINGLE_SIGNED_INVERTED` — one amount column with inverted sign convention; positive = debit, negative = credit. Used by banks like American Express where charges are positive and payments/refunds are negative.
 - `DEBIT_CREDIT_COLUMNS` — two separate columns: `debitColumn` and `creditColumn`.
 - `AMOUNT_WITH_TYPE` — one amount column + one type indicator column (`D`/`C`, `debit`/`credit`, etc.).
 
 ### Date Parsing
 
-Adapters declare a `dateFormat` string (e.g., `DD/MM/YYYY`, `MM-DD-YYYY`, `YYYY-MM-DD`). The engine normalises all parsed dates to ISO 8601 before storing.
+Adapters declare an optional `dateFormat` string (e.g., `DD/MM/YYYY`, `MM/DD/YYYY`, `YYYY-MM-DD`, `DD/MM/YYYY HH:mm:ss`). Datetime formats (date + time in a single cell) are also supported. The engine normalises all parsed dates to ISO 8601 before storing.
+
+**Auto-detection**: When `dateFormat` is omitted, `parseFile()` scans up to 20 date column values via `inferDateFormat()` before the row loop. If any sample has a first numeric part > 12, the format is locked to `DD/MM/YYYY`; if the second part > 12, to `MM/DD/YYYY`. This eliminates the most common EU vs. US date ambiguity. Genuinely ambiguous data (all values ≤ 12) still falls through to the per-row fallback parser.
+
+### Category Column (Advisory Hint)
+
+Adapters may declare `columnMapping.category` to map a bank-supplied category column. The extracted value is stored as `rowData.category` and forwarded as the `bankCategoryHint` argument to `categorizationService.classify()` at classification time. This functions identically to the Plaid `personal_finance_category` hint: it is injected into the Tier 3 LLM prompt as advisory context but does not affect Tiers 1 or 2.
 
 ---
 
@@ -65,10 +72,11 @@ BullMQ singleton, registered in `src/index.js` via `startSmartImportWorker()`. T
 5. **Build duplicate hash set** — Queries existing `Transaction` records for the target account within the batch's date range (with a 1-day buffer on each side for timezone edge cases; falls back to a 90-day window when no dates are available). Computes SHA-256 hashes and loads into an in-memory `Set`. For native adapters, duplicate sets are built per-account lazily as each unique `accountId` is encountered.
 6. **First pass — validate, dedup, and native classification** — For each parsed row, builds a `rowData` object and:
    - Validates required fields (`date`, `debit`/`credit`). Missing fields → `status: 'ERROR'`.
-   - Computes the dedup hash and checks against the hash set:
-     - Exact match → `status: 'DUPLICATE'`
-     - Time-ambiguous match (no time component in the date) → `status: 'POTENTIAL_DUPLICATE'`
-     - No match → `status: 'PENDING'`
+   - Computes the dedup hash and checks against the hash set via the `applyDuplicateStatus()` helper:
+     - Exact match with a wall-clock timestamp on the parsed date → `status: 'DUPLICATE'` (hard duplicate; hidden from the Review UI by default — see [GET /api/imports/[id]](../api/09-smart-import-api.md))
+     - Match on date-only (no time component) → `status: 'POTENTIAL_DUPLICATE'` (surfaced in Review with a warning badge so the user can explicitly override to CONFIRMED if it really is a distinct transaction)
+     - No match → `status: 'PENDING'` and the hash is added to the set so subsequent CSV rows with the same fingerprint are also flagged
+   - Duplicate-flagged rows are still classified so the suggested category is available to the user if they choose to override. They are **never** auto-confirmed (see `applyClassificationToRowData()` — auto-promote only fires on `status === 'PENDING'`).
    - **Native adapter path**: Resolves `account` and `category` CSV columns to IDs using tenant lookup maps. Rows with both resolved + no duplicate conflict are set to `status: 'CONFIRMED'`. Unresolvable rows stay `PENDING` with an `errorMessage`. Investment fields (`ticker`, `assetQuantity`, `assetPrice`) are taken directly from the CSV; `requiresEnrichment` is always `false`.
    - **AI adapter path**: Row is added to the `aiEntries` list for Phase 1/2 classification. Classification is **not** performed inline — all AI rows are collected first to enable frequency-based ordering.
    - Progress → 1%.
@@ -201,10 +209,13 @@ When the user clicks "Commit Import", the API endpoint (`POST /api/imports/:id?a
 **Full pipeline**:
 
 1. **Verify** — Confirms `StagedImport` exists and has `status: 'COMMITTING'`.
-2. **Fetch promotable rows** — Queries `StagedImportRow` with `status: 'CONFIRMED'` and non-null `suggestedCategoryId`. If `rowIds` is provided in the event data, only those rows are selected (partial commit).
+2. **Fetch promotable rows** — Queries `StagedImportRow` with `status === 'CONFIRMED'` **exactly** and non-null `suggestedCategoryId`. If `rowIds` is provided in the event data, only those rows are additionally filtered (partial commit).
+   - **Data-integrity guard**: `POTENTIAL_DUPLICATE` and `DUPLICATE` rows are deliberately excluded from this query. A user who wants to commit a flagged duplicate must explicitly override its status to `CONFIRMED` through the Review UI first. This keeps the `Transaction.externalId @unique` constraint as the true defense-in-depth backstop against accidental re-imports. Regression test: `apps/backend/src/__tests__/unit/workers/commitWorker.test.js` → "only fetches CONFIRMED rows — POTENTIAL_DUPLICATE and DUPLICATE are filtered out".
 3. **Batch create transactions** (batches of 200):
    a. Filters out rows requiring enrichment that are still missing ticker/quantity/price.
-   b. **Occurrence counter** — Tracks how many times each base hash appears across the entire commit (counter persists across batches). When multiple CONFIRMED rows produce the same base hash (e.g. 7 × "$1 Commission" on the same day), each gets a unique `externalId`: 1st → `baseHash`, 2nd → `baseHash:2`, 3rd → `baseHash:3`, etc. This ensures all user-confirmed transactions are actually created by `createMany`, even when they share the same date, description, amount, and account.
+   b. **Occurrence counter** — Tracks how many times each base hash appears across the entire commit (counter persists across batches). When multiple `CONFIRMED` rows in the same commit share the same base hash (e.g. 7 × "$1 Commission" on the same day that the user explicitly confirmed), each gets a unique `externalId`: 1st → `baseHash`, 2nd → `baseHash:2`, 3rd → `baseHash:3`, etc. This lets a user commit legitimate same-fingerprint transactions.
+
+      The counter is intentionally **scoped to a single commit** — it starts empty on each job. A re-committed row (re-import of a CSV that was previously committed) gets `externalId = baseHash` in the new commit, which already exists in the DB, so `createMany({ skipDuplicates: true })` correctly skips it. Combined with step 2's `status === 'CONFIRMED'` guard, this means any row reaching `createMany` is either a brand-new transaction or a DB-level duplicate that the unique constraint will reject — never a silent re-import.
    c. Maps rows to `Transaction` data. Investment fields (`ticker`, `assetQuantity`, `assetPrice`, `isin`, `exchange`, `assetCurrency`) are carried through from the staged row when present.
    d. Sets `Transaction.externalId` to the occurrence-suffixed hash for idempotent dedup.
    e. **Pre-checks for existing externalIds** — queries `Transaction` for all `externalId`s in the batch *before* calling `createMany`. This identifies which rows will be skipped by `skipDuplicates` so they can be treated differently from successfully committed rows. The check uses the full suffixed externalId, so re-importing the same CSV correctly detects all occurrences (including `baseHash:2`, `baseHash:3`, etc.).
@@ -238,9 +249,9 @@ If the worker throws at any point:
 
 ---
 
-## 9.7. Bijoy.ai Native CSV Adapter
+## 9.7. Bijoy Native CSV Adapter
 
-The "Bijoy.ai Native CSV" system adapter (`matchSignature.isNative: true`, `tenantId: null`) provides a direct, non-AI import path through the Smart Import pipeline. It is seeded via `migrations/20260228120000_seed_bijoyai_native_adapter`.
+The "Bijoy Native CSV" system adapter (`matchSignature.isNative: true`, `tenantId: null`) provides a direct, non-AI import path through the Smart Import pipeline. It is seeded via `migrations/20260228120000_seed_bliss_native_adapter`.
 
 **Key behaviour differences from bank-format adapters:**
 - AI classification is **bypassed** — `account` and `category` columns are resolved by name or numeric ID using tenant-scoped lookup maps.
@@ -282,17 +293,17 @@ If no candidates are found or the API call fails, `isin`/`exchange`/`assetCurren
 | `assetprice` | — | Price per unit at transaction date |
 | `tags` | — | Comma-separated tag names (e.g. `Japan 2026, Business`) |
 
-A downloadable template is available at `/templates/bijoyai-native-template.csv`.
+A downloadable template is available at `/templates/bijoy-native-template.csv`.
 
 ---
 
 ## 9.8. CSV Update Pipeline — Overview
 
-The Smart Import pipeline supports **updating existing transactions** via CSV round-trip. Users export transactions as a Bijoy.ai Native CSV (with a pre-populated `id` column), edit the file in a spreadsheet, and re-import it. Rows with a valid `id` update the existing transaction; rows without an `id` create new transactions (existing behaviour).
+The Smart Import pipeline supports **updating existing transactions** via CSV round-trip. Users export transactions as a Bijoy Native CSV (with a pre-populated `id` column), edit the file in a spreadsheet, and re-import it. Rows with a valid `id` update the existing transaction; rows without an `id` create new transactions (existing behaviour).
 
 The export endpoint (`apps/api/pages/api/transactions/export.js`) produces a CSV in the exact Bijoy.ai Native format, including the transaction `id` and all editable fields. This creates a full round-trip: Export → Edit → Re-import → Review → Commit.
 
-The Bijoy.ai Native CSV adapter gains one new optional column:
+The Bijoy Native CSV adapter gains one new optional column:
 
 | Column | Required | Description |
 |--------|----------|-------------|

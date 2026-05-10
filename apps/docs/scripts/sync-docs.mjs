@@ -31,9 +31,9 @@ const FEATURE_MAP = {
   'design-system':            { title: 'Design System',              order: 0,  description: 'Color tokens, typography, component patterns, and the Bijoy.ai UIKit' },
   'user-identity':            { title: 'User Identity & Auth',       order: 1,  description: 'Registration, sign-in, JWT sessions, Google OAuth, RBAC roles' },
   'accounts-and-categories':  { title: 'Accounts & Categories',      order: 2,  description: 'Multi-bank account management, category hierarchy, account owners' },
-  'reference-data':           { title: 'Reference Data',             order: 3,  description: 'Countries, currencies, banks, and tenant configuration metadata' },
+  'reference-data':           { title: 'Reference Data',             order: 3,  description: 'Countries, currencies, banks, tenant configuration, and admin maintenance / rebuild operations' },
   'transactions':             { title: 'Transactions',               order: 4,  description: 'CRUD operations, filtering, bulk actions, and encrypted storage' },
-  'analytics':                { title: 'Analytics',                  order: 5,  description: 'Spending aggregation, P&L, tag analytics, and monthly caches' },
+  'analytics':                { title: 'Analytics',                  order: 5,  description: 'Spending aggregation, financial summary, tag analytics, and monthly caches' },
   'portfolio':                { title: 'Portfolio',                  order: 6,  description: 'FIFO lot tracking, real-time pricing, FX conversion, and valuations' },
   'cash-holdings':            { title: 'Cash Holdings',              order: 7,  description: 'Cash position tracking with forward-fill valuation' },
   'plaid-integration':        { title: 'Plaid Integration',          order: 8,  description: 'Bank sync, two-worker pipeline, token rotation, and sync logs' },
@@ -47,6 +47,7 @@ const FEATURE_MAP = {
   'dashboard-actions':        { title: 'Dashboard Actions',          order: 16, description: 'Dashboard widgets, quick actions, and onboarding checklist' },
   'tag-analytics':            { title: 'Tag Analytics',              order: 18, description: 'Multi-tag transaction analysis with dedicated cache tables' },
   'security-master':          { title: 'Security Master & Equity Analysis', order: 19, description: 'Nightly stock fundamentals refresh, equity deep-dive with earnings and dividends' },
+  'llm-provider-abstraction': { title: 'LLM Provider Abstraction',   order: 20, description: 'Factory-backed adapter layer for Gemini, OpenAI, and Anthropic with a unified contract' },
 };
 
 // Maps feature slugs to actual filenames per layer (from docs/specs/)
@@ -70,6 +71,7 @@ const LAYER_FILES = {
   'dashboard-actions':        { frontend: '16-dashboard-actions.md' },
   'tag-analytics':            { api: '18-tag-analytics.md', backend: '18-tag-analytics.md', frontend: '18-tag-analytics.md' },
   'security-master':          { api: '19-security-master-api.md', backend: '19-security-master.md', frontend: '19-security-master.md' },
+  'llm-provider-abstraction': { backend: '20-llm-provider-abstraction.md' },
 };
 
 // ── Helpers ──────────────────────────────────────────────────

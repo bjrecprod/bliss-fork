@@ -11,27 +11,76 @@ Bijoy.ai supports CSV and XLSX imports with automatic format detection, AI class
 
 ![Smart Import upload step](/images/smartimport.png)
 
+> **Tip:** For your first import, start with a small batch (a single month or a hundred rows) and review the classifications carefully. Each correction trains the AI on your specific merchants and habits, so subsequent larger imports arrive with far higher auto-classification rates.
+
 ## File format detection
 
 Bijoy.ai matches your file's column headers against known adapter signatures. If a match is found, it auto-maps columns. If not, you create a custom adapter.
 
+### Preconfigured bank adapters
+
+Bijoy.ai ships with 30+ preconfigured adapters that automatically recognize CSV exports from major banks worldwide. Just upload your file and Bijoy.ai will detect the format:
+
+| Region | Supported banks |
+|--------|----------------|
+| **US** | Chase, Bank of America, Citi, Capital One, American Express, Discover, US Bank |
+| **UK** | HSBC, Barclays, Lloyds, Monzo, Santander UK |
+| **Spain** | BBVA, CaixaBank, Santander |
+| **France** | Boursorama, Credit Agricole |
+| **EU** | N26, Revolut, Wise |
+| **Brazil** | Nubank, Itau |
+| **Canada** | RBC, TD Canada |
+| **Australia** | ANZ, Commonwealth Bank |
+| **Brokerages** | Interactive Brokers, eToro |
+
+Two generic fallback adapters (`Date/Description/Amount` and `Date/Description/Debit/Credit`) cover banks not listed above, as long as their CSV uses standard column names.
+
+> **Bank not listed?** Create a custom adapter in seconds — see below.
+
 ### Creating a custom adapter
 
-Click **Import Adapters** on the import page to open the adapter manager. Define:
+When Bijoy.ai can't recognise your file's format, it shows an **"Unknown Format"** alert along with a preview table of up to 3 rows from your file — so you can see exactly what Bijoy.ai is reading before you configure anything.
 
-- **Match Headers** — comma-separated column names that identify this format (e.g., `Date, Description, Amount`)
-- **Date / Description / Amount columns** — map to your file's headers
-- **Amount strategy** — `SINGLE_SIGNED` (one column, negative = debit) or `DEBIT_CREDIT_COLUMNS` (separate columns)
-- **Date format** — e.g., `DD/MM/YYYY`, `YYYY-MM-DD`, `MM-DD-YYYY`
-- **Default currency** — applied when the file doesn't include a currency column
+Click **"Create Adapter for this Format"** (or **Import Adapters → New Adapter**) to open the adapter form. Bijoy.ai pre-fills the form using the headers it detected, so you mostly just pick values from dropdowns rather than typing column names by hand.
+
+#### Match Headers
+
+Detected column names appear as removable **chips**. You can click `×` on any chip to remove it, or type a new name and press `+` to add one. These are the headers Bijoy.ai will look for in future uploads to identify this file format automatically.
+
+#### Column mapping
+
+Each field (Date, Description, Amount, etc.) shows a dropdown pre-populated with the headers from your file. Just pick the right column for each field.
+
+#### Amount strategy
+
+Choose how amounts are encoded in your file:
+
+| Strategy | When to use |
+|----------|-------------|
+| **One column (positive/negative)** | One amount column; negative values are expenses |
+| **One column inverted (Amex-style)** | One amount column; positive values are expenses (some US cards) |
+| **Separate debit/credit columns** | Your bank uses two columns — one for money in, one for money out |
+| **Amount + type column** | One amount column plus a separate column that says "debit" or "credit" |
+
+#### Date format
+
+Pick from common presets (e.g. `DD/MM/YYYY`, `YYYY-MM-DD`, `MM/DD/YYYY`) or choose **Auto-detect** to let Bijoy.ai figure it out. You can also enter a custom format string.
+
+#### Row preview
+
+As you adjust settings, the **Row Preview** card at the bottom of the form updates in real time to show how the first row of your file will be parsed — date, description, amount, and currency. Use this to catch mapping mistakes before saving.
+
+#### Default currency
+
+Select the currency to apply when your file doesn't include a currency column. Leave blank to inherit the destination account's currency.
 
 ![Adapter creation dialog](/images/smartimportadapter.png)
 
 Adapters are saved per-tenant and reused automatically on future imports.
 
-## Bijoy.ai Native CSV format
+## Bijoy Native CSV format
 
-For maximum control, prepare your data in the Bijoy.ai Native format. This bypasses adapter detection and supports all fields including investments and tags.
+For maximum control, prepare your data in the Bijoy Native format. This bypasses adapter detection and supports all fields including investments and tags.
 
 **Required columns:**
 

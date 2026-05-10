@@ -37,6 +37,7 @@ import {
   useCancelImport,
 } from '@/hooks/use-imports';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { translateCategoryName } from '@/lib/category-i18n';
 import { api } from '@/lib/api';
 import { itemNeedsEnrichment } from '@/lib/investment-utils';
 import type { PlaidTransaction, Category, StagedImportRow } from '@/types/api';
@@ -112,8 +113,17 @@ function importRowToReviewItem(
   const amount = (Number(row.debit) || 0) - (Number(row.credit) || 0);
   const account = row.accountId ? accountsMap.get(row.accountId) : null;
 
+  // Duplicate-flagged rows get a dedicated status badge and are NOT committable.
+  // DUPLICATE = exact hash match including timestamp (hard dup; normally the GET
+  // endpoint hides these entirely). POTENTIAL_DUPLICATE = same date/description/
+  // amount/account but no timestamp — shown with a warning badge so the user can
+  // explicitly override to CONFIRMED if it really is a distinct transaction.
   let status: TxStatus = 'ai-approved';
-  if (row.requiresEnrichment) {
+  if (row.status === 'DUPLICATE') {
+    status = 'duplicate';
+  } else if (row.status === 'POTENTIAL_DUPLICATE') {
+    status = 'potential-duplicate';
+  } else if (row.requiresEnrichment) {
     status = 'needs-enrichment';
   } else if (row.confidence != null && row.confidence < reviewThreshold) {
     status = 'low-confidence';
@@ -177,13 +187,15 @@ export default function TransactionReviewPage() {
 
   // ── Plaid data ──
   const [plaidPage, setPlaidPage] = useState(1);
-  const [plaidCategoryFilter, setPlaidCategoryFilter] = useState<number | null>(null);
+  // null = no filter (all groups collapsed), 'uncategorized' = NULL-category rows, number = specific category
+  const [plaidCategoryFilter, setPlaidCategoryFilter] = useState<number | 'uncategorized' | null>(null);
   const { data: plaidData, isLoading: plaidLoading } = usePlaidTransactions({
     page: plaidPage,
     limit: 500,
     promotionStatus: 'CLASSIFIED',
     ...(plaidItemIdParam ? { plaidItemId: plaidItemIdParam } : {}),
-    ...(plaidCategoryFilter ? { categoryId: plaidCategoryFilter } : {}),
+    ...(typeof plaidCategoryFilter === 'number' ? { categoryId: plaidCategoryFilter } : {}),
+    ...(plaidCategoryFilter === 'uncategorized' ? { uncategorized: true } : {}),
   });
   const plaidTransactions = useMemo(() => plaidData?.transactions ?? [], [plaidData]);
   const plaidSummary = useMemo(() => plaidData?.summary, [plaidData]);
@@ -204,15 +216,19 @@ export default function TransactionReviewPage() {
 
   const [selectedImportId, setSelectedImportId] = useState<string | null>(importIdParam);
   const [importPage, setImportPage] = useState(1);
-  const [importCategoryFilter, setImportCategoryFilter] = useState<number | null>(null);
+  const [importCategoryFilter, setImportCategoryFilter] = useState<number | 'uncategorized' | null>(null);
   const { data: stagedData, isLoading: stagedLoading } = useStagedImport(
     selectedImportId,
     {
       page: importPage,
       limit: 50,
-      // Show rows needing action + auto-confirmed rows not yet committed (excludes SKIPPED)
-      status: 'PENDING,POTENTIAL_DUPLICATE,ERROR,DUPLICATE,CONFIRMED',
-      ...(importCategoryFilter ? { categoryId: importCategoryFilter } : {}),
+      // Show rows needing action + auto-confirmed rows not yet committed.
+      // DUPLICATE (hard duplicates w/ timestamp match) is intentionally excluded —
+      // those rows must never reach the Review UI as committable. POTENTIAL_DUPLICATE
+      // stays visible so the user can override to CONFIRMED if it's a legit tx.
+      status: 'PENDING,POTENTIAL_DUPLICATE,ERROR,CONFIRMED',
+      ...(typeof importCategoryFilter === 'number' ? { categoryId: importCategoryFilter } : {}),
+      ...(importCategoryFilter === 'uncategorized' ? { uncategorized: true } : {}),
     },
   );
   const importRows = useMemo(() => stagedData?.rows ?? [], [stagedData]);
@@ -242,6 +258,31 @@ export default function TransactionReviewPage() {
   useEffect(() => { setImportPage(1); }, [importCategoryFilter]);
   // Clear category filter when the selected import changes
   useEffect(() => { setImportCategoryFilter(null); }, [selectedImportId]);
+
+  // Populated by renderGrouped* — used to scroll the expanded card into view after refetch.
+  const groupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingScrollKey = useRef<string | null>(null);
+
+  // Stable per-category money totals — keyed by category key string (categoryId or 'uncategorized').
+  // Updated only when no filter is active so that expanding a category doesn't reset the
+  // other groups' totals to zero (their items become [] when the API filters by category).
+  const plaidStableTotals = useRef<Map<string, number>>(new Map());
+  const importStableTotals = useRef<Map<string, number>>(new Map());
+
+  // Scroll to the newly-expanded category group once its data has loaded.
+  useEffect(() => {
+    if (plaidLoading || !pendingScrollKey.current) return;
+    const el = groupRefs.current.get(pendingScrollKey.current);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    pendingScrollKey.current = null;
+  }, [plaidLoading]);
+
+  useEffect(() => {
+    if (stagedLoading || !pendingScrollKey.current) return;
+    const el = groupRefs.current.get(pendingScrollKey.current);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    pendingScrollKey.current = null;
+  }, [stagedLoading]);
 
   // ── Detect COMMITTING → COMMITTED/READY transition ──
   const prevImportStatusRef = useRef<string | undefined>();
@@ -307,6 +348,33 @@ export default function TransactionReviewPage() {
     [importRows, categoriesMap, accountsMap, reviewThreshold],
   );
 
+  // Capture stable per-category money totals from the full unfiltered datasets.
+  // When a category filter is active the API only returns that category's items,
+  // which would make every other group's total collapse to zero — so we only
+  // update when no filter is set and reuse the last known totals while expanded.
+  // NOTE: these effects must live after plaidReviewItems / importReviewItems are
+  // declared — referencing them in a dep array before their const binding is
+  // evaluated causes a Temporal Dead Zone crash in the production build.
+  useEffect(() => {
+    if (plaidCategoryFilter !== null) return;
+    const map = new Map<string, number>();
+    for (const item of plaidReviewItems) {
+      const key = item.categoryId?.toString() ?? 'uncategorized';
+      map.set(key, (map.get(key) ?? 0) + Math.abs(item.amount));
+    }
+    plaidStableTotals.current = map;
+  }, [plaidReviewItems, plaidCategoryFilter]);
+
+  useEffect(() => {
+    if (importCategoryFilter !== null) return;
+    const map = new Map<string, number>();
+    for (const item of importReviewItems) {
+      const key = item.categoryId?.toString() ?? 'uncategorized';
+      map.set(key, (map.get(key) ?? 0) + Math.abs(item.amount));
+    }
+    importStableTotals.current = map;
+  }, [importReviewItems, importCategoryFilter]);
+
   // ── Grouped data — server-side summaries drive headers; current-page items fill rows ──
   //
   // Groups are ordered by server-provided count (most items first).
@@ -331,11 +399,14 @@ export default function TransactionReviewPage() {
     return plaidCategoryBreakdown.map((entry) => {
       const key = entry.categoryId?.toString() ?? 'uncategorized';
       const items = itemsByCategory.get(key) ?? [];
+      // Use stable totals captured from the unfiltered dataset so that expanding
+      // one category does not reset other groups' money totals to zero.
+      const total = plaidStableTotals.current.get(key) ?? items.reduce((sum, i) => sum + Math.abs(i.amount), 0);
       return {
         key,
         categoryName: entry.category?.name ?? 'Uncategorized',
         items,
-        total: items.reduce((sum, i) => sum + Math.abs(i.amount), 0),
+        total,
         totalCount: entry.count,
       };
     });
@@ -348,11 +419,14 @@ export default function TransactionReviewPage() {
     return importCategorySummary.map((entry) => {
       const key = entry.categoryId?.toString() ?? 'uncategorized';
       const items = itemsByCategory.get(key) ?? [];
+      // Use stable totals captured from the unfiltered dataset so that expanding
+      // one category does not reset other groups' money totals to zero.
+      const total = importStableTotals.current.get(key) ?? items.reduce((sum, i) => sum + Math.abs(i.amount), 0);
       return {
         key,
         categoryName: entry.category?.name ?? 'Uncategorized',
         items,
-        total: items.reduce((sum, i) => sum + Math.abs(i.amount), 0),
+        total,
         totalCount: entry.count,
       };
     });
@@ -400,6 +474,10 @@ export default function TransactionReviewPage() {
           i.promotionStatus !== 'CONFIRMED' &&
           i.promotionStatus !== 'SKIPPED' &&
           i.promotionStatus !== 'DUPLICATE' &&
+          // POTENTIAL_DUPLICATE rows are excluded from bulk promote/approve —
+          // user must explicitly override each one via the drawer to commit it,
+          // otherwise re-imported transactions would silently re-land.
+          i.promotionStatus !== 'POTENTIAL_DUPLICATE' &&
           !itemNeedsEnrichment(i, categoriesMap),
       ),
     );
@@ -465,6 +543,24 @@ export default function TransactionReviewPage() {
     [updatePlaidTx, toast, plaidReviewItems, plaidCategoryFilter, plaidTransactions.length],
   );
 
+  // Clear any active category filter after a bulk operation so the user isn't
+  // left looking at a stale "filtered to an empty category" view. Without
+  // this, approving all items in a group leaves the filter set to that now-
+  // empty category; the next refetch returns 0 items and the grouped view
+  // appears broken until the user manually clicks another category. Mirrors
+  // the `length <= 1` fallback in `handleImportRowStatus` for the single-
+  // item path.
+  const clearStaleCategoryFilters = useCallback(() => {
+    if (plaidCategoryFilter != null) {
+      setPlaidCategoryFilter(null);
+      setPlaidPage(1);
+    }
+    if (importCategoryFilter != null) {
+      setImportCategoryFilter(null);
+      setImportPage(1);
+    }
+  }, [plaidCategoryFilter, importCategoryFilter]);
+
   const handlePromoteGroup = useCallback(
     (items: ReviewItem[]) => {
       // Plaid group promote — exclude items that need enrichment
@@ -484,6 +580,7 @@ export default function TransactionReviewPage() {
           { transactionIds: plaidIds },
           {
             onSuccess: (result) => {
+              clearStaleCategoryFilters();
               const parts = [`Promoted ${result.promoted} transactions`];
               if (result.errors > 0) parts.push(`${result.errors} failed`);
               if (skippedEnrichment > 0) parts.push(`${skippedEnrichment} need enrichment`);
@@ -509,6 +606,10 @@ export default function TransactionReviewPage() {
           i.promotionStatus !== 'CONFIRMED' &&
           i.promotionStatus !== 'SKIPPED' &&
           i.promotionStatus !== 'DUPLICATE' &&
+          // POTENTIAL_DUPLICATE rows are excluded from bulk promote/approve —
+          // user must explicitly override each one via the drawer to commit it,
+          // otherwise re-imported transactions would silently re-land.
+          i.promotionStatus !== 'POTENTIAL_DUPLICATE' &&
           !itemNeedsEnrichment(i, categoriesMap),
       );
       const importEnrichmentSkipped = items.filter(
@@ -517,12 +618,20 @@ export default function TransactionReviewPage() {
           i.promotionStatus !== 'CONFIRMED' &&
           i.promotionStatus !== 'SKIPPED' &&
           i.promotionStatus !== 'DUPLICATE' &&
+          // POTENTIAL_DUPLICATE rows are excluded from bulk promote/approve —
+          // user must explicitly override each one via the drawer to commit it,
+          // otherwise re-imported transactions would silently re-land.
+          i.promotionStatus !== 'POTENTIAL_DUPLICATE' &&
           itemNeedsEnrichment(i, categoriesMap),
       ).length;
       for (const item of importItems) {
         handleImportRowStatus(item.originalImportRow!, 'CONFIRMED');
       }
       if (importItems.length > 0) {
+        // Clear the (possibly now-empty) import category filter so the
+        // refetched grouped view reflects the drained category. See
+        // `clearStaleCategoryFilters` docstring.
+        clearStaleCategoryFilters();
         const desc = importEnrichmentSkipped > 0
           ? `${importItems.length} row(s) confirmed. ${importEnrichmentSkipped} investment row(s) need enrichment first.`
           : `${importItems.length} row(s) confirmed for commit.`;
@@ -536,7 +645,7 @@ export default function TransactionReviewPage() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handleImportRowStatus defined later; stable useCallback
-    [bulkPromote, toast, categoriesMap],
+    [bulkPromote, toast, categoriesMap, clearStaleCategoryFilters],
   );
 
   const handleBulkPromote = useCallback(() => {
@@ -544,6 +653,9 @@ export default function TransactionReviewPage() {
       { minConfidence: parseFloat(bulkConfidenceThreshold) },
       {
         onSuccess: (result) => {
+          // Confidence-threshold bulk promote can drain many categories at
+          // once; always reset the view filters.
+          clearStaleCategoryFilters();
           setShowBulkDialog(false);
           toast({
             title: 'Bulk Promote Complete',
@@ -556,7 +668,7 @@ export default function TransactionReviewPage() {
         },
       },
     );
-  }, [bulkPromote, bulkConfidenceThreshold, toast]);
+  }, [bulkPromote, bulkConfidenceThreshold, toast, clearStaleCategoryFilters]);
 
   // ── Import handlers ──
   const handleImportRowStatus = useCallback(
@@ -875,32 +987,42 @@ export default function TransactionReviewPage() {
       <div className="space-y-3">
         {groups.map((group) => {
           const catId = group.key === 'uncategorized' ? null : parseInt(group.key, 10);
-          const isExpanded = importCategoryFilter === catId;
+          // Filter starts as null so nothing is expanded on first load. Uncategorized
+          // uses the 'uncategorized' sentinel so it's distinguishable from "no filter".
+          const isExpanded = catId === null
+            ? importCategoryFilter === 'uncategorized'
+            : importCategoryFilter === catId;
           return (
-            <GroupCard
+            <div
               key={group.key}
-              categoryName={group.categoryName}
-              items={isExpanded ? group.items : []}
-              total={group.total}
-              totalCount={group.totalCount}
-              onApprove={handleItemApprove}
-              onSkip={handleItemSkip}
-              onApproveAll={() => handlePromoteGroup(group.items)}
-              onItemClick={setSelectedItem}
-              disabled={updatePlaidTx.isPending || bulkPromote.isPending || updateImportRow.isPending}
-              isExpanded={isExpanded}
-              onToggle={() => {
-                setImportCategoryFilter(isExpanded ? null : catId);
-                setImportPage(1);
-              }}
-              pagination={isExpanded ? renderPagination(
-                importPage,
-                importPagination?.totalPages ?? 1,
-                importPagination?.total,
-                setImportPage,
-                'rows',
-              ) : undefined}
-            />
+              ref={(el) => { if (el) groupRefs.current.set(group.key, el); else groupRefs.current.delete(group.key); }}
+            >
+              <GroupCard
+                categoryName={group.categoryName}
+                items={isExpanded ? group.items : []}
+                total={group.total}
+                totalCount={group.totalCount}
+                onApprove={handleItemApprove}
+                onSkip={handleItemSkip}
+                onApproveAll={() => handlePromoteGroup(group.items)}
+                onItemClick={setSelectedItem}
+                disabled={updatePlaidTx.isPending || bulkPromote.isPending || updateImportRow.isPending}
+                isExpanded={isExpanded}
+                onToggle={() => {
+                  const next = catId === null ? 'uncategorized' : catId;
+                  if (!isExpanded) pendingScrollKey.current = group.key;
+                  setImportCategoryFilter(isExpanded ? null : next);
+                  setImportPage(1);
+                }}
+                pagination={isExpanded ? renderPagination(
+                  importPage,
+                  importPagination?.totalPages ?? 1,
+                  importPagination?.total,
+                  setImportPage,
+                  'rows',
+                ) : undefined}
+              />
+            </div>
           );
         })}
       </div>
@@ -911,32 +1033,42 @@ export default function TransactionReviewPage() {
       <div className="space-y-3">
         {groups.map((group) => {
           const catId = group.key === 'uncategorized' ? null : parseInt(group.key, 10);
-          const isExpanded = plaidCategoryFilter === catId;
+          // Filter starts as null so nothing is expanded on first load. Uncategorized
+          // uses the 'uncategorized' sentinel so it's distinguishable from "no filter".
+          const isExpanded = catId === null
+            ? plaidCategoryFilter === 'uncategorized'
+            : plaidCategoryFilter === catId;
           return (
-            <GroupCard
+            <div
               key={group.key}
-              categoryName={group.categoryName}
-              items={isExpanded ? group.items : []}
-              total={group.total}
-              totalCount={group.totalCount}
-              onApprove={handleItemApprove}
-              onSkip={handleItemSkip}
-              onApproveAll={() => handlePromoteGroup(group.items)}
-              onItemClick={setSelectedItem}
-              disabled={updatePlaidTx.isPending || bulkPromote.isPending || updateImportRow.isPending}
-              isExpanded={isExpanded}
-              onToggle={() => {
-                setPlaidCategoryFilter(isExpanded ? null : catId);
-                setPlaidPage(1);
-              }}
-              pagination={isExpanded ? renderPagination(
-                plaidPage,
-                plaidPagination?.totalPages ?? 1,
-                plaidPagination?.total,
-                setPlaidPage,
-                'transactions',
-              ) : undefined}
-            />
+              ref={(el) => { if (el) groupRefs.current.set(group.key, el); else groupRefs.current.delete(group.key); }}
+            >
+              <GroupCard
+                categoryName={group.categoryName}
+                items={isExpanded ? group.items : []}
+                total={group.total}
+                totalCount={group.totalCount}
+                onApprove={handleItemApprove}
+                onSkip={handleItemSkip}
+                onApproveAll={() => handlePromoteGroup(group.items)}
+                onItemClick={setSelectedItem}
+                disabled={updatePlaidTx.isPending || bulkPromote.isPending || updateImportRow.isPending}
+                isExpanded={isExpanded}
+                onToggle={() => {
+                  const next = catId === null ? 'uncategorized' : catId;
+                  if (!isExpanded) pendingScrollKey.current = group.key;
+                  setPlaidCategoryFilter(isExpanded ? null : next);
+                  setPlaidPage(1);
+                }}
+                pagination={isExpanded ? renderPagination(
+                  plaidPage,
+                  plaidPagination?.totalPages ?? 1,
+                  plaidPagination?.total,
+                  setPlaidPage,
+                  'transactions',
+                ) : undefined}
+              />
+            </div>
           );
         })}
       </div>
@@ -1245,6 +1377,15 @@ export default function TransactionReviewPage() {
         onClose={() => setSelectedItem(null)}
         onSaveAndPromote={handleDrawerSave}
         onSkip={handleDrawerSkip}
+        onResetToPending={
+          // Only wired for import rows — the drawer itself double-gates on
+          // `item.source === 'import'`, but this guard keeps the prop
+          // undefined for Plaid items so the button never even considers
+          // rendering.
+          selectedItem?.source === 'import' && selectedItem.originalImportRow
+            ? () => handleImportRowStatus(selectedItem.originalImportRow!, 'PENDING')
+            : undefined
+        }
         isSaving={updatePlaidTx.isPending || updateImportRow.isPending}
       />
 
@@ -1253,10 +1394,10 @@ export default function TransactionReviewPage() {
         if (!pendingDrawerSave) return null;
         const { item, categoryId } = pendingDrawerSave;
         const effectiveCategoryId = categoryId ?? item.categoryId;
-        const effectiveCategoryName =
-          (effectiveCategoryId
-            ? categories.find((c: Category) => c.id === effectiveCategoryId)?.name
-            : null) ?? item.category;
+        const effectiveCategoryName = (() => {
+          const cat = effectiveCategoryId ? categories.find((c: Category) => c.id === effectiveCategoryId) : null;
+          return cat ? translateCategoryName(t, cat) : (item.category ?? null);
+        })();
         const otherCount = pendingDrawerOtherMatches.length;
         return (
           <Dialog
@@ -1322,6 +1463,10 @@ export default function TransactionReviewPage() {
                         },
                         {
                           onSuccess: (result) => {
+                            // Clear stale filters — the drawer's "confirm all"
+                            // can fully drain the currently-expanded category
+                            // if all its items share this description.
+                            clearStaleCategoryFilters();
                             setPendingDrawerSave(null);
                             const total = result.promoted + 1 + importMatches.length;
                             toast({
@@ -1340,6 +1485,7 @@ export default function TransactionReviewPage() {
                       );
                     } else {
                       // Only import matches, no Plaid — close dialog immediately
+                      clearStaleCategoryFilters();
                       setPendingDrawerSave(null);
                       const total = 1 + importMatches.length;
                       toast({
@@ -1401,6 +1547,13 @@ export default function TransactionReviewPage() {
                   { transactionIds: ids },
                   {
                     onSuccess: (result) => {
+                      // Same rationale as the group-approve path: the set of
+                      // promoted items may fully drain the currently-expanded
+                      // category (if the category's remaining items all share
+                      // this description). Clear the stale filter so the
+                      // refetched grouped view isn't filtered to an empty
+                      // category.
+                      clearStaleCategoryFilters();
                       setPendingApproveItem(null);
                       toast({
                         title: `Promoted ${result.promoted} transaction${result.promoted !== 1 ? 's' : ''}`,

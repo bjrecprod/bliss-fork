@@ -31,7 +31,7 @@
   {
     "slug": "reference-data",
     "title": "Reference Data",
-    "description": "Countries, currencies, banks, and tenant configuration metadata",
+    "description": "Countries, currencies, banks, tenant configuration, and admin maintenance / rebuild operations",
     "order": 3,
     "layers": {
       "api": "docs/specs/api/03-reference-data-management.md",
@@ -51,7 +51,7 @@
   {
     "slug": "analytics",
     "title": "Analytics",
-    "description": "Spending aggregation, P&L, tag analytics, and monthly caches",
+    "description": "Spending aggregation, financial summary, tag analytics, and monthly caches",
     "order": 5,
     "layers": {
       "api": "docs/specs/api/05-analytics-api.md",
@@ -194,6 +194,15 @@
       "api": "docs/specs/api/19-security-master-api.md",
       "backend": "docs/specs/backend/19-security-master.md",
       "frontend": "docs/specs/frontend/19-security-master.md"
+    }
+  },
+  {
+    "slug": "llm-provider-abstraction",
+    "title": "LLM Provider Abstraction",
+    "description": "Factory-backed adapter layer for Gemini, OpenAI, and Anthropic with a unified contract",
+    "order": 20,
+    "layers": {
+      "backend": "docs/specs/backend/20-llm-provider-abstraction.md"
     }
   }
 ]

@@ -43,12 +43,16 @@ export const DEFAULT_CATEGORIES = [
   { code: 'ALLOWANCE',            name: 'Allowance',            group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '💰' },
   { code: 'RENT_INCOME',          name: 'Rent Income',          group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🏡' },
   { code: 'SALARY',               name: 'Salary',               group: 'Labor Income',        type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '💵' },
-  { code: 'GOVERNMENT_WELFARE',   name: 'Government Welfare',   group: 'Labor Income',        type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🏛️' },
+  { code: 'FREELANCE_INCOME',     name: 'Freelance Income',     group: 'Labor Income',        type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '💼' },
+  { code: 'BONUS',                name: 'Bonus',                group: 'Labor Income',        type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🎁' },
+  { code: 'COMMISSION',           name: 'Commission',           group: 'Labor Income',        type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🤝' },
+  { code: 'GOVERNMENT_WELFARE',   name: 'Government Welfare',   group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🏛️' },
   { code: 'TAXES',                name: 'Taxes',                group: 'Taxes',               type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🧾' },
+  { code: 'TAX_REFUND',           name: 'Tax Refund',           group: 'Taxes',               type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '↩️' },
   { code: 'DIVIDENDS',            name: 'Dividends',            group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '💸' },
   { code: 'BOND_INCOME',          name: 'Bond Income',          group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '🏛️' },
   { code: 'INTEREST_INCOME',      name: 'Interest Income',      group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '💰' },
-  { code: 'OPTIONS_INCOME',       name: 'Options Income',       group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '📉' },          
+  { code: 'OPTIONS_INCOME',       name: 'Options Income',       group: 'Passive Income',      type: 'Income',               portfolioItemKeyStrategy: 'IGNORE',  icon: '📉' },
 
   // ── Essentials (non-discretionary spending) ───────────────────────────────
   // Housing
@@ -132,10 +136,10 @@ export const DEFAULT_CATEGORIES = [
 
   // ── Transfers ─────────────────────────────────────────────────────────────
   { code: 'INHERITANCE',           name: 'Inheritance',           group: 'Inheritance',        type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '⚰️' },
-  { code: 'RECEIVED_DOMESTIC',     name: 'Received Domestic',     group: 'Domestic',           type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '📨' },
-  { code: 'RECEIVED_INTERNATIONAL',name: 'Received International',group: 'International',      type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '🌍' },
-  { code: 'SENT_DOMESTIC',         name: 'Sent Domestic',         group: 'Domestic',           type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '📤' },
-  { code: 'SENT_INTERNATIONAL',    name: 'Sent International',    group: 'International',      type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '✈️' },
+  { code: 'RECEIVED_DOMESTIC',     name: 'Transfer Received — Domestic',     group: 'Domestic',           type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '📨' },
+  { code: 'RECEIVED_INTERNATIONAL',name: 'Transfer Received — International',group: 'International',      type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '🌍' },
+  { code: 'SENT_DOMESTIC',         name: 'Transfer Sent — Domestic',         group: 'Domestic',           type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '📤' },
+  { code: 'SENT_INTERNATIONAL',    name: 'Transfer Sent — International',    group: 'International',      type: 'Transfers',            portfolioItemKeyStrategy: 'IGNORE',  icon: '✈️' },
 
   // ── Ventures (own businesses / side projects) ─────────────────────────────
   // Revenue

@@ -215,8 +215,8 @@ function SignInForm({ demoMode = false }: { demoMode?: boolean }) {
 
   useEffect(() => {
     if (demoMode) {
-      form.setValue("email", "demo@bijoy.ai");
-      form.setValue("password", "bijoyai1234");
+      form.setValue("email", "bjrec@bijoy.ai");
+      form.setValue("password", "bijoy1234");
     }
   }, [demoMode, form]);
 
@@ -421,7 +421,7 @@ function SignUpForm() {
         >
           {t("By creating an account you agree to our")}{" "}
           <a
-            href="https://github.com/danielvsantos/bijoyai/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
@@ -467,7 +467,7 @@ function useDemoMode(): boolean {
 
 function AuthCard() {
   const { t } = useTranslation();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, googleOAuthEnabled } = useAuth();
   const [tab, setTab] = useState("signin");
   const isDemo = useDemoMode();
 
@@ -500,7 +500,7 @@ function AuthCard() {
               fontFamily: "monospace",
             }}
           >
-            demo@bijoy.ai &nbsp;/&nbsp; bijoyai1234
+            bjrec@bijoy.ai &nbsp;/&nbsp; bijoy1234
           </div>
         </div>
       )}
@@ -512,8 +512,8 @@ function AuthCard() {
         </div>
       )}
 
-      {/* Google OAuth — hidden in demo mode */}
-      {!isDemo && (
+      {/* Google OAuth — hidden in demo mode or when credentials are not configured */}
+      {!isDemo && googleOAuthEnabled && (
         <>
           <GoogleButton
             label={
@@ -745,7 +745,7 @@ function RightPanel() {
         >
           {t("Protected by enterprise-grade encryption.")}{" "}
           <a
-            href="https://github.com/danielvsantos/bijoyai/blob/main/LICENSE"
+            href="https://github.com/bjrecprod/bliss-fork/blob/main/LICENSE"
             target="_blank"
             rel="noopener noreferrer"
             className="underline"
